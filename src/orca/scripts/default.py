@@ -2567,10 +2567,7 @@ class Script(script.Script):
             entry = self.utilities.getEntryForEditableComboBox(event.source)
             if entry and entry.getState().contains(pyatspi.STATE_FOCUSED):
                 return
-        '''
-        TODO: chrys remove
-        mouseReviewItem = mouse_review.reviewer.getCurrentItem()
-        '''
+
         orcaApp = orca.getManager()
         mouse_review = orcaApp.getAPI('MouseReview')
         
