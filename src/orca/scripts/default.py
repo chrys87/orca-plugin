@@ -54,7 +54,7 @@ import orca.settings_manager as settings_manager
 import orca.sound as sound
 import orca.speech as speech
 import orca.speechserver as speechserver
-import orca.mouse_review as mouse_review
+#import orca.mouse_review as mouse_review
 import orca.notification_messages as notification_messages
 
 _settingsManager = settings_manager.getManager()
@@ -493,7 +493,8 @@ class Script(script.Script):
             input_event.InputEventHandler(
                 Script.saveBookmarks,
                 cmdnames.BOOKMARK_SAVE)
-
+        '''
+        TODO: chrys remove
         self.inputEventHandlers["toggleMouseReviewHandler"] = \
             input_event.InputEventHandler(
                 mouse_review.reviewer.toggle,
@@ -508,7 +509,7 @@ class Script(script.Script):
             input_event.InputEventHandler(
                 Script.presentDate,
                 cmdnames.PRESENT_CURRENT_DATE)
-
+        '''
         self.inputEventHandlers["bypassNextCommandHandler"] = \
             input_event.InputEventHandler(
                 Script.bypassNextCommand,
@@ -2567,8 +2568,17 @@ class Script(script.Script):
             entry = self.utilities.getEntryForEditableComboBox(event.source)
             if entry and entry.getState().contains(pyatspi.STATE_FOCUSED):
                 return
- 
+        '''
+        TODO: chrys remove
         mouseReviewItem = mouse_review.reviewer.getCurrentItem()
+        '''
+        orcaApp = orca.getManager()
+        mouse_review = orcaApp.getAPI('MouseReview')
+        
+        mouseReviewItem = None
+        if mouse_review != None:
+            mouseReviewItem = mouse_review.getCurrentItem()
+
         selectedChildren = self.utilities.selectedChildren(obj)
         for child in selectedChildren:
             if pyatspi.findAncestor(orca_state.locusOfFocus, lambda x: x == child):
@@ -4430,7 +4440,8 @@ class Script(script.Script):
         """
         speech.speak(messages.UNICODE % \
                          self.utilities.unicodeValueString(character))
-
+    '''
+    TODO: chrys remove
     def presentTime(self, inputEvent):
         """ Presents the current time. """
         timeFormat = _settingsManager.getSetting('presentTimeFormat')
@@ -4444,7 +4455,7 @@ class Script(script.Script):
         message = time.strftime(dateFormat, time.localtime())
         self.presentMessage(message)
         return True
-
+    '''
     def presentSizeAndPosition(self, inputEvent):
         """ Presents the size and position of the locusOfFocus. """
 

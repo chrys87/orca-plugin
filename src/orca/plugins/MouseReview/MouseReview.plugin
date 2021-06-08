@@ -1,0 +1,6 @@
+[Plugin]
+Module=MouseReview
+Loader=python3
+Name=Mouse Review
+Description=Review whats below the mouse coursor
+Authors=Chrys chrys@linux-a11y.org

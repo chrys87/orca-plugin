@@ -38,6 +38,7 @@ import re
 import signal
 import subprocess
 import sys
+from gi.repository import GObject
 
 try:
     from gi.repository.Gio import Settings
@@ -70,7 +71,7 @@ from . import event_manager
 from . import keybindings
 from . import logger
 from . import messages
-from . import mouse_review
+#   from . import mouse_review
 from . import notification_messages
 from . import orca_state
 from . import orca_platform
@@ -80,11 +81,14 @@ from . import settings_manager
 from . import speech
 from . import sound
 from .input_event import BrailleEvent
+from . import cmdnames
+from . import plugin_system_manager
 
 _eventManager = event_manager.getManager()
 _scriptManager = script_manager.getManager()
 _settingsManager = settings_manager.getManager()
 _logger = logger.getLogger()
+
 
 def onEnabledChanged(gsetting, key):
     try:
@@ -450,11 +454,13 @@ def loadUserSettings(script=None, inputEvent=None, skipReloadMessage=False):
         msg = 'ORCA: Braille is not enabled in settings'
         debug.println(debug.LEVEL_INFO, msg, True)
 
-
+    '''
+    TODO: chrys remove
     if _settingsManager.getSetting('enableMouseReview'):
         mouse_review.reviewer.activate()
     else:
         mouse_review.reviewer.deactivate()
+    '''
 
     if _settingsManager.getSetting('enableSound'):
         player.init()
@@ -591,6 +597,7 @@ def init(registry):
         signal.signal(signal.SIGALRM, settings.timeoutCallback)
         signal.alarm(settings.timeoutTime)
 
+    orcaApp.pluginSystemManager.load_all_plugins()
     loadUserSettings()
 
     if settings.timeoutCallback and (settings.timeoutTime > 0):
@@ -682,7 +689,8 @@ def shutdown(script=None, inputEvent=None):
         signal.signal(signal.SIGALRM, settings.timeoutCallback)
         signal.alarm(settings.timeoutTime)
 
-    orca_state.activeScript.presentMessage(messages.STOP_ORCA, resetStyles=False)
+    orcaApp.emitSignal('application-stop-complete')
+    orcaApp.pluginSystemManager.unload_all_plugins(ForceAllPlugins=True)
 
     _scriptManager.deactivate()
     _eventManager.deactivate()
@@ -800,13 +808,13 @@ def main(cacheValues=True):
     debug.println(debug.LEVEL_INFO, "ORCA: ATSPI registry initialized.", True)
 
     try:
-        message = messages.START_ORCA
         script = _scriptManager.getDefaultScript()
-        script.presentMessage(message)
     except:
         debug.printException(debug.LEVEL_SEVERE)
 
     script = orca_state.activeScript
+    orcaApp.emitSignal('application-start-complete')
+
     if script:
         window = script.utilities.activeWindow()
         if window and not orca_state.locusOfFocus:
@@ -834,5 +842,85 @@ def main(cacheValues=True):
         die(EXIT_CODE_HANG)
     return 0
 
+class Orca(GObject.Object):
+    # basic signals
+    __gsignals__ = {
+        "application-start-complete":  (GObject.SignalFlags.RUN_LAST, None, ()),
+        "application-stop-complete":  (GObject.SignalFlags.RUN_LAST, None, ()),
+    #    "settings-load-complete":  (GObject.SignalFlags.RUN_LAST, None, ()),
+    #    "settings-reload-complete":  (GObject.SignalFlags.RUN_LAST, None, ())
+    }
+    def __init__(self):
+        GObject.Object.__init__(self)
+        self.orcaAPI = {'Orca': self}
+        # add dynamic API
+        # for now add compatibility API
+        self.registerAPI('Logger', _logger)
+        self.registerAPI('SettingsManager', settings_manager)
+        self.registerAPI('ScriptManager', script_manager)
+        self.registerAPI('EventManager', event_manager)
+        self.registerAPI('Speech', speech)
+        self.registerAPI('Sound', sound)
+        self.registerAPI('Braille', braille)
+        self.registerAPI('Debug', debug)
+        self.registerAPI('Messages', messages)
+        self.registerAPI('Cmdnames', cmdnames)
+        self.registerAPI('NotificationMessages', notification_messages)
+        self.registerAPI('OrcaState', orca_state)
+        self.registerAPI('OrcaPlatform', orca_platform)
+        self.registerAPI('OrcaPlatform', orca_platform)
+        self.registerAPI('Settings', settings)
+        self.registerAPI('Keybindings', keybindings)
+        self.registerAPI('EmitRegionChanged', emitRegionChanged)
+        # add members
+        self.APIHelper = plugin_system_manager.APIHelper(self)
+        self.pluginSystemManager = plugin_system_manager.PluginSystemManager(self)
+    def getAPIHelper(self):
+        return self.APIHelper
+    def getPluginSystemManager(self):
+        return self.pluginSystemManager
+    def registerAPI(self, key, value):
+        # add dynamic API
+        self.orcaAPI[key] = value
+    def unregisterAPI(self, key):
+        try:
+            del self.orcaAPI[key]
+        except:
+            print('API Key: "{}" not found,'.format(key))
+    def getAPI(self, key):
+        # get dynamic API
+        return self.orcaAPI.get(key)
+    def registerSignal(self, signalName, signalFlag = GObject.SignalFlags.RUN_LAST, closure = GObject.TYPE_NONE, accumulator=()):
+        # register signal
+        if GObject.signal_lookup(signalName, self) == 0:
+            GObject.signal_new(signalName, self, signalFlag, closure,accumulator)
+    def connectSignal(self, signalName, function, param = None):
+        try:
+            if GObject.signal_lookup(signalName, self) != 0:
+                self.connect(signalName, function)
+        except:
+            pass
+    def disconnectSignalByFunction(self, function):
+        try:
+            self.disconnect_by_func(function)
+        except:
+            pass
+    def emitSignal(self, signalName):
+        # emit an signal
+        try:
+            self.emit(signalName)
+            print('after Emit Signal: {}'.format(signalName))
+        except e as Exception:
+            print('Event "{}" does not exist.'.format(signalName))
+    def run(self, cacheValues=True):
+        return main(cacheValues)
+    def stop(self):
+        pass
+
+orcaApp = Orca()
+
+def getManager():
+    return orcaApp
+
 if __name__ == "__main__":
-    sys.exit(main())
+    sys.exit(orcaApp.run())

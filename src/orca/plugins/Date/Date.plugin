@@ -1,0 +1,6 @@
+[Plugin]
+Module=Date
+Loader=python3
+Name=Date
+Description=Present the current date
+Authors=Chrys chrys@linux-a11y.org

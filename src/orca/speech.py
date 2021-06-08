@@ -159,6 +159,14 @@ def sayAll(utteranceIterator, progressCallback):
             debug.println(debug.LEVEL_INFO, logLine, True)
             log.info(logLine)
 
+def cancel():
+    if _speechserver:
+        try:
+            _speechserver._cancel()
+        except:
+            pass
+
+
 def _speak(text, acss, interrupt):
     """Speaks the individual string using the given ACSS."""
 

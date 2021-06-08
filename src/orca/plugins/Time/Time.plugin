@@ -1,0 +1,6 @@
+[Plugin]
+Module=Time
+Loader=python3
+Name=Time
+Description=Present current time
+Authors=Chrys chrys@linux-a11y.org

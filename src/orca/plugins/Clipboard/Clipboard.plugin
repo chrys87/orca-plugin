@@ -1,0 +1,6 @@
+[Plugin]
+Module=Clipboard
+Loader=python3
+Name=Clipboard
+Description=Present the content of the current clipboard
+Authors=Chrys chrys@linux-a11y.org

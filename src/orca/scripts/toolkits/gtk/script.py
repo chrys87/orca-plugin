@@ -106,11 +106,13 @@ class Script(default.Script):
 
         if self.utilities.isLayoutOnly(event.source):
             return
-
+        '''
+        TODO: chrys remove
         if event.source == mouse_review.reviewer.getCurrentItem():
             msg = "GTK: Event source is current mouse review item"
             debug.println(debug.LEVEL_INFO, msg, True)
             return
+        '''
 
         if self.utilities.isTypeahead(orca_state.locusOfFocus) \
            and "Table" in pyatspi.listInterfaces(event.source) \
