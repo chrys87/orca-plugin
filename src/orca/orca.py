@@ -453,14 +453,6 @@ def loadUserSettings(script=None, inputEvent=None, skipReloadMessage=False):
         msg = 'ORCA: Braille is not enabled in settings'
         debug.println(debug.LEVEL_INFO, msg, True)
 
-    '''
-    TODO: chrys remove
-    if _settingsManager.getSetting('enableMouseReview'):
-        mouse_review.reviewer.activate()
-    else:
-        mouse_review.reviewer.deactivate()
-    '''
-
     if _settingsManager.getSetting('enableSound'):
         player.init()
 
