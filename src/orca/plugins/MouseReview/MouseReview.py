@@ -93,17 +93,19 @@ class MouseReview(GObject.Object, Peas.Activatable):
         _scriptManager = script_manager.getManager()
         _settingsManager = settings_manager.getManager()
         self.init()
-        self.setKeybinding('e')
     def do_deactivate(self):
         API = self.object
         global _mouseReviewCapable
         if not _mouseReviewCapable:
             return
-        self.setKeybinding(None)
         self.mouse_review.deactivate()
         API.app.unregisterAPI('MouseReview')
     def do_update_state(self):
         API = self.object
+    def setupCompatBinding(self, app):
+        cmdnames = app.getAPI('Cmdnames')
+        inputEventHandlers = app.getAPI('inputEventHandlers')
+        inputEventHandlers['toggleMouseReviewHandler'] = app.getAPIHelper().createInputEventHandler(self.mouse_review.toggle, cmdnames.MOUSE_REVIEW_TOGGLE)
     def init(self):
         API = self.object
         if self.mouse_review == None:
@@ -115,14 +117,7 @@ class MouseReview(GObject.Object, Peas.Activatable):
             self.mouse_review.activate()
         else:
             self.mouse_review.deactivate()
-    def setKeybinding(self, keybinding):
-        API = self.object
-        if keybinding == None:
-            API.app.getAPIHelper().unregisterShortcut(self.mouse_review.toggle)
-        else:
-            API.app.getAPIHelper().registerShortcut(self.mouse_review.toggle, keybinding, cmdnames.MOUSE_REVIEW_TOGGLE)
-        self.keybinding = keybinding
-
+        API.app.connectSignal("inputeventhandlers-setup-complete", self.setupCompatBinding)
 
 class _StringContext:
     """The textual information associated with an _ItemContext."""

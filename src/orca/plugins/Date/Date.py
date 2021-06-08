@@ -8,23 +8,17 @@ class Date(GObject.Object, Peas.Activatable):
 
     object = GObject.Property(type=GObject.Object)
     def __init__(self):
-        self.keybinding = None
+        pass
     def do_activate(self):
         API = self.object
-        self.setKeybinding('t')
+        API.app.connectSignal("inputeventhandlers-setup-complete", self.setupCompatBinding)
+    def setupCompatBinding(self, app):
+        cmdnames = app.getAPI('Cmdnames')
+        inputEventHandlers = app.getAPI('inputEventHandlers')
+        inputEventHandlers['presentDateHandler'] = app.getAPIHelper().createInputEventHandler(self.presentDate, cmdnames.PRESENT_CURRENT_DATE)
     def do_deactivate(self):
         API = self.object
-        self.setKeybinding(None)
-    def do_update_state(self):
-        API = self.object
-    def setKeybinding(self, keybinding):
-        API = self.object
-        if keybinding == None:
-            API.app.getAPIHelper().unregisterShortcut(self.keybinding)
-        else:
-            cmdnames = API.app.getAPI('Cmdnames')
-            API.app.getAPIHelper().registerShortcut(self.presentDate, keybinding, cmdnames.PRESENT_CURRENT_DATE, clickCount = 2)
-        self.keybinding = keybinding
+        API.app.disconnectSignalByFunction(self.setupCompatBinding)
     def presentDate(self, script, inputEvent):
         """ Presents the current time. """
         API = self.object
@@ -33,3 +27,5 @@ class Date(GObject.Object, Peas.Activatable):
         dateFormat = _settingsManager.getSetting('presentDateFormat')
         message = time.strftime(dateFormat, time.localtime())
         API.app.getAPIHelper().outputMessage(message)
+
+
