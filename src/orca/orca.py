@@ -71,7 +71,6 @@ from . import event_manager
 from . import keybindings
 from . import logger
 from . import messages
-#   from . import mouse_review
 from . import notification_messages
 from . import orca_state
 from . import orca_platform
