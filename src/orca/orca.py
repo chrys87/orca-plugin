@@ -841,6 +841,8 @@ class Orca(GObject.Object):
         "application-stop-complete":  (GObject.SignalFlags.RUN_LAST, None, ()),
         "settings-init-complete": (GObject.SignalFlags.RUN_LAST, None, ()),
         "settings-load-complete": (GObject.SignalFlags.RUN_LAST, None, ()),
+        "inputeventhandlers-setup-complete": (GObject.SignalFlags.RUN_LAST, None, ()),
+
     }
     def __init__(self):
         GObject.Object.__init__(self)
