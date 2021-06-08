@@ -11,10 +11,19 @@ class Time(GObject.Object, Peas.Activatable):
         self.keybinding = None
     def do_activate(self):
         API = self.object
-        self.setKeybinding('t')
+        API.app.connectSignal("application-start-complete", self.setupCompatBinding)
+        #self.setKeybinding('t')
+    def setupCompatBinding(self, app):
+        cmdnames = app.getAPI('Cmdnames')
+        script_manager = app.getAPI('ScriptManager')
+        _script_manager = script_manager.getManager()
+        _script_manager._defaultScript.inputEventHandlers['presentTimeHandler'] = app.getAPIHelper().createInputEventHandler(self.presentTime, cmdnames.PRESENT_CURRENT_TIME)
+        print('reg')
     def do_deactivate(self):
         API = self.object
-        self.setKeybinding(None)
+        API.app.disconnectSignalByFunction(self.setupCompatBinding)
+
+        #self.setKeybinding(None)
     def do_update_state(self):
         API = self.object
     def setKeybinding(self, keybinding):
