@@ -54,7 +54,6 @@ import orca.settings_manager as settings_manager
 import orca.sound as sound
 import orca.speech as speech
 import orca.speechserver as speechserver
-#import orca.mouse_review as mouse_review
 import orca.notification_messages as notification_messages
 
 _settingsManager = settings_manager.getManager()
@@ -4440,22 +4439,7 @@ class Script(script.Script):
         """
         speech.speak(messages.UNICODE % \
                          self.utilities.unicodeValueString(character))
-    '''
-    TODO: chrys remove
-    def presentTime(self, inputEvent):
-        """ Presents the current time. """
-        timeFormat = _settingsManager.getSetting('presentTimeFormat')
-        message = time.strftime(timeFormat, time.localtime())
-        self.presentMessage(message)
-        return True
 
-    def presentDate(self, inputEvent):
-        """ Presents the current date. """
-        dateFormat = _settingsManager.getSetting('presentDateFormat')
-        message = time.strftime(dateFormat, time.localtime())
-        self.presentMessage(message)
-        return True
-    '''
     def presentSizeAndPosition(self, inputEvent):
         """ Presents the size and position of the locusOfFocus. """
 

@@ -29,7 +29,6 @@ import pyatspi
 import time
 
 import orca.debug as debug
-#import orca.mouse_review as mouse_review
 import orca.orca as orca
 import orca.orca_state as orca_state
 import orca.scripts.default as default
