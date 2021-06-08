@@ -88,7 +88,6 @@ _scriptManager = script_manager.getManager()
 _settingsManager = settings_manager.getManager()
 _logger = logger.getLogger()
 
-
 def onEnabledChanged(gsetting, key):
     try:
         enabled = gsetting.get_boolean(key)
