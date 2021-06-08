@@ -1,0 +1,6 @@
+[Plugin]
+Module=HelloOrca
+Loader=python3
+Name=Orca say hello
+Description=startup announcement for orca
+Authors=Chrys chrys@linux-a11y.org

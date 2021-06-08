@@ -38,7 +38,6 @@ orca_python_PYTHON = \
 	logger.py \
 	mathsymbols.py \
 	messages.py \
-	mouse_review.py \
 	notification_messages.py \
 	object_properties.py \
 	orca.py \
@@ -52,6 +51,7 @@ orca_python_PYTHON = \
 	orca_state.py \
 	phonnames.py \
 	orca_platform.py \
+	plugin_system_manager.py \
 	pronunciation_dict.py \
 	punctuation_settings.py \
 	script.py \
@@ -73,8 +73,10 @@ orca_python_PYTHON = \
 orca_pythondir=$(pkgpythondir)
 
 SUBDIRS = \
-        scripts \
-        backends
+	backends \
+	scripts \
+	core-plugins \
+	plugins
 
 ui_DATA = \
 	orca-find.ui \

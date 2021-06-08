@@ -1,0 +1,6 @@
+[Plugin]
+Module=ByeOrca
+Loader=python3
+Name=Stop announcement for orca
+Description=Test plugin for orca
+Authors=Chrys chrys@linux-a11y.org

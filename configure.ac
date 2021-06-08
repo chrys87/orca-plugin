@@ -4,10 +4,7 @@ m4_define(pygobject_required_version, 3.18)
 m4_define(atspi_required_version, 2.26)
 m4_define(atkbridge_required_version, 2.26)
 
-AC_INIT([orca],
-        [orca_version],
-        [http://bugzilla.gnome.org/enter_bug.cgi?product=orca],
-        [orca])
+AC_INIT([orca],[orca_version],[http://bugzilla.gnome.org/enter_bug.cgi?product=orca],[orca])
 
 AC_CONFIG_MACRO_DIR([m4])
 
@@ -79,7 +76,7 @@ case "${PLATFORM}" in
 esac
 AC_SUBST(PLATFORM_PATH)
 
-AC_OUTPUT([
+AC_CONFIG_FILES([
 run_pylint.sh
 Makefile
 docs/Makefile
@@ -133,10 +130,22 @@ src/orca/scripts/toolkits/Qt/Makefile
 src/orca/scripts/toolkits/WebKitGtk/Makefile
 src/orca/scripts/toolkits/gtk/Makefile
 src/orca/backends/Makefile
+src/orca/core-plugins/Makefile
+src/orca/core-plugins/ByeOrca/Makefile
+src/orca/core-plugins/HelloOrca/Makefile
+src/orca/plugins/Makefile
+src/orca/plugins/Clipboard/Makefile
+src/orca/plugins/HelloWorld/Makefile
+src/orca/plugins/SelfVoice/Makefile
+src/orca/plugins/Date/Makefile
+src/orca/plugins/Time/Makefile
+src/orca/plugins/MouseReview/Makefile
 src/orca/orca_bin.py
 src/orca/orca_i18n.py
 src/orca/orca_platform.py
-],[chmod +x run_pylint.sh ; cp src/orca/orca_bin.py src/orca/orca])
+])
+AC_CONFIG_COMMANDS([default],[chmod +x run_pylint.sh ; cp src/orca/orca_bin.py src/orca/orca],[])
+AC_OUTPUT
 
 if test "x$brlapi_available" = "xno" ; then
 echo

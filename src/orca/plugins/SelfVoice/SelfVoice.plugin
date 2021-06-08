@@ -1,0 +1,6 @@
+[Plugin]
+Module=SelfVoice
+Loader=python3
+Name=Self Voice Plugin
+Description=use orca text / braile from using unix sockets
+Authors=Chrys chrys@linux-a11y.org
