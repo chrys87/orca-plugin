@@ -400,7 +400,7 @@ def loadUserSettings(script=None, inputEvent=None, skipReloadMessage=False):
     braille.shutdown()
 
     _scriptManager.deactivate()
-    orcaApp.emitSignal('settings-init-complete')
+    orcaApp.emitSignal('settings-unload-complete')
 
     reloaded = False
     if _userSettings:
@@ -839,10 +839,9 @@ class Orca(GObject.Object):
     __gsignals__ = {
         "application-start-complete":  (GObject.SignalFlags.RUN_LAST, None, ()),
         "application-stop-complete":  (GObject.SignalFlags.RUN_LAST, None, ()),
-        "settings-init-complete": (GObject.SignalFlags.RUN_LAST, None, ()),
+        "settings-unload-complete": (GObject.SignalFlags.RUN_LAST, None, ()),
         "settings-load-complete": (GObject.SignalFlags.RUN_LAST, None, ()),
-        "inputeventhandlers-setup-complete": (GObject.SignalFlags.RUN_LAST, None, ()),
-
+        "inputeventhandlers-setup-complete": (GObject.SignalFlags.RUN_LAST, None, ()), # compat signal for register input event handlers
     }
     def __init__(self):
         GObject.Object.__init__(self)
