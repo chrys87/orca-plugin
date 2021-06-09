@@ -903,7 +903,7 @@ class Orca(GObject.Object):
         try:
             self.emit(signalName)
             print('after Emit Signal: {}'.format(signalName))
-        except e as Exception:
+        except:
             print('Event "{}" does not exist.'.format(signalName))
     def run(self, cacheValues=True):
         return main(cacheValues)
