@@ -12,7 +12,7 @@ class ByeOrca(GObject.Object, Peas.Activatable):
         pass
     def do_activate(self):
         API = self.object
-        API.app.connectSignal("application-stop-complete", self.process)
+        API.app.connectSignal("completed-application-stop", self.process)
     def do_deactivate(self):
         API = self.object
         API.app.disconnectSignalByFunction(self.process)
