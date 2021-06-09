@@ -885,12 +885,16 @@ class Orca(GObject.Object):
         return self.orcaAPI.get(key)
     def registerSignal(self, signalName, signalFlag = GObject.SignalFlags.RUN_LAST, closure = GObject.TYPE_NONE, accumulator=()):
         # register signal
-        if GObject.signal_lookup(signalName, self) == 0:
+        if not self.signalExist(signalName):
             GObject.signal_new(signalName, self, signalFlag, closure,accumulator)
+    def signalExist(self, signalName):
+        return GObject.signal_lookup(signalName, self) != 0
     def connectSignal(self, signalName, function, param = None):
         try:
-            if GObject.signal_lookup(signalName, self) != 0:
+            if self.signalExist(signalName):
                 self.connect(signalName, function)
+            else:
+                print('signal {} does not exist'.format(signalName))
         except:
             pass
     def disconnectSignalByFunction(self, function):
@@ -904,7 +908,7 @@ class Orca(GObject.Object):
             self.emit(signalName)
             print('after Emit Signal: {}'.format(signalName))
         except:
-            print('Event "{}" does not exist.'.format(signalName))
+            print('Signal "{}" does not exist.'.format(signalName))
     def run(self, cacheValues=True):
         return main(cacheValues)
     def stop(self):
