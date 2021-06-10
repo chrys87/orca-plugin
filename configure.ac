@@ -140,6 +140,7 @@ src/orca/plugins/SelfVoice/Makefile
 src/orca/plugins/Date/Makefile
 src/orca/plugins/Time/Makefile
 src/orca/plugins/MouseReview/Makefile
+src/orca/plugins/ClassicPreferences/Makefile
 src/orca/orca_bin.py
 src/orca/orca_i18n.py
 src/orca/orca_platform.py

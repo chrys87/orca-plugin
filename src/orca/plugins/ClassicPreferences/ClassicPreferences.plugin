@@ -1,0 +1,6 @@
+[Plugin]
+Module=ClassicPreferences
+Loader=python3
+Name=Classic Preferences UI
+Description=The classic preferences dialog
+Authors=Chrys chrys@linux-a11y.org

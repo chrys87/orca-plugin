@@ -1,4 +1,4 @@
-SUBDIRS = Clipboard HelloWorld SelfVoice Time MouseReview Date
+SUBDIRS = Clipboard HelloWorld SelfVoice Time MouseReview Date ClassicPreferences
 
 orca_pythondir=$(pkgpythondir)/plugins
 

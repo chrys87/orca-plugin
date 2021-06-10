@@ -81,7 +81,14 @@ from . import speech
 from . import sound
 from .input_event import BrailleEvent
 from . import cmdnames
-from . import plugin_system_manager
+from orca import plugin_system_manager
+from orca import ui_manager
+from orca import guilabels
+from orca import acss
+from orca import text_attribute_names
+from orca import speechserver
+from orca import input_event
+from orca import pronunciation_dict
 
 _eventManager = event_manager.getManager()
 _scriptManager = script_manager.getManager()
@@ -842,6 +849,8 @@ class Orca(GObject.Object):
         "load-setting-begin": (GObject.SignalFlags.RUN_LAST, None, ()),
         "load-setting-completed": (GObject.SignalFlags.RUN_LAST, None, ()),
         "setup-inputeventhandlers-completed": (GObject.SignalFlags.RUN_LAST, None, ()), # compat signal for register input event handlers
+        "request-orca-preferences": (GObject.SignalFlags.RUN_LAST, None, ()),
+        "request-application-preferences": (GObject.SignalFlags.RUN_LAST, None, ()),
     }
     def __init__(self):
         GObject.Object.__init__(self)
@@ -861,13 +870,27 @@ class Orca(GObject.Object):
         self.registerAPI('NotificationMessages', notification_messages)
         self.registerAPI('OrcaState', orca_state)
         self.registerAPI('OrcaPlatform', orca_platform)
-        self.registerAPI('OrcaPlatform', orca_platform)
         self.registerAPI('Settings', settings)
         self.registerAPI('Keybindings', keybindings)
+        self.registerAPI('GuiLabels', guilabels)
+        self.registerAPI('Acss', acss)
+        self.registerAPI('TextAttributeNames', text_attribute_names)
+        self.registerAPI('PronunciationDict', pronunciation_dict)
+        self.registerAPI('InputEvent', input_event)
+        self.registerAPI('SpeechServer', speechserver)
+        # orca lets say, special compat handling....
         self.registerAPI('EmitRegionChanged', emitRegionChanged)
+        self.registerAPI('LoadUserSettings', loadUserSettings)
+        self.registerAPI('HelpForOrca', helpForOrca)
+
         # add members
         self.APIHelper = plugin_system_manager.APIHelper(self)
+        self.eventManager = _eventManager
+        self.debug = debug
+        self.settingsManager = _settingsManager
+        self.scriptManager = _scriptManager
         self.pluginSystemManager = plugin_system_manager.PluginSystemManager(self)
+        self.uiManager = ui_manager.UiManager(self)
     def getAPIHelper(self):
         return self.APIHelper
     def getPluginSystemManager(self):

@@ -45,8 +45,6 @@ orca_python_PYTHON = \
 	orca_gui_find.py \
 	orca_gui_commandlist.py \
 	orca_gui_navlist.py \
-	orca_gui_prefs.py \
-	orca_gui_profile.py \
 	orca_i18n.py \
 	orca_state.py \
 	phonnames.py \
@@ -68,7 +66,8 @@ orca_python_PYTHON = \
 	speechserver.py \
 	structural_navigation.py \
 	text_attribute_names.py \
-	tutorialgenerator.py
+	tutorialgenerator.py \
+	ui_manager.py
 
 orca_pythondir=$(pkgpythondir)
 

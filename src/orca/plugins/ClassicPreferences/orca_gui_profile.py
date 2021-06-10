@@ -31,16 +31,22 @@ import locale
 import sys
 from gi.repository import Gtk
 
-from . import guilabels
-from . import orca_state
+orca_state = None
+guilabels = None
 
 OS = None
 newProfile = None
 
 class OrcaProfileGUI(Gtk.Dialog):
 
-    def __init__(self):
+    def __init__(self, app):
         """Initialize the Orca profile configuration GUI."""
+        self.app = app
+        global guilabels
+        global orca_state
+
+        guilabels = self.app.getAPI('GuiLabels')
+        orca_state = self.app.getAPI('OrcaState')
 
         Gtk.Dialog.__init__(self)
         self.set_title(guilabels.PROFILE_SAVE_AS_TITLE)

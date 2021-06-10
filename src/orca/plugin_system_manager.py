@@ -1,8 +1,14 @@
 #!/bin/python
 """PluginManager for loading orca plugins."""
-import os, inspect
+import os, inspect, sys
 from enum import IntEnum
 from gettext import gettext as _
+
+version = sys.version[:3] # we only need major.minor version.
+if version in ["3.3","3.4"]:
+    from importlib.machinery import SourceFileLoader
+else: # Python 3.5+, no support for python < 3.3.
+    import importlib.util
 
 import gi
 gi.require_version('Peas', '1.0')
@@ -104,7 +110,7 @@ class PluginSystemManager():
                 return plugin
         return None
     def getActivePlugins(self):
-        return ['HelloOrca','ByeOrca', 'SelfVoice', 'Clipboard', 'Hello', 'Date', 'Time', 'MouseReview']
+        return ['HelloOrca','ByeOrca', 'SelfVoice', 'Clipboard', 'Hello', 'Date', 'Time', 'MouseReview', 'ClassicPreferences']
     def load_all_plugins(self, ForceAllPlugins=False):
         """Loads plugins from settings."""
         active_plugin_names = self.getActivePlugins()
@@ -258,3 +264,11 @@ class APIHelper():
 
         self.orcaKeyBindings.remove(KeyBindingToRemove)
         settings.keyBindingsMap["default"] = self.orcaKeyBindings
+    def importModule(self, moduleName, moduleLocation):
+        if version in ["3.3","3.4"]:
+            return SourceFileLoader(moduleName, moduleLocation).load_module()
+        else:
+            spec = importlib.util.spec_from_file_location(moduleName, moduleLocation)
+            driver_mod = importlib.util.module_from_spec(spec)
+            spec.loader.exec_module(driver_mod)
+            return driver_mod

@@ -34,34 +34,53 @@ from gi.repository import Pango
 import pyatspi
 import time
 
-from . import acss
-from . import debug
-from . import guilabels
-from . import messages
-from . import orca
-from . import orca_gtkbuilder
-from . import orca_gui_profile
-from . import orca_state
-from . import orca_platform
-from . import settings
-from . import settings_manager
-from . import input_event
-from . import keybindings
-from . import pronunciation_dict
-from . import braille
-from . import speech
-from . import speechserver
-from . import text_attribute_names
+import sys
+version = sys.version[:3] # we only need major.minor version.
+if version in ["3.3","3.4"]:
+    from importlib.machinery import SourceFileLoader
+else: # Python 3.5+, no support for python < 3.3.
+    import importlib.util
 
-_settingsManager = settings_manager.getManager()
+def importModule(moduleName, moduleLocation):
+    if version in ["3.3","3.4"]:
+        return SourceFileLoader(moduleName, moduleLocation).load_module()
+    else:
+        spec = importlib.util.spec_from_file_location(moduleName, moduleLocation)
+        driver_mod = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(driver_mod)
+        return driver_mod
+
+
+# compatibility layer
+acss = None
+guilabels = None
+#from . import orca_gui_profile
+orca_gui_profile = importModule('orca_gui_profile', 'orca_gui_profile.py')
+from orca import orca_gtkbuilder
+orca_platform = None
+settings = None
+debug = None
+orca = None
+input_event = None
+orca_state = None
+settings_manager = None
+keybindings = None
+speech = None
+messages = None
+braille = None
+speechserver = None
+pronunciation_dict = None
+text_attribute_names = None
+tablesdir = None
+_settingsManager = None
+
+
 
 try:
     import louis
 except ImportError:
     louis = None
-from .orca_platform import tablesdir
-if louis and not tablesdir:
-    louis = None
+
 
 (HANDLER, DESCRIP, MOD_MASK1, MOD_USED1, KEY1, CLICK_COUNT1, OLDTEXT1, \
  TEXT1, MODIF, EDITABLE) = list(range(10))
@@ -91,7 +110,7 @@ if louis and not tablesdir:
 
 class OrcaSetupGUI(orca_gtkbuilder.GtkBuilderWrapper):
 
-    def __init__(self, fileName, windowName, prefsDict):
+    def __init__(self, fileName, windowName, prefsDict, app):
         """Initialize the Orca configuration GUI.
 
         Arguments:
@@ -99,7 +118,52 @@ class OrcaSetupGUI(orca_gtkbuilder.GtkBuilderWrapper):
         - windowName: name of the component to get from the GtkBuilder file.
         - prefsDict: dictionary of preferences to use during initialization
         """
-
+        self.app = app
+        global acss
+        global guilabels
+        global orca_gtkbuilder
+        global orca_gui_profile
+        global orca_platform
+        global settings
+        global debug
+        global orca
+        global input_event
+        global orca_state
+        global settings_manager
+        global keybindings
+        global speech
+        global messages
+        global braille
+        global speechserver
+        global pronunciation_dict
+        global text_attribute_names
+        global _settingsManager
+        global tablesdir
+        global louis
+        acss = self.app.getAPI('Acss')
+        guilabels = self.app.getAPI('GuiLabels')
+        orca_platform = self.app.getAPI('OrcaPlatform')
+        settings = self.app.getAPI('Settings')
+        debug= self.app.getAPI('Debug')
+        input_event = self.app.getAPI('InputEvent')
+        orca_state = self.app.getAPI('OrcaState')
+        settings_manager = self.app.getAPI('SettingsManager')
+        keybindings = self.app.getAPI('Keybindings')
+        speech = self.app.getAPI('Speech')
+        messages = self.app.getAPI('Messages')
+        braille = self.app.getAPI('Braille')
+        speechserver = self.app.getAPI('SpeechServer')
+        pronunciation_dict = self.app.getAPI('PronunciationDict')
+        text_attribute_names = self.app.getAPI('TextAttributeNames')
+        try:
+            tablesdir = orca_platform.tablesdir
+        except:
+            pass
+        
+        if louis and not tablesdir:
+            louis = None
+        
+        _settingsManager = settings_manager.getManager()
         orca_gtkbuilder.GtkBuilderWrapper.__init__(self, fileName, windowName)
         self.prefsDict = prefsDict
 
@@ -3195,7 +3259,7 @@ class OrcaSetupGUI(orca_gtkbuilder.GtkBuilderWrapper):
         - widget: the component that generated the signal.
         """
 
-        orca.helpForOrca(page="preferences")
+        self.app.getAPI('HelpForOrca')(page="preferences")
 
     def restoreSettings(self):
         """Restore the settings we saved away when opening the preferences
@@ -3257,7 +3321,7 @@ class OrcaSetupGUI(orca_gtkbuilder.GtkBuilderWrapper):
 
         self.writeUserPreferences()
 
-        orca.loadUserSettings(self.script)
+        self.app.getAPI('LoadUserSettings')(self.script)
 
         braille.checkBrailleSetting()
 
@@ -3468,7 +3532,7 @@ class OrcaSetupGUI(orca_gtkbuilder.GtkBuilderWrapper):
         _settingsManager.setProfile(profile[1])
         self.prefsDict = _settingsManager.getGeneralSettings(profile[1])
 
-        orca.loadUserSettings(skipReloadMessage=True)
+        self.app.getAPI('loadUserSettings')(skipReloadMessage=True)
 
         self._initGUIState()
 
