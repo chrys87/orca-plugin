@@ -11,7 +11,7 @@ class Time(GObject.Object, Peas.Activatable):
         pass
     def do_activate(self):
         API = self.object
-        API.app.connectSignal("completed-inputeventhandlers-setup", self.setupCompatBinding)
+        API.app.connectSignal("setup-inputeventhandlers-completed", self.setupCompatBinding)
     def setupCompatBinding(self, app):
         cmdnames = app.getAPI('Cmdnames')
         inputEventHandlers = app.getAPI('inputEventHandlers')

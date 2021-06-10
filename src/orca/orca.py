@@ -400,7 +400,7 @@ def loadUserSettings(script=None, inputEvent=None, skipReloadMessage=False):
     braille.shutdown()
 
     _scriptManager.deactivate()
-    orcaApp.emitSignal('begin-setting-load')
+    orcaApp.emitSignal('load-setting-begin')
 
     reloaded = False
     if _userSettings:
@@ -469,7 +469,7 @@ def loadUserSettings(script=None, inputEvent=None, skipReloadMessage=False):
 
     _scriptManager.activate()
     _eventManager.activate()
-    orcaApp.emitSignal('completed-setting-load')
+    orcaApp.emitSignal('load-setting-completed')
 
     debug.println(debug.LEVEL_INFO, 'ORCA: User Settings Loaded', True)
 
@@ -681,7 +681,7 @@ def shutdown(script=None, inputEvent=None):
         signal.signal(signal.SIGALRM, settings.timeoutCallback)
         signal.alarm(settings.timeoutTime)
 
-    orcaApp.emitSignal('completed-application-stop')
+    orcaApp.emitSignal('stop-application-completed')
     orcaApp.pluginSystemManager.unload_all_plugins(ForceAllPlugins=True)
 
     _scriptManager.deactivate()
@@ -805,7 +805,7 @@ def main(cacheValues=True):
         debug.printException(debug.LEVEL_SEVERE)
 
     script = orca_state.activeScript
-    orcaApp.emitSignal('completed-application-start')
+    orcaApp.emitSignal('start-application-completed')
 
     if script:
         window = script.utilities.activeWindow()
@@ -837,11 +837,11 @@ def main(cacheValues=True):
 class Orca(GObject.Object):
     # basic signals
     __gsignals__ = {
-        "completed-application-start":  (GObject.SignalFlags.RUN_LAST, None, ()),
-        "completed-application-stop":  (GObject.SignalFlags.RUN_LAST, None, ()),
-        "begin-setting-load": (GObject.SignalFlags.RUN_LAST, None, ()),
-        "completed-setting-load": (GObject.SignalFlags.RUN_LAST, None, ()),
-        "completed-inputeventhandlers-setup": (GObject.SignalFlags.RUN_LAST, None, ()), # compat signal for register input event handlers
+        "start-application-completed":  (GObject.SignalFlags.RUN_LAST, None, ()),
+        "stop-application-completed":  (GObject.SignalFlags.RUN_LAST, None, ()),
+        "load-setting-begin": (GObject.SignalFlags.RUN_LAST, None, ()),
+        "load-setting-completed": (GObject.SignalFlags.RUN_LAST, None, ()),
+        "setup-inputeventhandlers-completed": (GObject.SignalFlags.RUN_LAST, None, ()), # compat signal for register input event handlers
     }
     def __init__(self):
         GObject.Object.__init__(self)

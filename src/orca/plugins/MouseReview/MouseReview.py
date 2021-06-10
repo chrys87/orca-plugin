@@ -117,7 +117,7 @@ class MouseReview(GObject.Object, Peas.Activatable):
             self.mouse_review.activate()
         else:
             self.mouse_review.deactivate()
-        API.app.connectSignal("completed-inputeventhandlers-setup", self.setupCompatBinding)
+        API.app.connectSignal("setup-inputeventhandlers-completed", self.setupCompatBinding)
 
 class _StringContext:
     """The textual information associated with an _ItemContext."""

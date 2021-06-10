@@ -11,7 +11,7 @@ class HelloOrca(GObject.Object, Peas.Activatable):
         pass
     def do_activate(self):
         API = self.object
-        API.app.connectSignal("completed-application-start", self.process)
+        API.app.connectSignal("start-application-completed", self.process)
     def do_deactivate(self):
         API = self.object
         API.app.disconnectSignalByFunction(self.process)
