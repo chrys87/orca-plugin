@@ -34,28 +34,11 @@ from gi.repository import Pango
 import pyatspi
 import time
 
-import sys
-version = sys.version[:3] # we only need major.minor version.
-if version in ["3.3","3.4"]:
-    from importlib.machinery import SourceFileLoader
-else: # Python 3.5+, no support for python < 3.3.
-    import importlib.util
-
-def importModule(moduleName, moduleLocation):
-    if version in ["3.3","3.4"]:
-        return SourceFileLoader(moduleName, moduleLocation).load_module()
-    else:
-        spec = importlib.util.spec_from_file_location(moduleName, moduleLocation)
-        driver_mod = importlib.util.module_from_spec(spec)
-        spec.loader.exec_module(driver_mod)
-        return driver_mod
-
-
 # compatibility layer
 acss = None
 guilabels = None
 #from . import orca_gui_profile
-orca_gui_profile = importModule('orca_gui_profile', 'orca_gui_profile.py')
+orca_gui_profile = None
 from orca import orca_gtkbuilder
 orca_platform = None
 settings = None
@@ -155,6 +138,8 @@ class OrcaSetupGUI(orca_gtkbuilder.GtkBuilderWrapper):
         speechserver = self.app.getAPI('SpeechServer')
         pronunciation_dict = self.app.getAPI('PronunciationDict')
         text_attribute_names = self.app.getAPI('TextAttributeNames')
+        orca_gui_profile = self.app.getAPIHelper().importModule('orca_gui_profile', 'orca_gui_profile.py')
+
         try:
             tablesdir = orca_platform.tablesdir
         except:

@@ -89,6 +89,7 @@ from orca import text_attribute_names
 from orca import speechserver
 from orca import input_event
 from orca import pronunciation_dict
+from orca import orca_gtkbuilder
 
 _eventManager = event_manager.getManager()
 _scriptManager = script_manager.getManager()
@@ -878,6 +879,7 @@ class Orca(GObject.Object):
         self.registerAPI('PronunciationDict', pronunciation_dict)
         self.registerAPI('InputEvent', input_event)
         self.registerAPI('SpeechServer', speechserver)
+        self.registerAPI('OrcaGtkbuilder', orca_gtkbuilder)
         # orca lets say, special compat handling....
         self.registerAPI('EmitRegionChanged', emitRegionChanged)
         self.registerAPI('LoadUserSettings', loadUserSettings)
