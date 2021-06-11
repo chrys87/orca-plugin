@@ -892,7 +892,6 @@ class Orca(GObject.Object):
         self.settingsManager = _settingsManager
         self.scriptManager = _scriptManager
         self.pluginSystemManager = plugin_system_manager.PluginSystemManager(self)
-        self.uiManager = ui_manager.UiManager(self)
     def getAPIHelper(self):
         return self.APIHelper
     def getPluginSystemManager(self):
