@@ -10,7 +10,7 @@ class ClassicPreferences(GObject.Object, Peas.Activatable):
 
     object = GObject.Property(type=GObject.Object)
     def __init__(self):
-        self.keybinding = None
+        pass
     def do_activate(self):
         API = self.object
         API.app.connectSignal("setup-inputeventhandlers-completed", self.setupCompatBinding)
@@ -24,17 +24,6 @@ class ClassicPreferences(GObject.Object, Peas.Activatable):
         API.app.disconnectSignalByFunction(self.setupCompatBinding)
     def do_update_state(self):
         API = self.object
-    def setKeybinding(self, keybinding, function = None):
-        API = self.object
-        if keybinding == None:
-            API.app.getAPIHelper().unregisterShortcut(self.keybinding)
-        else:
-            if function == None:
-                self.keybinding = None
-                return
-            API.app.getAPIHelper().registerShortcut(function, keybinding, 'preferences')
-        self.keybinding = keybinding
-
     def showAppPreferencesGUI(self, script=None, inputEvent=None):
         """Displays the user interface to configure the settings for a
         specific applications within Orca and set up those app-specific
