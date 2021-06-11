@@ -29,7 +29,7 @@ class Clipboard(GObject.Object, Peas.Activatable):
     def speakClipboard(self, script, inputEvent):
         API = self.object
         Message = self.getClipboard()
-        API.app.getAPIHelper().outputMessage(Message)
+        API.app.getAPI('OrcaState').activeScript.presentMessage(Message, resetStyles=False)
     def getClipboard(self):
         Message = ""
         FoundClipboardContent = False
