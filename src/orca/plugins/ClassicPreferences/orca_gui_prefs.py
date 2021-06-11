@@ -25,7 +25,7 @@ __date__      = "$Date$"
 __copyright__ = "Copyright (c) 2005-2009 Sun Microsystems Inc."
 __license__   = "LGPL"
 
-import os
+import os, sys, inspect
 from gi.repository import Gdk
 from gi.repository import GLib
 from gi.repository import Gtk
@@ -34,8 +34,6 @@ from gi.repository import Pango
 import pyatspi
 import time
 
-
-import os, sys, inspect
 currPath = os.path.dirname(os.path.realpath(os.path.abspath(inspect.getfile(inspect.currentframe()))))
 
 # compatibility layer
