@@ -66,8 +66,7 @@ orca_python_PYTHON = \
 	speechserver.py \
 	structural_navigation.py \
 	text_attribute_names.py \
-	tutorialgenerator.py \
-	ui_manager.py
+	tutorialgenerator.py 
 
 orca_pythondir=$(pkgpythondir)
 
@@ -78,8 +77,7 @@ SUBDIRS = \
 	plugins
 
 ui_DATA = \
-	orca-find.ui \
-	orca-setup.ui
+	orca-find.ui 
 
 EXTRA_DIST = \
 	$(ui_DATA) \
