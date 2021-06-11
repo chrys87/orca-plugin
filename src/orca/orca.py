@@ -82,7 +82,6 @@ from . import sound
 from .input_event import BrailleEvent
 from . import cmdnames
 from orca import plugin_system_manager
-from orca import ui_manager
 from orca import guilabels
 from orca import acss
 from orca import text_attribute_names

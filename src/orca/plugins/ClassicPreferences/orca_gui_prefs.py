@@ -34,10 +34,13 @@ from gi.repository import Pango
 import pyatspi
 import time
 
+
+import os, sys, inspect
+currPath = os.path.dirname(os.path.realpath(os.path.abspath(inspect.getfile(inspect.currentframe()))))
+
 # compatibility layer
 acss = None
 guilabels = None
-#from . import orca_gui_profile
 orca_gui_profile = None
 from orca import orca_gtkbuilder
 orca_platform = None
@@ -138,7 +141,7 @@ class OrcaSetupGUI(orca_gtkbuilder.GtkBuilderWrapper):
         speechserver = self.app.getAPI('SpeechServer')
         pronunciation_dict = self.app.getAPI('PronunciationDict')
         text_attribute_names = self.app.getAPI('TextAttributeNames')
-        orca_gui_profile = self.app.getAPIHelper().importModule('orca_gui_profile', 'orca_gui_profile.py')
+        orca_gui_profile = self.app.getAPIHelper().importModule('orca_gui_profile', currPath + '/orca_gui_profile.py')
 
         try:
             tablesdir = orca_platform.tablesdir
