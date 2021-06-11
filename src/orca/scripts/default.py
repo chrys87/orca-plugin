@@ -411,16 +411,6 @@ class Script(script.Script):
                 orca.quitOrca,
                 cmdnames.QUIT_ORCA)
 
-        self.inputEventHandlers["preferencesSettingsHandler"] = \
-            input_event.InputEventHandler(
-                orca.showPreferencesGUI,
-                cmdnames.SHOW_PREFERENCES_GUI)
-
-        self.inputEventHandlers["appPreferencesSettingsHandler"] = \
-            input_event.InputEventHandler(
-                orca.showAppPreferencesGUI,
-                cmdnames.SHOW_APP_PREFERENCES_GUI)
-
         self.inputEventHandlers["toggleSilenceSpeechHandler"] = \
             input_event.InputEventHandler(
                 Script.toggleSilenceSpeech,
@@ -492,23 +482,7 @@ class Script(script.Script):
             input_event.InputEventHandler(
                 Script.saveBookmarks,
                 cmdnames.BOOKMARK_SAVE)
-        '''
-        TODO: chrys remove
-        self.inputEventHandlers["toggleMouseReviewHandler"] = \
-            input_event.InputEventHandler(
-                mouse_review.reviewer.toggle,
-                cmdnames.MOUSE_REVIEW_TOGGLE)
 
-        self.inputEventHandlers["presentTimeHandler"] = \
-            input_event.InputEventHandler(
-                Script.presentTime,
-                cmdnames.PRESENT_CURRENT_TIME)
-
-        self.inputEventHandlers["presentDateHandler"] = \
-            input_event.InputEventHandler(
-                Script.presentDate,
-                cmdnames.PRESENT_CURRENT_DATE)
-        '''
         self.inputEventHandlers["bypassNextCommandHandler"] = \
             input_event.InputEventHandler(
                 Script.bypassNextCommand,

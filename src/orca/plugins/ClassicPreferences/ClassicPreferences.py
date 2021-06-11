@@ -13,18 +13,15 @@ class ClassicPreferences(GObject.Object, Peas.Activatable):
         self.keybinding = None
     def do_activate(self):
         API = self.object
-        #API.app.connectSignal("setup-inputeventhandlers-completed", self.setupCompatBinding)
-        self.setKeybinding('e', self.showPreferencesGUI)
+        API.app.connectSignal("setup-inputeventhandlers-completed", self.setupCompatBinding)
     def setupCompatBinding(self, app):
         cmdnames = app.getAPI('Cmdnames')
         inputEventHandlers = app.getAPI('inputEventHandlers')
-        inputEventHandlers['preferencesSettingsHandler'] = app.getAPIHelper().createInputEventHandler(self.presentTime, cmdnames.SHOW_PREFERENCES_GUI)
-        inputEventHandlers['appPreferencesSettingsHandler'] = app.getAPIHelper().createInputEventHandler(self.presentTime, cmdnames.SHOW_APP_PREFERENCES_GUI)
-
+        inputEventHandlers['preferencesSettingsHandler'] = app.getAPIHelper().createInputEventHandler(self.showPreferencesGUI, cmdnames.SHOW_PREFERENCES_GUI)
+        inputEventHandlers['appPreferencesSettingsHandler'] = app.getAPIHelper().createInputEventHandler(self.showAppPreferencesGUI, cmdnames.SHOW_APP_PREFERENCES_GUI)
     def do_deactivate(self):
         API = self.object
-        #API.app.disconnectSignalByFunction(self.setupCompatBinding)
-        self.setKeybinding(None)
+        API.app.disconnectSignalByFunction(self.setupCompatBinding)
     def do_update_state(self):
         API = self.object
     def setKeybinding(self, keybinding, function = None):
