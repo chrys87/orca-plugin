@@ -482,56 +482,6 @@ def loadUserSettings(script=None, inputEvent=None, skipReloadMessage=False):
 
     return True
 
-def _showPreferencesUI(script, prefs):
-    if orca_state.orcaOS:
-        orca_state.orcaOS.showGUI()
-        return
-
-    try:
-        module = importlib.import_module('.orca_gui_prefs', 'orca')
-    except:
-        debug.printException(debug.LEVEL_SEVERE)
-        return
-
-    uiFile = os.path.join(orca_platform.datadir,
-                          orca_platform.package,
-                          "ui",
-                          "orca-setup.ui")
-
-    orca_state.orcaOS = module.OrcaSetupGUI(uiFile, "orcaSetupWindow", prefs)
-    orca_state.orcaOS.init(script)
-    orca_state.orcaOS.showGUI()
-
-def showAppPreferencesGUI(script=None, inputEvent=None):
-    """Displays the user interface to configure the settings for a
-    specific applications within Orca and set up those app-specific
-    user preferences using a GUI.
-
-    Returns True to indicate the input event has been consumed.
-    """
-
-    prefs = {}
-    for key in settings.userCustomizableSettings:
-        prefs[key] = _settingsManager.getSetting(key)
-
-    script = script or orca_state.activeScript
-    _showPreferencesUI(script, prefs)
-
-    return True
-
-def showPreferencesGUI(script=None, inputEvent=None):
-    """Displays the user interface to configure Orca and set up
-    user preferences using a GUI.
-
-    Returns True to indicate the input event has been consumed.
-    """
-
-    prefs = _settingsManager.getGeneralSettings(_settingsManager.profile)
-    script = _scriptManager.getDefaultScript()
-    _showPreferencesUI(script, prefs)
-
-    return True
-
 def helpForOrca(script=None, inputEvent=None, page=""):
     """Show Orca Help window (part of the GNOME Access Guide).
 
