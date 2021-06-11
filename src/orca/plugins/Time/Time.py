@@ -28,4 +28,4 @@ class Time(GObject.Object, Peas.Activatable):
         _settingsManager = settings_manager.getManager()
         timeFormat = _settingsManager.getSetting('presentTimeFormat')
         message = time.strftime(timeFormat, time.localtime())
-        API.app.getAPIHelper().outputMessage(message)
+        API.app.getAPI('OrcaState').activeScript.presentMessage(message, resetStyles=False)

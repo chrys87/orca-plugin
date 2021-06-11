@@ -26,6 +26,6 @@ class Date(GObject.Object, Peas.Activatable):
         _settingsManager = settings_manager.getManager()
         dateFormat = _settingsManager.getSetting('presentDateFormat')
         message = time.strftime(dateFormat, time.localtime())
-        API.app.getAPIHelper().outputMessage(message)
+        API.app.getAPI('OrcaState').activeScript.presentMessage(message, resetStyles=False)
 
 
