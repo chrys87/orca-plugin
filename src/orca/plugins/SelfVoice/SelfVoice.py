@@ -2,6 +2,8 @@
 # echo "This is a test." | socat - UNIX-CLIENT:/tmp/orca-PID.sock
 # Where PID is orca's process id.
 # Prepend text to be spoken with <!#APPEND#!> to make it not interrupt, for inaccessible windows.
+# Append message to be spoken with <#PERSISTENT#> to present a persistent message in braille
+# <#APPEND#> is only usable for a persistent message
 
 import gi
 gi.require_version('Peas', '1.0')
@@ -11,6 +13,7 @@ import select, socket, os, os.path
 from threading import Thread, Lock
 
 APPEND_CODE = '<#APPEND#>'
+PERSISTENT_CODE = '<#PERSISTENT#>'
 
 class SelfVoice(GObject.Object, Peas.Activatable):
     __gtype_name__ = 'SelfVoice'
@@ -45,7 +48,13 @@ class SelfVoice(GObject.Object, Peas.Activatable):
         append = Message.startswith(APPEND_CODE)
         if append:
             Message = Message[len(APPEND_CODE):]
-        API.app.getAPIHelper().outputMessage(Message, not append)
+        if Message.endswith(PERSISTENT_CODE):
+            Message = Message[:len(Message)-len(PERSISTENT_CODE)]
+            API.app.getAPIHelper().outputMessage(Message, not append)
+        else:
+            script_manager = API.app.getAPI('ScriptManager')
+            scriptManager = script_manager.getManager()
+            scriptManager.getDefaultScript().presentMessage(Message, resetStyles=False)
         return
         try:
             settings = API.app.getAPI('Settings')
