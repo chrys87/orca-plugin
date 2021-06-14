@@ -48,6 +48,7 @@ orca_python_PYTHON = \
 	orca_i18n.py \
 	orca_state.py \
 	phonnames.py \
+	plugin.py \
 	orca_platform.py \
 	plugin_system_manager.py \
 	pronunciation_dict.py \
