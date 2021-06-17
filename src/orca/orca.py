@@ -90,6 +90,7 @@ from orca import input_event
 from orca import pronunciation_dict
 from orca import orca_gtkbuilder
 from orca import signal_manager
+from orca import dynamic_api_manager
 
 _eventManager = event_manager.getManager()
 _scriptManager = script_manager.getManager()
@@ -408,7 +409,7 @@ def loadUserSettings(script=None, inputEvent=None, skipReloadMessage=False):
     braille.shutdown()
 
     _scriptManager.deactivate()
-    orcaApp.signalManager.emitSignal('load-setting-begin')
+    orcaApp.getSignalManager().emitSignal('load-setting-begin')
 
     reloaded = False
     if _userSettings:
@@ -477,7 +478,7 @@ def loadUserSettings(script=None, inputEvent=None, skipReloadMessage=False):
 
     _scriptManager.activate()
     _eventManager.activate()
-    orcaApp.signalManager.emitSignal('load-setting-completed')
+    orcaApp.getSignalManager().emitSignal('load-setting-completed')
 
     debug.println(debug.LEVEL_INFO, 'ORCA: User Settings Loaded', True)
 
@@ -639,7 +640,7 @@ def shutdown(script=None, inputEvent=None):
         signal.signal(signal.SIGALRM, settings.timeoutCallback)
         signal.alarm(settings.timeoutTime)
 
-    orcaApp.signalManager.emitSignal('stop-application-completed')
+    orcaApp.getSignalManager().emitSignal('stop-application-completed')
     orcaApp.pluginSystemManager.unload_all_plugins(ForceAllPlugins=True)
 
     _scriptManager.deactivate()
@@ -763,7 +764,7 @@ def main(cacheValues=True):
         debug.printException(debug.LEVEL_SEVERE)
 
     script = orca_state.activeScript
-    orcaApp.signalManager.emitSignal('start-application-completed')
+    orcaApp.getSignalManager().emitSignal('start-application-completed')
 
     if script:
         window = script.utilities.activeWindow()
@@ -805,63 +806,62 @@ class Orca(GObject.Object):
     }
     def __init__(self):
         GObject.Object.__init__(self)
-        self.orcaAPI = {'Orca': self}
-        # add dynamic API
-        # for now add compatibility API
-        self.registerAPI('Logger', _logger)
-        self.registerAPI('SettingsManager', settings_manager)
-        self.registerAPI('ScriptManager', script_manager)
-        self.registerAPI('EventManager', event_manager)
-        self.registerAPI('Speech', speech)
-        self.registerAPI('Sound', sound)
-        self.registerAPI('Braille', braille)
-        self.registerAPI('Debug', debug)
-        self.registerAPI('Messages', messages)
-        self.registerAPI('Cmdnames', cmdnames)
-        self.registerAPI('NotificationMessages', notification_messages)
-        self.registerAPI('OrcaState', orca_state)
-        self.registerAPI('OrcaPlatform', orca_platform)
-        self.registerAPI('Settings', settings)
-        self.registerAPI('Keybindings', keybindings)
-        self.registerAPI('GuiLabels', guilabels)
-        self.registerAPI('Acss', acss)
-        self.registerAPI('TextAttributeNames', text_attribute_names)
-        self.registerAPI('PronunciationDict', pronunciation_dict)
-        self.registerAPI('InputEvent', input_event)
-        self.registerAPI('SpeechServer', speechserver)
-        self.registerAPI('OrcaGtkbuilder', orca_gtkbuilder)
-        # orca lets say, special compat handling....
-        self.registerAPI('EmitRegionChanged', emitRegionChanged)
-        self.registerAPI('LoadUserSettings', loadUserSettings)
-        self.registerAPI('HelpForOrca', helpForOrca)
-
         # add members
         self.APIHelper = plugin_system_manager.APIHelper(self)
         self.eventManager = _eventManager
-        self.debug = debug
         self.settingsManager = _settingsManager
         self.scriptManager = _scriptManager
         self.pluginSystemManager = plugin_system_manager.PluginSystemManager(self)
         self.signalManager = signal_manager.SignalManager(self)
+        self.dynamicApiManager = dynamic_api_manager.DynamicApiManager(self)
+        self.debugManager = debug
+
+        # add dynamic API
+        # for now add compatibility API
+        self.getDynamicApiManager().registerAPI('Logger', _logger)
+        self.getDynamicApiManager().registerAPI('SettingsManager', settings_manager)
+        self.getDynamicApiManager().registerAPI('ScriptManager', script_manager)
+        self.getDynamicApiManager().registerAPI('EventManager', event_manager)
+        self.getDynamicApiManager().registerAPI('Speech', speech)
+        self.getDynamicApiManager().registerAPI('Sound', sound)
+        self.getDynamicApiManager().registerAPI('Braille', braille)
+        self.getDynamicApiManager().registerAPI('Debug', debug)
+        self.getDynamicApiManager().registerAPI('Messages', messages)
+        self.getDynamicApiManager().registerAPI('Cmdnames', cmdnames)
+        self.getDynamicApiManager().registerAPI('NotificationMessages', notification_messages)
+        self.getDynamicApiManager().registerAPI('OrcaState', orca_state)
+        self.getDynamicApiManager().registerAPI('OrcaPlatform', orca_platform)
+        self.getDynamicApiManager().registerAPI('Settings', settings)
+        self.getDynamicApiManager().registerAPI('Keybindings', keybindings)
+        self.getDynamicApiManager().registerAPI('GuiLabels', guilabels)
+        self.getDynamicApiManager().registerAPI('Acss', acss)
+        self.getDynamicApiManager().registerAPI('TextAttributeNames', text_attribute_names)
+        self.getDynamicApiManager().registerAPI('PronunciationDict', pronunciation_dict)
+        self.getDynamicApiManager().registerAPI('InputEvent', input_event)
+        self.getDynamicApiManager().registerAPI('SpeechServer', speechserver)
+        self.getDynamicApiManager().registerAPI('OrcaGtkbuilder', orca_gtkbuilder)
+        # orca lets say, special compat handling....
+        self.getDynamicApiManager().registerAPI('EmitRegionChanged', emitRegionChanged)
+        self.getDynamicApiManager().registerAPI('LoadUserSettings', loadUserSettings)
+        self.getDynamicApiManager().registerAPI('HelpForOrca', helpForOrca)
+
     def getAPIHelper(self):
         return self.APIHelper
     def getPluginSystemManager(self):
         return self.pluginSystemManager
-    def registerAPI(self, key, value):
-        # add dynamic API
-        self.orcaAPI[key] = value
-    def unregisterAPI(self, key):
-        try:
-            del self.orcaAPI[key]
-        except:
-            print('API Key: "{}" not found,'.format(key))
-    def getAPI(self, key):
-        # get dynamic API
-        return self.orcaAPI.get(key)
-    def registerSignal(self, signalName, signalFlag = GObject.SignalFlags.RUN_LAST, closure = GObject.TYPE_NONE, accumulator=()):
-        # register signal
-        if not self.signalExist(signalName):
-            GObject.signal_new(signalName, self, signalFlag, closure,accumulator)
+    def getDynamicApiManager(self):
+        return self.dynamicApiManager
+    def getSignalManager(self):
+        return self.signalManager
+    def getEventManager(self):
+        return self.eventManager
+    def getSettingsManager(self):
+        return self.settingsManager
+    def getScriptManager(self):
+        return self.scriptManager
+    def getDebugManager(self):
+        return self.debugManager
+
     def run(self, cacheValues=True):
         return main(cacheValues)
     def stop(self):

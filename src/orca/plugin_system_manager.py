@@ -182,8 +182,8 @@ class PluginSystemManager():
         self.app.settings.ActivePlugins = engine.get_property("loaded-plugins")
 
 class APIHelper():
-    def __init__(self, API):
-        self.API = API
+    def __init__(self, app):
+        self.app = app
         self.orcaKeyBindings = None
 
     '''
@@ -205,9 +205,9 @@ class APIHelper():
     _pluginAPIManager.setOrcaAPI('Keybindings', keybindings)
     '''
     def outputMessage(self, Message, interrupt=False):
-        settings = self.API.getAPI('Settings')
-        braille = self.API.getAPI('Braille')
-        speech = self.API.getAPI('Speech')
+        settings = self.app.getDynamicApiManager().getAPI('Settings')
+        braille = self.app.getDynamicApiManager().getAPI('Braille')
+        speech = self.app.getDynamicApiManager().getAPI('Speech')
         if speech != None:
             if (settings.enableSpeech):
                 if interrupt:
@@ -218,12 +218,12 @@ class APIHelper():
             if (settings.enableBraille):
                 braille.displayMessage(Message)
     def createInputEventHandler(self, function, name, learnModeEnabled=True):
-        EventManager = self.API.getAPI('EventManager')
+        EventManager = self.app.getDynamicApiManager().getAPI('EventManager')
         newInputEventHandler = EventManager.input_event.InputEventHandler(function, name, learnModeEnabled)
         return newInputEventHandler
     def registerShortcut(self, function, key, name, clickCount = 1, shiftKey = False, ctrlKey = False, altKey = False, learnModeEnabled=True):
-        keybindings = self.API.getAPI('Keybindings')
-        settings = self.API.getAPI('Settings')
+        keybindings = self.app.getDynamicApiManager().getAPI('Keybindings')
+        settings = self.app.getDynamicApiManager().getAPI('Settings')
 
         if self.orcaKeyBindings == None:
             self.orcaKeyBindings = keybindings.KeyBindings()
@@ -255,9 +255,9 @@ class APIHelper():
         return newKeyBinding
 
     def unregisterShortcut(self, KeyBindingToRemove):
-        keybindings = self.API.getAPI('Keybindings')
-        settings = self.API.getAPI('Settings')
-        EventManager = self.API.getAPI('EventManager')
+        keybindings = self.app.getDynamicApiManager().getAPI('Keybindings')
+        settings = self.app.getDynamicApiManager().getAPI('Settings')
+        EventManager = self.app.getDynamicApiManager().getAPI('EventManager')
         
         if self.orcaKeyBindings == None:
             self.orcaKeyBindings = keybindings.KeyBindings()

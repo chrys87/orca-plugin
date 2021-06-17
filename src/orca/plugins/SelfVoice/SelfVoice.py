@@ -52,14 +52,14 @@ class SelfVoice(GObject.Object, Peas.Activatable):
             Message = Message[:len(Message)-len(PERSISTENT_CODE)]
             API.app.getAPIHelper().outputMessage(Message, not append)
         else:
-            script_manager = API.app.getAPI('ScriptManager')
+            script_manager = API.app.getDynamicApiManager().getAPI('ScriptManager')
             scriptManager = script_manager.getManager()
             scriptManager.getDefaultScript().presentMessage(Message, resetStyles=False)
         return
         try:
-            settings = API.app.getAPI('Settings')
-            braille = API.app.getAPI('Braille')
-            speech = API.app.getAPI('Speech')
+            settings = API.app.getDynamicApiManager().getAPI('Settings')
+            braille = API.app.getDynamicApiManager().getAPI('Braille')
+            speech = API.app.getDynamicApiManager().getAPI('Speech')
             # Speak
             if speech != None:
                 if (settings.enableSpeech):

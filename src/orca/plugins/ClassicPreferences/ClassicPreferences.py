@@ -13,15 +13,15 @@ class ClassicPreferences(GObject.Object, Peas.Activatable):
         pass
     def do_activate(self):
         API = self.object
-        API.app.signalManager.connectSignal("setup-inputeventhandlers-completed", self.setupCompatBinding)
+        API.app.getSignalManager().connectSignal("setup-inputeventhandlers-completed", self.setupCompatBinding)
     def setupCompatBinding(self, app):
-        cmdnames = app.getAPI('Cmdnames')
-        inputEventHandlers = app.getAPI('inputEventHandlers')
+        cmdnames = app.getDynamicApiManager().getAPI('Cmdnames')
+        inputEventHandlers = app.getDynamicApiManager().getAPI('inputEventHandlers')
         inputEventHandlers['preferencesSettingsHandler'] = app.getAPIHelper().createInputEventHandler(self.showPreferencesGUI, cmdnames.SHOW_PREFERENCES_GUI)
         inputEventHandlers['appPreferencesSettingsHandler'] = app.getAPIHelper().createInputEventHandler(self.showAppPreferencesGUI, cmdnames.SHOW_APP_PREFERENCES_GUI)
     def do_deactivate(self):
         API = self.object
-        API.app.signalManager.disconnectSignalByFunction(self.setupCompatBinding)
+        API.app.getSignalManager().disconnectSignalByFunction(self.setupCompatBinding)
     def do_update_state(self):
         API = self.object
 
@@ -34,10 +34,10 @@ class ClassicPreferences(GObject.Object, Peas.Activatable):
         Returns True to indicate the input event has been consumed.
         """
         API = self.object
-        orca_state = API.app.getAPI('OrcaState')
-        settings = API.app.getAPI('Settings')
-        _settingsManager = API.app.getAPI('SettingsManager').getManager()
-        _scriptManager = API.app.getAPI('ScriptManager').getManager()
+        orca_state = API.app.getDynamicApiManager().getAPI('OrcaState')
+        settings = API.app.getDynamicApiManager().getAPI('Settings')
+        _settingsManager = API.app.getDynamicApiManager().getAPI('SettingsManager').getManager()
+        _scriptManager = API.app.getDynamicApiManager().getAPI('ScriptManager').getManager()
 
         prefs = {}
         for key in settings.userCustomizableSettings:
@@ -53,20 +53,20 @@ class ClassicPreferences(GObject.Object, Peas.Activatable):
         Returns True to indicate the input event has been consumed.
         """
         API = self.object
-        orca_state = API.app.getAPI('OrcaState')
-        settings = API.app.getAPI('Settings')
-        _settingsManager = API.app.getAPI('SettingsManager').getManager()
-        _scriptManager = API.app.getAPI('ScriptManager').getManager()
-        debug = API.app.getAPI('Debug')
+        orca_state = API.app.getDynamicApiManager().getAPI('OrcaState')
+        settings = API.app.getDynamicApiManager().getAPI('Settings')
+        _settingsManager = API.app.getDynamicApiManager().getAPI('SettingsManager').getManager()
+        _scriptManager = API.app.getDynamicApiManager().getAPI('ScriptManager').getManager()
+        debug = API.app.getDynamicApiManager().getAPI('Debug')
         prefs = _settingsManager.getGeneralSettings(_settingsManager.profile)
         script = _scriptManager.getDefaultScript()
         self._showPreferencesUI(script, prefs)
 
     def _showPreferencesUI(self, script, prefs):
         API = self.object
-        orca_state = API.app.getAPI('OrcaState')
-        debug = API.app.getAPI('Debug')
-        orca_platform = API.app.getAPI('OrcaPlatform')
+        orca_state = API.app.getDynamicApiManager().getAPI('OrcaState')
+        debug = API.app.getDynamicApiManager().getAPI('Debug')
+        orca_platform = API.app.getDynamicApiManager().getAPI('OrcaPlatform')
         
         if orca_state.orcaOS:
             orca_state.orcaOS.showGUI()

@@ -11,21 +11,21 @@ class Date(GObject.Object, Peas.Activatable):
         pass
     def do_activate(self):
         API = self.object
-        API.app.signalManager.connectSignal("setup-inputeventhandlers-completed", self.setupCompatBinding)
+        API.app.getSignalManager().connectSignal("setup-inputeventhandlers-completed", self.setupCompatBinding)
     def setupCompatBinding(self, app):
-        cmdnames = app.getAPI('Cmdnames')
-        inputEventHandlers = app.getAPI('inputEventHandlers')
+        cmdnames = app.getDynamicApiManager().getAPI('Cmdnames')
+        inputEventHandlers = app.getDynamicApiManager().getAPI('inputEventHandlers')
         inputEventHandlers['presentDateHandler'] = app.getAPIHelper().createInputEventHandler(self.presentDate, cmdnames.PRESENT_CURRENT_DATE)
     def do_deactivate(self):
         API = self.object
-        API.app.signalManager.disconnectSignalByFunction(self.setupCompatBinding)
+        API.app.getSignalManager().disconnectSignalByFunction(self.setupCompatBinding)
     def presentDate(self, script, inputEvent):
         """ Presents the current time. """
         API = self.object
-        settings_manager = API.app.getAPI('SettingsManager')
+        settings_manager = API.app.getDynamicApiManager().getAPI('SettingsManager')
         _settingsManager = settings_manager.getManager()
         dateFormat = _settingsManager.getSetting('presentDateFormat')
         message = time.strftime(dateFormat, time.localtime())
-        API.app.getAPI('OrcaState').activeScript.presentMessage(message, resetStyles=False)
+        API.app.getDynamicApiManager().getAPI('OrcaState').activeScript.presentMessage(message, resetStyles=False)
 
 

@@ -494,8 +494,8 @@ class Script(script.Script):
                 cmdnames.PRESENT_SIZE_AND_POSITION)
 
         self.inputEventHandlers.update(notification_messages.inputEventHandlers)
-        orca.getManager().registerAPI('inputEventHandlers',self.inputEventHandlers)
-        orca.getManager().signalManager.emitSignal('setup-inputeventhandlers-completed')
+        orca.getManager().getDynamicApiManager().registerAPI('inputEventHandlers',self.inputEventHandlers)
+        orca.getManager().getSignalManager().emitSignal('setup-inputeventhandlers-completed')
 
     def getInputEventHandlerKey(self, inputEventHandler):
         """Returns the name of the key that contains an inputEventHadler

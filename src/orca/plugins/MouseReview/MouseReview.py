@@ -79,42 +79,42 @@ class MouseReview(GObject.Object, Peas.Activatable):
         global emitRegionChanged
         global messages
         global cmdnames
-        debug= API.app.getAPI('Debug')
-        event_manager = API.app.getAPI('EventManager')
-        messages = API.app.getAPI('Messages')
-        cmdnames = API.app.getAPI('Cmdnames')
-        orca_state = API.app.getAPI('OrcaState')
-        script_manager = API.app.getAPI('ScriptManager')
-        settings_manager = API.app.getAPI('SettingsManager')
-        speech = API.app.getAPI('Speech')
-        emitRegionChanged = API.app.getAPI('EmitRegionChanged')
+        debug= API.app.getDynamicApiManager().getAPI('Debug')
+        event_manager = API.app.getDynamicApiManager().getAPI('EventManager')
+        messages = API.app.getDynamicApiManager().getAPI('Messages')
+        cmdnames = API.app.getDynamicApiManager().getAPI('Cmdnames')
+        orca_state = API.app.getDynamicApiManager().getAPI('OrcaState')
+        script_manager = API.app.getDynamicApiManager().getAPI('ScriptManager')
+        settings_manager = API.app.getDynamicApiManager().getAPI('SettingsManager')
+        speech = API.app.getDynamicApiManager().getAPI('Speech')
+        emitRegionChanged = API.app.getDynamicApiManager().getAPI('EmitRegionChanged')
         _eventManager = event_manager.getManager()
         _scriptManager = script_manager.getManager()
         _settingsManager = settings_manager.getManager()
         self.Initialize(API.app)
-        API.app.signalManager.connectSignal("setup-inputeventhandlers-completed", self.setupCompatBinding)
-        API.app.signalManager.connectSignal("load-setting-completed", self.Initialize)
+        API.app.getSignalManager().connectSignal("setup-inputeventhandlers-completed", self.setupCompatBinding)
+        API.app.getSignalManager().connectSignal("load-setting-completed", self.Initialize)
     def do_deactivate(self):
         API = self.object
         global _mouseReviewCapable
         if not _mouseReviewCapable:
             return
         self.mouse_review.deactivate()
-        API.app.unregisterAPI('MouseReview')
-        API.app.signalManager.disconnectSignalByFunction(self.setupCompatBinding)
-        API.app.signalManager.disconnectSignalByFunction( self.Initialize)
+        API.app.getDynamicApiManager().unregisterAPI('MouseReview')
+        API.app.getSignalManager().disconnectSignalByFunction(self.setupCompatBinding)
+        API.app.getSignalManager().disconnectSignalByFunction( self.Initialize)
 
     def do_update_state(self):
         API = self.object
     def setupCompatBinding(self, app):
-        cmdnames = app.getAPI('Cmdnames')
-        inputEventHandlers = app.getAPI('inputEventHandlers')
+        cmdnames = app.getDynamicApiManager().getAPI('Cmdnames')
+        inputEventHandlers = app.getDynamicApiManager().getAPI('inputEventHandlers')
         inputEventHandlers['toggleMouseReviewHandler'] = app.getAPIHelper().createInputEventHandler(self.mouse_review.toggle, cmdnames.MOUSE_REVIEW_TOGGLE)
     def Initialize(self, app):
         if self.mouse_review == None:
             self.mouse_review = MouseReviewer()
-            app.registerAPI('MouseReview', self.mouse_review)
-        settings_manager = app.getAPI('SettingsManager')
+            app.getDynamicApiManager().registerAPI('MouseReview', self.mouse_review)
+        settings_manager = app.getDynamicApiManager().getAPI('SettingsManager')
         _settingsManager = settings_manager.getManager()
         if _settingsManager.getSetting('enableMouseReview'):
             self.mouse_review.activate()

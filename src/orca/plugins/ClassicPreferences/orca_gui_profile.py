@@ -45,8 +45,8 @@ class OrcaProfileGUI(Gtk.Dialog):
         global guilabels
         global orca_state
 
-        guilabels = self.app.getAPI('GuiLabels')
-        orca_state = self.app.getAPI('OrcaState')
+        guilabels = self.app.getDynamicApiManager().getAPI('GuiLabels')
+        orca_state = self.app.getDynamicApiManager().getAPI('OrcaState')
 
         Gtk.Dialog.__init__(self)
         self.set_title(guilabels.PROFILE_SAVE_AS_TITLE)

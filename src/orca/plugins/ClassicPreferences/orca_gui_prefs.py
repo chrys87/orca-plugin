@@ -124,21 +124,21 @@ class OrcaSetupGUI(orca_gtkbuilder.GtkBuilderWrapper):
         global _settingsManager
         global tablesdir
         global louis
-        acss = self.app.getAPI('Acss')
-        guilabels = self.app.getAPI('GuiLabels')
-        orca_platform = self.app.getAPI('OrcaPlatform')
-        settings = self.app.getAPI('Settings')
-        debug= self.app.getAPI('Debug')
-        input_event = self.app.getAPI('InputEvent')
-        orca_state = self.app.getAPI('OrcaState')
-        settings_manager = self.app.getAPI('SettingsManager')
-        keybindings = self.app.getAPI('Keybindings')
-        speech = self.app.getAPI('Speech')
-        messages = self.app.getAPI('Messages')
-        braille = self.app.getAPI('Braille')
-        speechserver = self.app.getAPI('SpeechServer')
-        pronunciation_dict = self.app.getAPI('PronunciationDict')
-        text_attribute_names = self.app.getAPI('TextAttributeNames')
+        acss = self.app.getDynamicApiManager().getAPI('Acss')
+        guilabels = self.app.getDynamicApiManager().getAPI('GuiLabels')
+        orca_platform = self.app.getDynamicApiManager().getAPI('OrcaPlatform')
+        settings = self.app.getDynamicApiManager().getAPI('Settings')
+        debug= self.app.getDynamicApiManager().getAPI('Debug')
+        input_event = self.app.getDynamicApiManager().getAPI('InputEvent')
+        orca_state = self.app.getDynamicApiManager().getAPI('OrcaState')
+        settings_manager = self.app.getDynamicApiManager().getAPI('SettingsManager')
+        keybindings = self.app.getDynamicApiManager().getAPI('Keybindings')
+        speech = self.app.getDynamicApiManager().getAPI('Speech')
+        messages = self.app.getDynamicApiManager().getAPI('Messages')
+        braille = self.app.getDynamicApiManager().getAPI('Braille')
+        speechserver = self.app.getDynamicApiManager().getAPI('SpeechServer')
+        pronunciation_dict = self.app.getDynamicApiManager().getAPI('PronunciationDict')
+        text_attribute_names = self.app.getDynamicApiManager().getAPI('TextAttributeNames')
         orca_gui_profile = self.app.getAPIHelper().importModule('orca_gui_profile', currPath + '/orca_gui_profile.py')
 
         try:
@@ -3245,7 +3245,7 @@ class OrcaSetupGUI(orca_gtkbuilder.GtkBuilderWrapper):
         - widget: the component that generated the signal.
         """
 
-        self.app.getAPI('HelpForOrca')(page="preferences")
+        self.app.getDynamicApiManager().getAPI('HelpForOrca')(page="preferences")
 
     def restoreSettings(self):
         """Restore the settings we saved away when opening the preferences
@@ -3307,7 +3307,7 @@ class OrcaSetupGUI(orca_gtkbuilder.GtkBuilderWrapper):
 
         self.writeUserPreferences()
 
-        self.app.getAPI('LoadUserSettings')(self.script)
+        self.app.getDynamicApiManager().getAPI('LoadUserSettings')(self.script)
 
         braille.checkBrailleSetting()
 
@@ -3518,7 +3518,7 @@ class OrcaSetupGUI(orca_gtkbuilder.GtkBuilderWrapper):
         _settingsManager.setProfile(profile[1])
         self.prefsDict = _settingsManager.getGeneralSettings(profile[1])
 
-        self.app.getAPI('loadUserSettings')(skipReloadMessage=True)
+        self.app.getDynamicApiManager().getAPI('loadUserSettings')(skipReloadMessage=True)
 
         self._initGUIState()
 

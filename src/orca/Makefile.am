@@ -22,6 +22,7 @@ orca_python_PYTHON = \
 	common_keyboardmap.py \
 	debug.py \
 	desktop_keyboardmap.py \
+	dynamic_api_manager.py \
 	event_manager.py \
 	eventsynthesizer.py \
 	find.py \
