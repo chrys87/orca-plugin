@@ -1,10 +1,6 @@
-#!/bin/python
-#!/bin/python
 import gi
-
 gi.require_version("Gtk", "3.0")
 from gi.repository import Gtk
-
 
 class PluginManagerUi(Gtk.Window):
     def __init__(self):
