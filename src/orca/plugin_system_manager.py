@@ -110,12 +110,17 @@ class PluginSystemManager():
                 return plugin
         return None
     def getActivePlugins(self):
-        return ['HelloOrca','ByeOrca', 'SelfVoice', 'Clipboard', 'Hello', 'Date', 'Time', 'MouseReview', 'ClassicPreferences']
+        return ['HelloOrca','ByeOrca', 'SelfVoice', 'Clipboard', 'Hello', 'Date', 'Time', 'MouseReview', 'ClassicPreferences', ' PluginManager']
+    def isPluginActive(self, plugin):
+        # TODO: currently all plugins are active, so settings infra yet
+        return True
+        active_plugin_names = self.getActivePlugins()
+        return plugin.get_module_name() in active_plugin_names
     def load_all_plugins(self, ForceAllPlugins=False):
         """Loads plugins from settings."""
         active_plugin_names = self.getActivePlugins()
         for plugin in self.plugins:
-            if (plugin.get_module_name() in active_plugin_names) or ForceAllPlugins:
+            if self.isPluginActive(plugin) or ForceAllPlugins:
                 self.load_plugin(plugin.get_module_name())
 
     def load_plugin(self, plugin_name):
@@ -132,7 +137,7 @@ class PluginSystemManager():
         """Loads plugins from settings."""
         active_plugin_names = self.getActivePlugins()
         for plugin in self.plugins:
-            if not (plugin.get_module_name() in active_plugin_names) or ForceAllPlugins:
+            if not self.isPluginActive(plugin) or ForceAllPlugins:
                 self.unload_plugin(plugin.get_module_name())
 
     def unload_plugin(self, plugin_name):

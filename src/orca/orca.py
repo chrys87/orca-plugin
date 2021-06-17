@@ -815,7 +815,29 @@ class Orca(GObject.Object):
         self.signalManager = signal_manager.SignalManager(self)
         self.dynamicApiManager = dynamic_api_manager.DynamicApiManager(self)
         self.debugManager = debug
+        self.createCompatAPI()
+    def getAPIHelper(self):
+        return self.APIHelper
+    def getPluginSystemManager(self):
+        return self.pluginSystemManager
+    def getDynamicApiManager(self):
+        return self.dynamicApiManager
+    def getSignalManager(self):
+        return self.signalManager
+    def getEventManager(self):
+        return self.eventManager
+    def getSettingsManager(self):
+        return self.settingsManager
+    def getScriptManager(self):
+        return self.scriptManager
+    def getDebugManager(self):
+        return self.debugManager
 
+    def run(self, cacheValues=True):
+        return main(cacheValues)
+    def stop(self):
+        pass
+    def createCompatAPI(self):
         # add dynamic API
         # for now add compatibility API
         self.getDynamicApiManager().registerAPI('Logger', _logger)
@@ -844,28 +866,6 @@ class Orca(GObject.Object):
         self.getDynamicApiManager().registerAPI('EmitRegionChanged', emitRegionChanged)
         self.getDynamicApiManager().registerAPI('LoadUserSettings', loadUserSettings)
         self.getDynamicApiManager().registerAPI('HelpForOrca', helpForOrca)
-
-    def getAPIHelper(self):
-        return self.APIHelper
-    def getPluginSystemManager(self):
-        return self.pluginSystemManager
-    def getDynamicApiManager(self):
-        return self.dynamicApiManager
-    def getSignalManager(self):
-        return self.signalManager
-    def getEventManager(self):
-        return self.eventManager
-    def getSettingsManager(self):
-        return self.settingsManager
-    def getScriptManager(self):
-        return self.scriptManager
-    def getDebugManager(self):
-        return self.debugManager
-
-    def run(self, cacheValues=True):
-        return main(cacheValues)
-    def stop(self):
-        pass
 
 orcaApp = Orca()
 

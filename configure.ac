@@ -133,6 +133,7 @@ src/orca/backends/Makefile
 src/orca/core-plugins/Makefile
 src/orca/core-plugins/ByeOrca/Makefile
 src/orca/core-plugins/HelloOrca/Makefile
+src/orca/core-plugins/PluginManager/Makefile
 src/orca/plugins/Makefile
 src/orca/plugins/Clipboard/Makefile
 src/orca/plugins/HelloWorld/Makefile
