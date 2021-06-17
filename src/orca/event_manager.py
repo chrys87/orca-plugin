@@ -130,6 +130,11 @@ class EventManager:
             debug.println(debug.LEVEL_INFO, msg, True)
             return False
 
+        if self._inDeluge() and self._ignoreDuringDeluge(event):
+            msg = 'EVENT MANAGER: Ignoring event type due to deluge'
+            debug.println(debug.LEVEL_INFO, msg, True)
+            return True
+
         script = orca_state.activeScript
         if event.type.startswith('object:children-changed'):
             if not script:
@@ -326,7 +331,7 @@ class EventManager:
         if debug.debugEventQueue:
             debug.println(debug.LEVEL_ALL, "           ...released")
 
-    def _queuePrintln(self, e, isEnqueue=True):
+    def _queuePrintln(self, e, isEnqueue=True, isPrune=None):
         """Convenience method to output queue-related debugging info."""
 
         if isinstance(e, input_event.KeyboardEvent):
@@ -342,7 +347,11 @@ class EventManager:
         else:
             return
 
-        if isEnqueue:
+        if isPrune:
+            string = "EVENT MANAGER: Pruning %s %s" % (e.type, data)
+        elif isPrune is not None:
+            string = "EVENT MANAGER: Not pruning %s %s" % (e.type, data)
+        elif isEnqueue:
             string = "EVENT MANAGER: Queueing %s %s" % (e.type, data)
         else:
             string = "EVENT MANAGER: Dequeued %s %s" % (e.type, data)
@@ -378,6 +387,11 @@ class EventManager:
             return
 
         self._queuePrintln(e)
+
+        if self._inFlood() and self._prioritizeDuringFlood(e):
+            msg = 'EVENT MANAGER: Pruning event queue due to flood.'
+            debug.println(debug.LEVEL_INFO, msg, True)
+            self._pruneEventsDuringFlood()
 
         asyncMode = self._asyncMode
         if isObjectEvent:
@@ -690,8 +704,18 @@ class EventManager:
             return True, "The script insists it should be activated for this event."
 
         eType = event.type
+
         if eType.startswith('window:activate'):
-            return True, "window:activate event"
+            windowActivation = True
+        else:
+            windowActivation = eType.startswith('object:state-changed:active') \
+                and event.detail1 and role == pyatspi.ROLE_FRAME
+
+        if windowActivation:
+            if event.source != orca_state.activeWindow:
+                return True, "Window activation"
+            else:
+                return False, "Window activation for already-active window"
 
         if eType.startswith('focus') \
            or (eType.startswith('object:state-changed:focused')
@@ -710,6 +734,93 @@ class EventManager:
             return True, "Modal panel is showing."
 
         return False, "No reason found to activate a different script."
+
+    def _ignoreDuringDeluge(self, event):
+        """Returns true if this event should be ignored during a deluge."""
+
+        ignore = ["object:text-changed:delete",
+                  "object:text-changed:insert",
+                  "object:state-changed:showing",
+                  "object:state-changed:sensitive"]
+
+        if event.type not in ignore:
+            return False
+
+        return event.source != orca_state.locusOfFocus
+
+    def _inDeluge(self):
+        size = self._eventQueue.qsize()
+        if size > 100:
+            msg = 'EVENT MANAGER: DELUGE! Queue size is %i' % size
+            debug.println(debug.LEVEL_INFO, msg, True)
+            return True
+
+        return False
+
+    def _processDuringFlood(self, event):
+        """Returns true if this event should be processed during a flood."""
+
+        ignore = ["object:text-changed:delete",
+                  "object:text-changed:insert",
+                  "object:state-changed:showing",
+                  "object:state-changed:sensitive"]
+
+        if event.type not in ignore:
+            return True
+
+        return event.source == orca_state.locusOfFocus
+
+    def _prioritizeDuringFlood(self, event):
+        """Returns true if this event should be prioritized during a flood."""
+
+        if event.type.startswith("object:state-changed:focused"):
+            return event.detail1
+
+        if event.type.startswith("object:state-changed:selected"):
+            return event.detail1
+
+        if event.type.startswith("window:activate"):
+            return True
+
+        if event.type.startswith("window:deactivate"):
+            return True
+
+        if event.type.startswith("object:state-changed:active"):
+            return event.source.getRole() in [pyatspi.ROLE_FRAME, pyatspi.ROLE_WINDOW]
+
+        return False
+
+    def _pruneEventsDuringFlood(self):
+        """Gets rid of events we don't care about during a flood."""
+
+        oldSize = self._eventQueue.qsize()
+
+        newQueue = queue.Queue(0)
+        while not self._eventQueue.empty():
+            try:
+                event = self._eventQueue.get()
+            except Empty:
+                continue
+
+            if self._processDuringFlood(event):
+                newQueue.put(event)
+                self._queuePrintln(event, isPrune=False)
+            self._eventQueue.task_done()
+
+        self._eventQueue = newQueue
+        newSize = self._eventQueue.qsize()
+
+        msg = 'EVENT MANAGER: %i events pruned. New size: %i' % ((oldSize - newSize), newSize)
+        debug.println(debug.LEVEL_INFO, msg, True)
+
+    def _inFlood(self):
+        size = self._eventQueue.qsize()
+        if size > 50:
+            msg = 'EVENT MANAGER: FLOOD? Queue size is %i' % size
+            debug.println(debug.LEVEL_INFO, msg, True)
+            return True
+
+        return False
 
     def _processObjectEvent(self, event):
         """Handles all object events destined for scripts.
@@ -764,6 +875,11 @@ class EventManager:
 
         if state and state.contains(pyatspi.STATE_ICONIFIED):
             msg = 'EVENT MANAGER: Ignoring iconified object: %s' % event.source
+            debug.println(debug.LEVEL_INFO, msg, True)
+            return
+
+        if self._inFlood() and not self._processDuringFlood(event):
+            msg = 'EVENT MANAGER: Not processing this event due to flood.'
             debug.println(debug.LEVEL_INFO, msg, True)
             return
 
