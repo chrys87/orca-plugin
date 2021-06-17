@@ -11,11 +11,9 @@ class HelloWorld(GObject.Object, Peas.Activatable):
         pass
     def do_activate(self):
         API = self.object
-        API.app.connect("start-orca", self.process)
         print('activate')
     def do_deactivate(self):
         API = self.object
-        API.app.disconnect_by_func(self.process)
         print('deactivate')
     def do_update_state(self):
         API = self.object

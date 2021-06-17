@@ -92,8 +92,8 @@ class MouseReview(GObject.Object, Peas.Activatable):
         _scriptManager = script_manager.getManager()
         _settingsManager = settings_manager.getManager()
         self.Initialize(API.app)
-        API.app.connectSignal("setup-inputeventhandlers-completed", self.setupCompatBinding)
-        API.app.connectSignal("load-setting-completed", self.Initialize)
+        API.app.signalManager.connectSignal("setup-inputeventhandlers-completed", self.setupCompatBinding)
+        API.app.signalManager.connectSignal("load-setting-completed", self.Initialize)
     def do_deactivate(self):
         API = self.object
         global _mouseReviewCapable
@@ -101,8 +101,8 @@ class MouseReview(GObject.Object, Peas.Activatable):
             return
         self.mouse_review.deactivate()
         API.app.unregisterAPI('MouseReview')
-        API.app.disconnectSignalByFunction(self.setupCompatBinding)
-        API.app.disconnectSignalByFunction( self.Initialize)
+        API.app.signalManager.disconnectSignalByFunction(self.setupCompatBinding)
+        API.app.signalManager.disconnectSignalByFunction( self.Initialize)
 
     def do_update_state(self):
         API = self.object

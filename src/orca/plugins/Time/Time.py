@@ -11,14 +11,14 @@ class Time(GObject.Object, Peas.Activatable):
         pass
     def do_activate(self):
         API = self.object
-        API.app.connectSignal("setup-inputeventhandlers-completed", self.setupCompatBinding)
+        API.app.signalManager.connectSignal("setup-inputeventhandlers-completed", self.setupCompatBinding)
     def setupCompatBinding(self, app):
         cmdnames = app.getAPI('Cmdnames')
         inputEventHandlers = app.getAPI('inputEventHandlers')
         inputEventHandlers['presentTimeHandler'] = app.getAPIHelper().createInputEventHandler(self.presentTime, cmdnames.PRESENT_CURRENT_TIME)
     def do_deactivate(self):
         API = self.object
-        API.app.disconnectSignalByFunction(self.setupCompatBinding)
+        API.app.signalManager.disconnectSignalByFunction(self.setupCompatBinding)
     def do_update_state(self):
         API = self.object
     def presentTime(self, script, inputEvent):

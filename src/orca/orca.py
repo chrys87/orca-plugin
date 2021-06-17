@@ -89,6 +89,7 @@ from orca import speechserver
 from orca import input_event
 from orca import pronunciation_dict
 from orca import orca_gtkbuilder
+from orca import signal_manager
 
 _eventManager = event_manager.getManager()
 _scriptManager = script_manager.getManager()
@@ -407,7 +408,7 @@ def loadUserSettings(script=None, inputEvent=None, skipReloadMessage=False):
     braille.shutdown()
 
     _scriptManager.deactivate()
-    orcaApp.emitSignal('load-setting-begin')
+    orcaApp.signalManager.emitSignal('load-setting-begin')
 
     reloaded = False
     if _userSettings:
@@ -476,7 +477,7 @@ def loadUserSettings(script=None, inputEvent=None, skipReloadMessage=False):
 
     _scriptManager.activate()
     _eventManager.activate()
-    orcaApp.emitSignal('load-setting-completed')
+    orcaApp.signalManager.emitSignal('load-setting-completed')
 
     debug.println(debug.LEVEL_INFO, 'ORCA: User Settings Loaded', True)
 
@@ -638,7 +639,7 @@ def shutdown(script=None, inputEvent=None):
         signal.signal(signal.SIGALRM, settings.timeoutCallback)
         signal.alarm(settings.timeoutTime)
 
-    orcaApp.emitSignal('stop-application-completed')
+    orcaApp.signalManager.emitSignal('stop-application-completed')
     orcaApp.pluginSystemManager.unload_all_plugins(ForceAllPlugins=True)
 
     _scriptManager.deactivate()
@@ -762,7 +763,7 @@ def main(cacheValues=True):
         debug.printException(debug.LEVEL_SEVERE)
 
     script = orca_state.activeScript
-    orcaApp.emitSignal('start-application-completed')
+    orcaApp.signalManager.emitSignal('start-application-completed')
 
     if script:
         window = script.utilities.activeWindow()
@@ -841,6 +842,7 @@ class Orca(GObject.Object):
         self.settingsManager = _settingsManager
         self.scriptManager = _scriptManager
         self.pluginSystemManager = plugin_system_manager.PluginSystemManager(self)
+        self.signalManager = signal_manager.SignalManager(self)
     def getAPIHelper(self):
         return self.APIHelper
     def getPluginSystemManager(self):
@@ -860,28 +862,6 @@ class Orca(GObject.Object):
         # register signal
         if not self.signalExist(signalName):
             GObject.signal_new(signalName, self, signalFlag, closure,accumulator)
-    def signalExist(self, signalName):
-        return GObject.signal_lookup(signalName, self) != 0
-    def connectSignal(self, signalName, function, param = None):
-        try:
-            if self.signalExist(signalName):
-                self.connect(signalName, function)
-            else:
-                print('signal {} does not exist'.format(signalName))
-        except:
-            pass
-    def disconnectSignalByFunction(self, function):
-        try:
-            self.disconnect_by_func(function)
-        except:
-            pass
-    def emitSignal(self, signalName):
-        # emit an signal
-        try:
-            self.emit(signalName)
-            print('after Emit Signal: {}'.format(signalName))
-        except:
-            print('Signal "{}" does not exist.'.format(signalName))
     def run(self, cacheValues=True):
         return main(cacheValues)
     def stop(self):
