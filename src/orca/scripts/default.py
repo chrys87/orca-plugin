@@ -2545,7 +2545,7 @@ class Script(script.Script):
                 return
 
         orcaApp = orca.getManager()
-        mouse_review = orcaApp.getAPI('MouseReview')
+        mouse_review = orcaApp.getDynamicApiManager().getAPI('MouseReview')
         
         mouseReviewItem = None
         if mouse_review != None:

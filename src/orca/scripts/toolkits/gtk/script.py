@@ -107,7 +107,7 @@ class Script(default.Script):
             return
 
         orcaApp = orca.getManager()
-        mouse_review = orcaApp.getAPI('MouseReview')
+        mouse_review = orcaApp.getDynamicApiManager().getAPI('MouseReview')
         if mouse_review != None:
             if event.source == mouse_review.getCurrentItem():
                 msg = "GTK: Event source is current mouse review item"

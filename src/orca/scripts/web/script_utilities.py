@@ -663,7 +663,7 @@ class Utilities(script_utilities.Utilities):
             return rv
         
         orcaApp = orca.getManager()
-        mouse_review = orcaApp.getAPI('MouseReview')
+        mouse_review = orcaApp.getDynamicApiManager().getAPI('MouseReview')
         
         if mouse_review != None:
             if not mouse_review.inMouseEvent:

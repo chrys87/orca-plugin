@@ -17,7 +17,3 @@ class DynamicApiManager():
     def getAPI(self, key):
         # get dynamic API
         return self.orcaAPI.get(key)
-    def registerSignal(self, signalName, signalFlag = GObject.SignalFlags.RUN_LAST, closure = GObject.TYPE_NONE, accumulator=()):
-        # register signal
-        if not self.signalExist(signalName):
-            GObject.signal_new(signalName, self, signalFlag, closure,accumulator)
