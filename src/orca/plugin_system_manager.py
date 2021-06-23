@@ -228,10 +228,14 @@ class APIHelper():
         return newInputEventHandler
     def registerGestureByString(self, function, name, gestureString, learnModeEnabled = True):
         gestureList = gestureString.split(',')
+        registeredGestures = []
         for gesture in gestureList:
             if gesture.startswith('kb:'):
                 shortcutString = gesture[3:]
-                self.registerShortcutByString(function, name, shortcutString, learnModeEnabled)
+                registuredGesture = self.registerShortcutByString(function, name, shortcutString, learnModeEnabled)
+                if registuredGesture:
+                    registeredGestures.append(registuredGesture)
+        return registeredGestures
     def registerShortcutByString(self, function, name, shortcutString, learnModeEnabled = True):
         clickCount = 0
         orcaKey = False
@@ -256,8 +260,8 @@ class APIHelper():
                 key = shortcutElementLower
         if clickCount == 0:
             clickCount = 1
-        self.registerShortcut(function, key, name, clickCount, orcaKey, shiftKey, ctrlKey, altKey, learnModeEnabled)
-    
+        return .registerShortcut(function, key, name, clickCount, orcaKey, shiftKey, ctrlKey, altKey, learnModeEnabled)
+
     def registerShortcut(self, function, key, name, clickCount = 1, orcaKey = True, shiftKey = False, ctrlKey = False, altKey = False, learnModeEnabled = True):
         keybindings = self.app.getDynamicApiManager().getAPI('Keybindings')
         settings = self.app.getDynamicApiManager().getAPI('Settings')
