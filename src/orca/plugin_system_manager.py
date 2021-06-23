@@ -226,39 +226,105 @@ class APIHelper():
         EventManager = self.app.getDynamicApiManager().getAPI('EventManager')
         newInputEventHandler = EventManager.input_event.InputEventHandler(function, name, learnModeEnabled)
         return newInputEventHandler
-    def registerShortcut(self, function, key, name, clickCount = 1, shiftKey = False, ctrlKey = False, altKey = False, learnModeEnabled=True):
+    def registerGestureByString(self, function, name, gestureString, learnModeEnabled = True):
+        gestureList = gestureString.split(',')
+        for gesture in gestureList:
+            if gesture.startswith('kb:'):
+                shortcutString = gesture[3:]
+                self.registerShortcutByString(function, name, shortcutString, learnModeEnabled)
+    def registerShortcutByString(self, function, name, shortcutString, learnModeEnabled = True):
+        clickCount = 0
+        orcaKey = False
+        shiftKey = False
+        ctrlKey = False
+        altKey = False
+        key = ''
+        shortcutList = shortcutString.split('+')
+        for shortcutElement in shortcutList:
+            shortcutElementLower = shortcutElement.lower()
+            if shortcutElementLower == 'press':
+                clickCount += 1
+            elif shortcutElement == 'orca':
+                orcaKey = True
+            elif shortcutElementLower == 'shift':
+                shiftKey = True
+            elif shortcutElementLower == 'control':
+                ctrlKey = True
+            elif shortcutElementLower == 'alt':
+                altKey = True
+            else:
+                key = shortcutElementLower
+        if clickCount == 0:
+            clickCount = 1
+        self.registerShortcut(function, key, name, clickCount, orcaKey, shiftKey, ctrlKey, altKey, learnModeEnabled)
+    
+    def registerShortcut(self, function, key, name, clickCount = 1, orcaKey = True, shiftKey = False, ctrlKey = False, altKey = False, learnModeEnabled = True):
         keybindings = self.app.getDynamicApiManager().getAPI('Keybindings')
         settings = self.app.getDynamicApiManager().getAPI('Settings')
 
         if self.orcaKeyBindings == None:
             self.orcaKeyBindings = keybindings.KeyBindings()
         newInputEventHandler = self.createInputEventHandler(function, name, learnModeEnabled)
-
+        '''
+        MODIFIER_ORCA = 8
+        NO_MODIFIER_MASK              =  0
+        ALT_MODIFIER_MASK             =  1 << pyatspi.MODIFIER_ALT
+        CTRL_MODIFIER_MASK            =  1 << pyatspi.MODIFIER_CONTROL
+        ORCA_MODIFIER_MASK            =  1 << MODIFIER_ORCA
+        ORCA_ALT_MODIFIER_MASK        = (1 << MODIFIER_ORCA |
+                                        1 << pyatspi.MODIFIER_ALT)
+        ORCA_CTRL_MODIFIER_MASK       = (1 << MODIFIER_ORCA |
+                                        1 << pyatspi.MODIFIER_CONTROL)
+        ORCA_CTRL_ALT_MODIFIER_MASK   = (1 << MODIFIER_ORCA |
+                                        1 << pyatspi.MODIFIER_CONTROL |
+                                        1 << pyatspi.MODIFIER_ALT)
+        ORCA_SHIFT_MODIFIER_MASK      = (1 << MODIFIER_ORCA |
+                                        1 << pyatspi.MODIFIER_SHIFT)
+        SHIFT_MODIFIER_MASK           =  1 << pyatspi.MODIFIER_SHIFT
+        SHIFT_ALT_MODIFIER_MASK       = (1 << pyatspi.MODIFIER_SHIFT |
+                                        1 << pyatspi.MODIFIER_ALT)
+        CTRL_ALT_MODIFIER_MASK        = (1 << pyatspi.MODIFIER_CONTROL |
+                                        1 << pyatspi.MODIFIER_ALT)
+        COMMAND_MODIFIER_MASK         = (1 << pyatspi.MODIFIER_ALT |
+                                        1 << pyatspi.MODIFIER_CONTROL |
+                                        1 << pyatspi.MODIFIER_META2 |
+                                        1 << pyatspi.MODIFIER_META3)
+        NON_LOCKING_MODIFIER_MASK     = (1 << pyatspi.MODIFIER_SHIFT |
+                                        1 << pyatspi.MODIFIER_ALT |
+                                        1 << pyatspi.MODIFIER_CONTROL |
+                                        1 << pyatspi.MODIFIER_META2 |
+                                        1 << pyatspi.MODIFIER_META3 |
+                                        1 << MODIFIER_ORCA)
+        defaultModifierMask = NON_LOCKING_MODIFIER_MASK
+        '''
+        currModifierMask = None
         # orca
-        currModifierMask = keybindings.ORCA_MODIFIER_MASK
+        if orcaKey and not shiftKey and not ctrlKey and not altKey:
+            currModifierMask = keybindings.ORCA_MODIFIER_MASK
         
         # orca + alt
-        if not shiftKey and not ctrlKey and altKey:
+        if orcaKey and not shiftKey and not ctrlKey and altKey:
             currModifierMask = keybindings.ORCA_ALT_MODIFIER_MASK
         # orca + CTRL
-        elif not shiftKey and ctrlKey and not altKey:
+        elif orcaKey and not shiftKey and ctrlKey and not altKey:
             currModifierMask = keybindings.ORCA_CTRL_MODIFIER_MASK
         # orca + alt + CTRL
-        elif not shiftKey and ctrlKey and altKey:
+        elif orcaKey and not shiftKey and ctrlKey and altKey:
             currModifierMask = keybindings.ORCA_CTRL_ALT_MODIFIER_MASK
         # orca + shift
-        elif shiftKey and not ctrlKey and not altKey:
+        elif orcaKey and shiftKey and not ctrlKey and not altKey:
             currModifierMask = keybindings.ORCA_SHIFT_MODIFIER_MASK
         # alt + shift
-        elif shiftKey and not ctrlKey and altKey:
+        elif not orcaKey and shiftKey and not ctrlKey and altKey:
             currModifierMask = keybindings.SHIFT_ALT_MODIFIER_MASK
 
-        newKeyBinding = keybindings.KeyBinding(key, keybindings.defaultModifierMask, currModifierMask, newInputEventHandler, clickCount)
-        self.orcaKeyBindings.add(newKeyBinding)
+        if currModifierMask != None:
+            newKeyBinding = keybindings.KeyBinding(key, keybindings.defaultModifierMask, currModifierMask, newInputEventHandler, clickCount)
+            self.orcaKeyBindings.add(newKeyBinding)
 
-        settings.keyBindingsMap["default"] = self.orcaKeyBindings
-        return newKeyBinding
-
+            settings.keyBindingsMap["default"] = self.orcaKeyBindings
+            return newKeyBinding
+        return None
     def unregisterShortcut(self, KeyBindingToRemove):
         keybindings = self.app.getDynamicApiManager().getAPI('Keybindings')
         settings = self.app.getDynamicApiManager().getAPI('Settings')
