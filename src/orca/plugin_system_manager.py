@@ -260,7 +260,7 @@ class APIHelper():
                 key = shortcutElementLower
         if clickCount == 0:
             clickCount = 1
-        return .registerShortcut(function, key, name, clickCount, orcaKey, shiftKey, ctrlKey, altKey, learnModeEnabled)
+        return self.registerShortcut(function, key, name, clickCount, orcaKey, shiftKey, ctrlKey, altKey, learnModeEnabled)
 
     def registerShortcut(self, function, key, name, clickCount = 1, orcaKey = True, shiftKey = False, ctrlKey = False, altKey = False, learnModeEnabled = True):
         keybindings = self.app.getDynamicApiManager().getAPI('Keybindings')
