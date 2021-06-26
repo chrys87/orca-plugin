@@ -3,10 +3,13 @@ import gi
 gi.require_version("Gtk", "3.0")
 from gi.repository import Gtk
 
+# PMS_installPlugin
+import os, tarfile
+
 class PluginManagerUi(Gtk.ApplicationWindow):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs, title="Orca Plugin Manager")
-        self.connect("destroy", Gtk.main_quit)
+        self.connect("destroy", self.on_cancelButton_clicked)
 
         self.set_default_size(400, 600)
 
@@ -54,20 +57,67 @@ class PluginManagerUi(Gtk.ApplicationWindow):
         self.cancelButton.connect("clicked", self.on_cancelButton_clicked)
         self.buttomBox.pack_start(self.cancelButton, True, True, 0)
 
+    def closeWindow(self):
+        Gtk.main_quit()
+    def uninstallPlugin(self):
+        print("Uninstall")
+        selection = self.treeView.get_selection()
+        model, list_iter = selection.get_selected()
+        if list_iter:
+            self.listStore.remove(list_iter)
+    def installPlugin(self):
+        print("Install")
+        self.PMS_installPlugin('/home/chrys/.local/share/orca/InstallTest.tar.gz')
+    def applySettings(self):
+        print("Apply")
     def rowActivated(self, tree_view, path, column):
         print('active')
 
+    def PMS_installPlugin(self, pluingFilePath, installPath=''):
+        if not self.PMS_isValidPluginFile(pluingFilePath):
+            print('out')
+            return False
+        if installPath == '':
+            installPath = os.path.expanduser('~') + '/.local/share/orca/plugins'
+        if not os.path.exists(installPath):
+            os.mkdir(installPath)
+        try:
+            with tarfile.open(pluingFilePath) as tar:
+                tar.extractall(path=installPath)
+        except Exception as e:
+            print(e)
+        print('install', pluingFilePath)
+        return True
+    def PMS_isValidPluginFile(self, pluingFilePath):
+        if not os.path.exists(pluingFilePath):
+            print('notexist')
+            return False
+        pluginFolder = ''
+        try:
+            with tarfile.open(pluingFilePath) as tar:
+                tarMembers = tar.getmembers()
+                for tarMember in tarMembers:
+                    if tarMember.isdir():
+                        if pluginFolder == '':
+                            pluginFolder = tarMember.name
+                    if not tarMember.name.startswith(pluginFolder):
+                        print(pluginFolder, tarMember.name)
+                        return False
+        except Exception as e:
+            print(e)
+            return False
+        return True
     def on_oKButton_clicked(self, widget):
-        print("OK")
-
+        self.applySettings()
+        self.closeWindow()
     def on_applyButton_clicked(self, widget):
-        print("Apply")
+        self.applySettings()
     def on_installButton_clicked(self, widget):
-        print("Install")
+        self.installPlugin()
     def on_uninstallButton_clicked(self, widget):
-        print("Uninstall")
+        self.uninstallPlugin()
     def on_cancelButton_clicked(self, widget):
-        print("Cancel")
+        self.closeWindow()
 
     def addPlugin(self, Name, Active, Description = ''):
         self.listStore.append([Name, Active, Description])

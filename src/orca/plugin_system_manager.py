@@ -116,6 +116,12 @@ class PluginSystemManager():
         return True
         active_plugin_names = self.getActivePlugins()
         return plugin.get_module_name() in active_plugin_names
+    def installPlugin(self, file_path):
+        print('install', filePath)
+        return True
+    def uninstallPlugin(self, plugin_name):
+        print('uninstall', pluginName)
+        return True
     def load_all_plugins(self, ForceAllPlugins=False):
         """Loads plugins from settings."""
         active_plugin_names = self.getActivePlugins()
