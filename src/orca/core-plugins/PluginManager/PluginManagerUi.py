@@ -4,7 +4,7 @@ gi.require_version("Gtk", "3.0")
 from gi.repository import Gtk
 
 # PMS_installPlugin
-import os, tarfile
+import os, tarfile, shutil
 
 class PluginManagerUi(Gtk.ApplicationWindow):
     def __init__(self, *args, **kwargs):
@@ -63,50 +63,83 @@ class PluginManagerUi(Gtk.ApplicationWindow):
         print("Uninstall")
         selection = self.treeView.get_selection()
         model, list_iter = selection.get_selected()
+        print(model)
+        self.PMS_uninstallPlugin('InstallTest')
+
         if list_iter:
             self.listStore.remove(list_iter)
+        
     def installPlugin(self):
         print("Install")
         self.PMS_installPlugin('/home/chrys/.local/share/orca/InstallTest.tar.gz')
     def applySettings(self):
         print("Apply")
+        selection = self.treeView.get_selection()
+        model, list_iter = selection.get_selected()
+        print(model.get_value(list_iter,0))
     def rowActivated(self, tree_view, path, column):
         print('active')
 
-    def PMS_installPlugin(self, pluingFilePath, installPath=''):
-        if not self.PMS_isValidPluginFile(pluingFilePath):
+    def PMS_installPlugin(self, pluginFilePath, pluginStore=''):
+        if not self.PMS_isValidPluginFile(pluginFilePath):
             print('out')
             return False
-        if installPath == '':
-            installPath = os.path.expanduser('~') + '/.local/share/orca/plugins'
-        if not os.path.exists(installPath):
-            os.mkdir(installPath)
+        if pluginStore == '':
+            pluginStore = os.path.expanduser('~') + '/.local/share/orca/plugins/'
+        if not pluginStore.endswith('/'):
+            pluginStore += '/'
+        if not os.path.exists(pluginStore):
+            os.mkdir(pluginStore)
+        else:
+            if not os.path.isdir(pluginStore):
+                return False
+
         try:
-            with tarfile.open(pluingFilePath) as tar:
-                tar.extractall(path=installPath)
+            with tarfile.open(pluginFilePath) as tar:
+                tar.extractall(path=pluginStore)
         except Exception as e:
             print(e)
-        print('install', pluingFilePath)
+        print('install', pluginFilePath)
         return True
-    def PMS_isValidPluginFile(self, pluingFilePath):
-        if not os.path.exists(pluingFilePath):
+    def PMS_isValidPluginFile(self, pluginFilePath):
+        if not os.path.exists(pluginFilePath):
             print('notexist')
             return False
         pluginFolder = ''
+        pluginFileExists = False
         try:
-            with tarfile.open(pluingFilePath) as tar:
+            with tarfile.open(pluginFilePath) as tar:
                 tarMembers = tar.getmembers()
                 for tarMember in tarMembers:
                     if tarMember.isdir():
                         if pluginFolder == '':
                             pluginFolder = tarMember.name
+                    if tarMember.isfile():
+                        if tarMember.name.endswith('.plugin'):
+                            pluginFileExists = True
                     if not tarMember.name.startswith(pluginFolder):
                         print(pluginFolder, tarMember.name)
                         return False
         except Exception as e:
             print(e)
             return False
+        return pluginFileExists
+    def PMS_uninstallPlugin(self, pluginName, pluginStore=''):
+        if pluginStore == '':
+            pluginStore = os.path.expanduser('~') + '/.local/share/orca/plugins/'
+        if not pluginStore.endswith('/'):
+            pluginStore += '/'
+        if not os.path.isdir(pluginStore):
+            return False
+        if not os.path.isdir(pluginStore + pluginName):
+            return False
+        try:
+            shutil.rmtree(pluginStore + pluginName, ignore_errors=True)
+        except Exception as e:
+            print(e)
+            return False
         return True
+
     def on_oKButton_clicked(self, widget):
         self.applySettings()
         self.closeWindow()
@@ -131,7 +164,7 @@ class PluginManagerUi(Gtk.ApplicationWindow):
 
 if __name__ == "__main__":
     ui = PluginManagerUi()
-    ui.addPlugin('plugin1', True, 'bla')
+    ui.addPlugin('InstallTest', True, 'bla')
     ui.addPlugin('plugin2', True, 'bla')
     ui.addPlugin('plugin3', True, 'bla')
     ui.run()
