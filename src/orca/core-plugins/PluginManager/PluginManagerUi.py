@@ -71,7 +71,10 @@ class PluginManagerUi(Gtk.ApplicationWindow):
         
     def installPlugin(self):
         print("Install")
-        self.PMS_installPlugin('/home/chrys/.local/share/orca/InstallTest.tar.gz')
+        ok, filePath = self.chooseFile()
+        if not ok:
+            return
+        self.PMS_installPlugin(filePath)
     def applySettings(self):
         print("Apply")
         selection = self.treeView.get_selection()
@@ -102,6 +105,10 @@ class PluginManagerUi(Gtk.ApplicationWindow):
         print('install', pluginFilePath)
         return True
     def PMS_isValidPluginFile(self, pluginFilePath):
+        if not isinstance(pluginFilePath, str):
+            return False
+        if pluginFilePath == '':
+            return False
         if not os.path.exists(pluginFilePath):
             print('notexist')
             return False
@@ -154,7 +161,32 @@ class PluginManagerUi(Gtk.ApplicationWindow):
 
     def addPlugin(self, Name, Active, Description = ''):
         self.listStore.append([Name, Active, Description])
+    def chooseFile(self):
+        dialog = Gtk.FileChooserDialog(
+            title="Please choose a file", parent=self, action=Gtk.FileChooserAction.OPEN
+        )
+        dialog.add_buttons(
+            Gtk.STOCK_CANCEL,
+            Gtk.ResponseType.CANCEL,
+            Gtk.STOCK_OPEN,
+            Gtk.ResponseType.OK,
+        )
 
+        filter_plugin = Gtk.FileFilter()
+        filter_plugin.set_name("Plugin Archive")
+        filter_plugin.add_mime_type("application/gzip")
+        dialog.add_filter(filter_plugin)
+        
+        response = dialog.run()
+        filePath = ''
+        ok = False
+        
+        if response == Gtk.ResponseType.OK:
+            ok = True
+            filePath = dialog.get_filename()
+
+        dialog.destroy()
+        return ok, filePath
     def on_cell_toggled(self, widget, path):
         self.listStore[path][1] = not self.listStore[path][1]
     def run(self):
