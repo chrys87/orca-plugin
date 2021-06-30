@@ -740,6 +740,10 @@ class EventManager:
 
         ignore = ["object:text-changed:delete",
                   "object:text-changed:insert",
+                  "object:text-changed:delete:system",
+                  "object:text-changed:insert:system",
+                  "object:children-changed:add",
+                  "object:children-changed:add:system",
                   "object:state-changed:showing",
                   "object:state-changed:sensitive"]
 
@@ -762,6 +766,10 @@ class EventManager:
 
         ignore = ["object:text-changed:delete",
                   "object:text-changed:insert",
+                  "object:text-changed:delete:system",
+                  "object:text-changed:insert:system",
+                  "object:children-changed:add",
+                  "object:children-changed:add:system",
                   "object:state-changed:showing",
                   "object:state-changed:sensitive"]
 
@@ -787,6 +795,12 @@ class EventManager:
 
         if event.type.startswith("object:state-changed:active"):
             return event.source.getRole() in [pyatspi.ROLE_FRAME, pyatspi.ROLE_WINDOW]
+
+        if event.type.startswith("document:load-complete"):
+            return True
+
+        if event.type.startswith("object:state-changed:busy"):
+            return not event.detail1
 
         return False
 
