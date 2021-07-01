@@ -1,6 +1,6 @@
 #!/bin/python
 """PluginManager for loading orca plugins."""
-import os, inspect, sys
+import os, inspect, sys, pyatspi
 from enum import IntEnum
 from gettext import gettext as _
 
@@ -116,12 +116,10 @@ class PluginSystemManager():
         return True
         active_plugin_names = self.getActivePlugins()
         return plugin.get_module_name() in active_plugin_names
-    def installPlugin(self, file_path):
-        print('install', filePath)
-        return True
-    def uninstallPlugin(self, plugin_name):
-        print('uninstall', pluginName)
-        return True
+    def relaod_all_plugins(self, ForceAllPlugins=False):
+        self.unload_all_plugins(ForceAllPlugins)
+        self.load_all_plugins(ForceAllPlugins)
+
     def load_all_plugins(self, ForceAllPlugins=False):
         """Loads plugins from settings."""
         active_plugin_names = self.getActivePlugins()
@@ -157,7 +155,69 @@ class PluginSystemManager():
             self.engine.unload_plugin(plugin_info)
         except e as Exception:
             print(e)
+    def installPlugin(self, pluginFilePath, pluginStore=''):
+        if not self.isValidPluginFile(pluginFilePath):
+            print('out')
+            return False
+        if pluginStore == '':
+            pluginStore = PluginType.USER.get_root_dir()
+        if not pluginStore.endswith('/'):
+            pluginStore += '/'
+        if not os.path.exists(pluginStore):
+            os.mkdir(pluginStore)
+        else:
+            if not os.path.isdir(pluginStore):
+                return False
 
+        try:
+            with tarfile.open(pluginFilePath) as tar:
+                tar.extractall(path=pluginStore)
+        except Exception as e:
+            print(e)
+        print('install', pluginFilePath)
+        return True
+    def isValidPluginFile(self, pluginFilePath):
+        if not isinstance(pluginFilePath, str):
+            return False
+        if pluginFilePath == '':
+            return False
+        if not os.path.exists(pluginFilePath):
+            print('notexist')
+            return False
+        pluginFolder = ''
+        pluginFileExists = False
+        try:
+            with tarfile.open(pluginFilePath) as tar:
+                tarMembers = tar.getmembers()
+                for tarMember in tarMembers:
+                    if tarMember.isdir():
+                        if pluginFolder == '':
+                            pluginFolder = tarMember.name
+                    if tarMember.isfile():
+                        if tarMember.name.endswith('.plugin'):
+                            pluginFileExists = True
+                    if not tarMember.name.startswith(pluginFolder):
+                        print(pluginFolder, tarMember.name)
+                        return False
+        except Exception as e:
+            print(e)
+            return False
+        return pluginFileExists
+    def uninstallPlugin(self, pluginName, pluginStore=''):
+        if pluginStore == '':
+            pluginStore = PluginType.USER.get_root_dir()
+        if not pluginStore.endswith('/'):
+            pluginStore += '/'
+        if not os.path.isdir(pluginStore):
+            return False
+        if not os.path.isdir(pluginStore + pluginName):
+            return False
+        try:
+            shutil.rmtree(pluginStore + pluginName, ignore_errors=True)
+        except Exception as e:
+            print(e)
+            return False
+        return True
     def _setup_extension_set(self):
         plugin_iface = API(self.app)
         self.extension_set = Peas.ExtensionSet.new(self.engine,
@@ -275,66 +335,22 @@ class APIHelper():
         if self.orcaKeyBindings == None:
             self.orcaKeyBindings = keybindings.KeyBindings()
         newInputEventHandler = self.createInputEventHandler(function, name, learnModeEnabled)
-        '''
-        MODIFIER_ORCA = 8
-        NO_MODIFIER_MASK              =  0
-        ALT_MODIFIER_MASK             =  1 << pyatspi.MODIFIER_ALT
-        CTRL_MODIFIER_MASK            =  1 << pyatspi.MODIFIER_CONTROL
-        ORCA_MODIFIER_MASK            =  1 << MODIFIER_ORCA
-        ORCA_ALT_MODIFIER_MASK        = (1 << MODIFIER_ORCA |
-                                        1 << pyatspi.MODIFIER_ALT)
-        ORCA_CTRL_MODIFIER_MASK       = (1 << MODIFIER_ORCA |
-                                        1 << pyatspi.MODIFIER_CONTROL)
-        ORCA_CTRL_ALT_MODIFIER_MASK   = (1 << MODIFIER_ORCA |
-                                        1 << pyatspi.MODIFIER_CONTROL |
-                                        1 << pyatspi.MODIFIER_ALT)
-        ORCA_SHIFT_MODIFIER_MASK      = (1 << MODIFIER_ORCA |
-                                        1 << pyatspi.MODIFIER_SHIFT)
-        SHIFT_MODIFIER_MASK           =  1 << pyatspi.MODIFIER_SHIFT
-        SHIFT_ALT_MODIFIER_MASK       = (1 << pyatspi.MODIFIER_SHIFT |
-                                        1 << pyatspi.MODIFIER_ALT)
-        CTRL_ALT_MODIFIER_MASK        = (1 << pyatspi.MODIFIER_CONTROL |
-                                        1 << pyatspi.MODIFIER_ALT)
-        COMMAND_MODIFIER_MASK         = (1 << pyatspi.MODIFIER_ALT |
-                                        1 << pyatspi.MODIFIER_CONTROL |
-                                        1 << pyatspi.MODIFIER_META2 |
-                                        1 << pyatspi.MODIFIER_META3)
-        NON_LOCKING_MODIFIER_MASK     = (1 << pyatspi.MODIFIER_SHIFT |
-                                        1 << pyatspi.MODIFIER_ALT |
-                                        1 << pyatspi.MODIFIER_CONTROL |
-                                        1 << pyatspi.MODIFIER_META2 |
-                                        1 << pyatspi.MODIFIER_META3 |
-                                        1 << MODIFIER_ORCA)
-        defaultModifierMask = NON_LOCKING_MODIFIER_MASK
-        '''
-        currModifierMask = None
-        # orca
-        if orcaKey and not shiftKey and not ctrlKey and not altKey:
-            currModifierMask = keybindings.ORCA_MODIFIER_MASK
-        
-        # orca + alt
-        if orcaKey and not shiftKey and not ctrlKey and altKey:
-            currModifierMask = keybindings.ORCA_ALT_MODIFIER_MASK
-        # orca + CTRL
-        elif orcaKey and not shiftKey and ctrlKey and not altKey:
-            currModifierMask = keybindings.ORCA_CTRL_MODIFIER_MASK
-        # orca + alt + CTRL
-        elif orcaKey and not shiftKey and ctrlKey and altKey:
-            currModifierMask = keybindings.ORCA_CTRL_ALT_MODIFIER_MASK
-        # orca + shift
-        elif orcaKey and shiftKey and not ctrlKey and not altKey:
-            currModifierMask = keybindings.ORCA_SHIFT_MODIFIER_MASK
-        # alt + shift
-        elif not orcaKey and shiftKey and not ctrlKey and altKey:
-            currModifierMask = keybindings.SHIFT_ALT_MODIFIER_MASK
 
-        if currModifierMask != None:
-            newKeyBinding = keybindings.KeyBinding(key, keybindings.defaultModifierMask, currModifierMask, newInputEventHandler, clickCount)
-            self.orcaKeyBindings.add(newKeyBinding)
+        currModifierMask = keybindings.NO_MODIFIER_MASK
+        if orcaKey:
+            currModifierMask = currModifierMask | 1 << keybindings.MODIFIER_ORCA
+        if shiftKey:
+            currModifierMask = currModifierMask | 1 << pyatspi.MODIFIER_SHIFT
+        if altKey:
+            currModifierMask = currModifierMask | 1 << pyatspi.MODIFIER_ALT
+        if ctrlKey:
+            currModifierMask = currModifierMask | 1 << pyatspi.MODIFIER_CONTROL
 
-            settings.keyBindingsMap["default"] = self.orcaKeyBindings
-            return newKeyBinding
-        return None
+        newKeyBinding = keybindings.KeyBinding(key, keybindings.defaultModifierMask, currModifierMask, newInputEventHandler, clickCount)
+        self.orcaKeyBindings.add(newKeyBinding)
+
+        settings.keyBindingsMap["default"] = self.orcaKeyBindings
+        return newKeyBinding
     def unregisterShortcut(self, KeyBindingToRemove):
         keybindings = self.app.getDynamicApiManager().getAPI('Keybindings')
         settings = self.app.getDynamicApiManager().getAPI('Settings')

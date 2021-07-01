@@ -9,6 +9,7 @@ import os, tarfile, shutil
 class PluginManagerUi(Gtk.ApplicationWindow):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs, title="Orca Plugin Manager")
+        self.app = None
         self.connect("destroy", self.on_cancelButton_clicked)
 
         self.set_default_size(400, 600)
@@ -83,70 +84,6 @@ class PluginManagerUi(Gtk.ApplicationWindow):
     def rowActivated(self, tree_view, path, column):
         print('active')
 
-    def PMS_installPlugin(self, pluginFilePath, pluginStore=''):
-        if not self.PMS_isValidPluginFile(pluginFilePath):
-            print('out')
-            return False
-        if pluginStore == '':
-            pluginStore = os.path.expanduser('~') + '/.local/share/orca/plugins/'
-        if not pluginStore.endswith('/'):
-            pluginStore += '/'
-        if not os.path.exists(pluginStore):
-            os.mkdir(pluginStore)
-        else:
-            if not os.path.isdir(pluginStore):
-                return False
-
-        try:
-            with tarfile.open(pluginFilePath) as tar:
-                tar.extractall(path=pluginStore)
-        except Exception as e:
-            print(e)
-        print('install', pluginFilePath)
-        return True
-    def PMS_isValidPluginFile(self, pluginFilePath):
-        if not isinstance(pluginFilePath, str):
-            return False
-        if pluginFilePath == '':
-            return False
-        if not os.path.exists(pluginFilePath):
-            print('notexist')
-            return False
-        pluginFolder = ''
-        pluginFileExists = False
-        try:
-            with tarfile.open(pluginFilePath) as tar:
-                tarMembers = tar.getmembers()
-                for tarMember in tarMembers:
-                    if tarMember.isdir():
-                        if pluginFolder == '':
-                            pluginFolder = tarMember.name
-                    if tarMember.isfile():
-                        if tarMember.name.endswith('.plugin'):
-                            pluginFileExists = True
-                    if not tarMember.name.startswith(pluginFolder):
-                        print(pluginFolder, tarMember.name)
-                        return False
-        except Exception as e:
-            print(e)
-            return False
-        return pluginFileExists
-    def PMS_uninstallPlugin(self, pluginName, pluginStore=''):
-        if pluginStore == '':
-            pluginStore = os.path.expanduser('~') + '/.local/share/orca/plugins/'
-        if not pluginStore.endswith('/'):
-            pluginStore += '/'
-        if not os.path.isdir(pluginStore):
-            return False
-        if not os.path.isdir(pluginStore + pluginName):
-            return False
-        try:
-            shutil.rmtree(pluginStore + pluginName, ignore_errors=True)
-        except Exception as e:
-            print(e)
-            return False
-        return True
-
     def on_oKButton_clicked(self, widget):
         self.applySettings()
         self.closeWindow()
@@ -189,7 +126,8 @@ class PluginManagerUi(Gtk.ApplicationWindow):
         return ok, filePath
     def on_cell_toggled(self, widget, path):
         self.listStore[path][1] = not self.listStore[path][1]
-    def run(self):
+    def run(self, app = None):
+        self.app = app
         self.show_all()
         Gtk.main()
 
