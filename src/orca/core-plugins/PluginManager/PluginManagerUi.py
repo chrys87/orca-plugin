@@ -1,20 +1,23 @@
 #!/bin/python
 import gi
 gi.require_version("Gtk", "3.0")
-from gi.repository import Gtk
+from gi.repository import Gtk, Gdk
 
 class PluginManagerUi(Gtk.ApplicationWindow):
     def __init__(self, app, *args, **kwargs):
         super().__init__(*args, **kwargs, title="Orca Plugin Manager")
         self.app = app
         self.connect("destroy", self.on_cancelButton_clicked)
+        self.connect('key_press_event', self._on_key_press_window)
 
         self.set_default_size(400, 600)
+        self.set_position(Gtk.WindowPosition.CENTER_ON_PARENT)
 
         self.listStore = Gtk.ListStore(str, bool, str, object,)
 
         self.treeView = Gtk.TreeView(model=self.listStore)
         self.treeView.connect("row-activated", self.rowActivated)
+        self.treeView.connect('key_press_event', self._on_key_press_tree_view)
 
         self.rendererText = Gtk.CellRendererText()
         self.columnText = Gtk.TreeViewColumn("Name", self.rendererText, text=0)
@@ -73,7 +76,25 @@ class PluginManagerUi(Gtk.ApplicationWindow):
             return
         self.app.getPluginSystemManager().installPlugin(filePath)
         self.refreshPluginList()
+        
+    def _on_key_press_window(self, _, event):
+        _, key_val = event.get_keyval()
+        modifiers = event.get_state()
+        if key_val == Gdk.KEY_Escape:
+            self.closeWindow()
 
+    def _on_key_press_tree_view(self, _, event):
+        _, key_val = event.get_keyval()
+        modifiers = event.get_state()
+        if key_val == Gdk.KEY_Return:
+            self.applySettings()
+            self.closeWindow()
+        if key_val == Gdk.KEY_Escape:
+            self.closeWindow()
+        # CTRL + Q
+        #if modifiers == Gdk.ModifierType.CONTROL_MASK | Gdk.ModifierType.MOD2_MASK:
+        #    if key_val == Gdk.KEY_q:
+        #        self._on_scan()
     def applySettings(self):
         for row in self.listStore:
             pluginInfo = row[3]
