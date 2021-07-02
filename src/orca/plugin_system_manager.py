@@ -364,11 +364,8 @@ class APIHelper():
         self.orcaKeyBindings.add(newKeyBinding)
 
         settings.keyBindingsMap["default"] = self.orcaKeyBindings
-        print(settings.keyBindingsMap["default"])
-
         return newKeyBinding
     def unregisterShortcut(self, KeyBindingToRemove):
-        print(KeyBindingToRemove)
         keybindings = self.app.getDynamicApiManager().getAPI('Keybindings')
         settings = self.app.getDynamicApiManager().getAPI('Settings')
         EventManager = self.app.getDynamicApiManager().getAPI('EventManager')
@@ -378,7 +375,6 @@ class APIHelper():
 
         self.orcaKeyBindings.remove(KeyBindingToRemove)
         settings.keyBindingsMap["default"] = self.orcaKeyBindings
-        print(settings.keyBindingsMap["default"])
     def importModule(self, moduleName, moduleLocation):
         if version in ["3.3","3.4"]:
             return SourceFileLoader(moduleName, moduleLocation).load_module()

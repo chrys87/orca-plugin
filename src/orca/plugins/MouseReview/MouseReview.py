@@ -103,6 +103,8 @@ class MouseReview(GObject.Object, Peas.Activatable):
         API.app.getDynamicApiManager().unregisterAPI('MouseReview')
         API.app.getSignalManager().disconnectSignalByFunction(self.setupCompatBinding)
         API.app.getSignalManager().disconnectSignalByFunction( self.Initialize)
+        inputEventHandlers = API.app.getDynamicApiManager().getAPI('inputEventHandlers')
+        del inputEventHandlers['toggleMouseReviewHandler']
 
     def do_update_state(self):
         API = self.object

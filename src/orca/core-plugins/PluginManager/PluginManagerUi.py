@@ -98,9 +98,7 @@ class PluginManagerUi(Gtk.ApplicationWindow):
         self.closeWindow()
     def refreshPluginList(self):
         self.clearPluginList()
-        plugin        #selection = self.treeView.get_selection()
-        #model, list_iter = selection.get_selected()
-        #print(model.get_value(list_iter,0))List = self.app.getPluginSystemManager().plugins
+        pluginList = self.app.getPluginSystemManager().plugins
         for pluginInfo in pluginList:
             name = pluginInfo.get_module_name()
             isActive = self.app.getPluginSystemManager().isPluginActive(pluginInfo)

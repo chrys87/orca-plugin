@@ -22,10 +22,11 @@ class ClassicPreferences(GObject.Object, Peas.Activatable):
     def do_deactivate(self):
         API = self.object
         API.app.getSignalManager().disconnectSignalByFunction(self.setupCompatBinding)
+        inputEventHandlers = API.app.getDynamicApiManager().getAPI('inputEventHandlers')
+        del inputEventHandlers['preferencesSettingsHandler']
+        del inputEventHandlers['appPreferencesSettingsHandler']
     def do_update_state(self):
         API = self.object
-
-
     def showAppPreferencesGUI(self, script=None, inputEvent=None):
         """Displays the user interface to configure the settings for a
         specific applications within Orca and set up those app-specific

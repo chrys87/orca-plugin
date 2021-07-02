@@ -16,7 +16,6 @@ class Clipboard(GObject.Object, Peas.Activatable):
         self.setKeybinding('w')
     def do_deactivate(self):
         API = self.object
-        print('unload clipboard')
         self.setKeybinding(None)
     def do_update_state(self):
         API = self.object
@@ -25,7 +24,7 @@ class Clipboard(GObject.Object, Peas.Activatable):
         if keybinding == None:
             API.app.getAPIHelper().unregisterShortcut(self.keybinding)
         else:
-            API.app.getAPIHelper().registerShortcut(self.speakClipboard, keybinding, 'clipboard')
+            keybinding = keybinding = API.app.getAPIHelper().registerShortcut(self.speakClipboard, keybinding, 'clipboard')
         self.keybinding = keybinding
     def speakClipboard(self, script, inputEvent):
         API = self.object

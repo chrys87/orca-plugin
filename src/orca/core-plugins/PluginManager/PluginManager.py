@@ -17,13 +17,12 @@ class PluginManager(GObject.Object, Peas.Activatable):
     def do_deactivate(self):
         API = self.object
         self.setKeybinding(None)
-
     def setKeybinding(self, keybinding):
         API = self.object
         if keybinding == None:
             API.app.getAPIHelper().unregisterShortcut(self.keybinding)
         else:
-            API.app.getAPIHelper().registerShortcut(self.startPluginManagerUi, keybinding, 'plugin manager')
+            keybinding = API.app.getAPIHelper().registerShortcut(self.startPluginManagerUi, keybinding, 'plugin manager')
         self.keybinding = keybinding
     def startPluginManagerUi(self, script, inputEvent):
         self.showUI()
