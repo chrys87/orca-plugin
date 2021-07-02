@@ -76,7 +76,7 @@ class PluginSystemManager():
 
         self._setupPluginsDir()
         self._setupExtensionSet()
-        self._activePlugins = ['HelloOrca','ByeOrca', 'SelfVoice', 'Hello', 'Date', 'MouseReview', 'ClassicPreferences', ' PluginManager']
+        self._activePlugins = [plugin.get_module_name() for plugin in self.plugins]
     @property
     def plugins(self):
         """Gets the engine's plugin list."""
