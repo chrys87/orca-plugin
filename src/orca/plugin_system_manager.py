@@ -93,14 +93,14 @@ class PluginSystemManager():
             return PluginType.SYSTEM
         return PluginType.USER
 
-    def get_extension(self, module_name):
+    def get_extension(self, pluginName):
         """Gets the extension identified by the specified name.
         Args:
-            module_name (str): The name of the extension.
+            pluginName (str): The name of the extension.
         Returns:
             The extension if exists. Otherwise, `None`.
         """
-        plugin = self.get_plugin_info(module_name)
+        plugin = self.getPluginInfoByName(pluginName)
         if not plugin:
             return None
 
@@ -108,15 +108,15 @@ class PluginSystemManager():
     def rescanPlugins(self):
         self.engine.garbage_collect()
         self.engine.rescan_plugins()
-    def get_plugin_info(self, module_name):
+    def getPluginInfoByName(self, pluginName, pluginType=PluginType.USER):
         """Gets the plugin info for the specified plugin name.
         Args:
-            module_name (str): The name from the .plugin file of the module.
+            pluginName (str): The name from the .plugin file of the module.
         Returns:
             Peas.PluginInfo: The plugin info if it exists. Otherwise, `None`.
         """
         for plugin in self.plugins:
-            if plugin.get_module_name() == module_name:
+            if plugin.get_module_name() == pluginName:
                 return plugin
         return None
     def getActivePlugins(self):
@@ -177,10 +177,10 @@ class PluginSystemManager():
             self.engine.unload_plugin(plugin_info)
         except e as Exception:
             print(e)
-    def installPlugin(self, pluginFilePath, pluginStore=PluginType.USER):
+    def installPlugin(self, pluginFilePath, pluginType=PluginType.USER):
         if not self.isValidPluginFile(pluginFilePath):
             return False
-        pluginFolder = pluginStore.get_root_dir()
+        pluginFolder = pluginType.get_root_dir()
         if not pluginFolder.endswith('/'):
             pluginFolder += '/'
         if not os.path.exists(pluginFolder):
@@ -223,8 +223,8 @@ class PluginSystemManager():
             print(e)
             return False
         return pluginFileExists
-    def uninstallPlugin(self, pluginName, pluginStore=PluginType.USER):
-        pluginFolder = pluginStore.get_root_dir()
+    def uninstallPlugin(self, pluginName, pluginType=PluginType.USER):
+        pluginFolder = pluginType.get_root_dir()
         if not pluginFolder.endswith('/'):
             pluginFolder += '/'
         if not os.path.isdir(pluginFolder):
