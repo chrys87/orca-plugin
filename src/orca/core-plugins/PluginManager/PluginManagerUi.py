@@ -7,8 +7,8 @@ class PluginManagerUi(Gtk.ApplicationWindow):
     def __init__(self, app, *args, **kwargs):
         super().__init__(*args, **kwargs, title="Orca Plugin Manager")
         self.app = app
-        self.connect("destroy", self.on_cancelButton_clicked)
-        self.connect('key_press_event', self._on_key_press_window)
+        self.connect("destroy", self._onCancelButtonClicked)
+        self.connect('key-press-event', self._onKeyPressWindow)
 
         self.set_default_size(400, 600)
         self.set_position(Gtk.WindowPosition.CENTER_ON_PARENT)
@@ -16,15 +16,15 @@ class PluginManagerUi(Gtk.ApplicationWindow):
         self.listStore = Gtk.ListStore(str, bool, str, object,)
 
         self.treeView = Gtk.TreeView(model=self.listStore)
-        self.treeView.connect("row-activated", self.rowActivated)
-        self.treeView.connect('key_press_event', self._on_key_press_tree_view)
+        self.treeView.connect("row-activated", self._rowActivated)
+        self.treeView.connect('key-press-event', self._onKeyPressTreeView)
 
         self.rendererText = Gtk.CellRendererText()
         self.columnText = Gtk.TreeViewColumn("Name", self.rendererText, text=0)
         self.treeView.append_column(self.columnText)
 
         self.rendererToggle = Gtk.CellRendererToggle()
-        self.rendererToggle.connect("toggled", self.on_cell_toggled)
+        self.rendererToggle.connect("toggled", self._onCellToggled)
 
         self.columnToggle = Gtk.TreeViewColumn("Active", self.rendererToggle, active=1)
         self.treeView.append_column(self.columnToggle)
@@ -38,24 +38,24 @@ class PluginManagerUi(Gtk.ApplicationWindow):
         self.add(self.mainVBox)
 
         self.oKButton = Gtk.Button(label="OK")
-        self.oKButton.connect("clicked", self.on_oKButton_clicked)
+        self.oKButton.connect("clicked", self._onOkButtonClicked)
         self.buttomBox.pack_start(self.oKButton, True, True, 0)
 
         self.applyButton = Gtk.Button(label="Apply")
-        self.applyButton.connect("clicked", self.on_applyButton_clicked)
+        self.applyButton.connect("clicked", self._onApplyButtonClicked)
         self.buttomBox.pack_start(self.applyButton, True, True, 0)
 
 
         self.applyButton = Gtk.Button(label="Install")
-        self.applyButton.connect("clicked", self.on_installButton_clicked)
+        self.applyButton.connect("clicked", self._onInstallButtonClicked)
         self.buttomBox.pack_start(self.applyButton, True, True, 0)
         
         self.applyButton = Gtk.Button(label="Uninstall")
-        self.applyButton.connect("clicked", self.on_uninstallButton_clicked)
+        self.applyButton.connect("clicked", self._onUninstallButtonClicked)
         self.buttomBox.pack_start(self.applyButton, True, True, 0)
         
         self.cancelButton = Gtk.Button(label="Cancel")
-        self.cancelButton.connect("clicked", self.on_cancelButton_clicked)
+        self.cancelButton.connect("clicked", self._onCancelButtonClicked)
         self.buttomBox.pack_start(self.cancelButton, True, True, 0)
 
     def closeWindow(self):
@@ -77,21 +77,20 @@ class PluginManagerUi(Gtk.ApplicationWindow):
         self.app.getPluginSystemManager().installPlugin(filePath)
         self.refreshPluginList()
         
-    def _on_key_press_window(self, _, event):
+    def _onKeyPressWindow(self, _, event):
         _, key_val = event.get_keyval()
-        modifiers = event.get_state()
         if key_val == Gdk.KEY_Escape:
             self.closeWindow()
 
-    def _on_key_press_tree_view(self, _, event):
+    def _onKeyPressTreeView(self, _, event):
         _, key_val = event.get_keyval()
-        modifiers = event.get_state()
         if key_val == Gdk.KEY_Return:
             self.applySettings()
             self.closeWindow()
         if key_val == Gdk.KEY_Escape:
             self.closeWindow()
         # CTRL + Q
+        #modifiers = event.get_state()
         #if modifiers == Gdk.ModifierType.CONTROL_MASK | Gdk.ModifierType.MOD2_MASK:
         #    if key_val == Gdk.KEY_q:
         #        self._on_scan()
@@ -103,19 +102,19 @@ class PluginManagerUi(Gtk.ApplicationWindow):
         self.app.getPluginSystemManager().syncAllPluginsActive()
         self.refreshPluginList()
 
-    def rowActivated(self, tree_view, path, column):
+    def _rowActivated(self, tree_view, path, column):
         print('rowActivated')
 
-    def on_oKButton_clicked(self, widget):
+    def _onOkButtonClicked(self, widget):
         self.applySettings()
         self.closeWindow()
-    def on_applyButton_clicked(self, widget):
+    def _onApplyButtonClicked(self, widget):
         self.applySettings()
-    def on_installButton_clicked(self, widget):
+    def _onInstallButtonClicked(self, widget):
         self.installPlugin()
-    def on_uninstallButton_clicked(self, widget):
+    def _onUninstallButtonClicked(self, widget):
         self.uninstallPlugin()
-    def on_cancelButton_clicked(self, widget):
+    def _onCancelButtonClicked(self, widget):
         self.closeWindow()
     def refreshPluginList(self):
         self.clearPluginList()
@@ -154,7 +153,7 @@ class PluginManagerUi(Gtk.ApplicationWindow):
 
         dialog.destroy()
         return ok, filePath
-    def on_cell_toggled(self, widget, path):
+    def _onCellToggled(self, widget, path):
         self.listStore[path][1] = not self.listStore[path][1]
     def run(self):
         self.refreshPluginList()

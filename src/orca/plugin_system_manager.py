@@ -125,8 +125,6 @@ class PluginSystemManager():
             if pluginName  in self.getActivePlugins():
                 self._activePlugins.remove(pluginName )
     def isPluginActive(self, pluginInfo):
-        # TODO: currently all plugins are active, so settings infra yet
-        #return True
         if PluginSystemManager.getPluginType(pluginInfo) == PluginType.CORE:
             return True
         active_plugin_names = self.getActivePlugins()
