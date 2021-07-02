@@ -137,6 +137,15 @@ class PluginManagerUi(Gtk.ApplicationWindow):
         self.listStore[path][1] = not self.listStore[path][1]
     def run(self):
         self.refreshPluginList()
+        orca_state = self.app.getDynamicApiManager().getAPI('OrcaState')
+        ts = 0
+        try:
+            ts = orca_state.lastInputEvent.timestamp
+        except:
+            pass
+        if ts == 0:
+            ts = Gtk.get_current_event_time()
+        self.present_with_time(ts)
         self.show_all()
         Gtk.main()
         self.destroy()
