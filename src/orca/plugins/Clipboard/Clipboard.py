@@ -16,6 +16,7 @@ class Clipboard(GObject.Object, Peas.Activatable):
         self.setKeybinding('w')
     def do_deactivate(self):
         API = self.object
+        print('unload clipboard')
         self.setKeybinding(None)
     def do_update_state(self):
         API = self.object

@@ -4,9 +4,9 @@ gi.require_version("Gtk", "3.0")
 from gi.repository import Gtk
 
 class PluginManagerUi(Gtk.ApplicationWindow):
-    def __init__(self, *args, **kwargs):
+    def __init__(self, app, *args, **kwargs):
         super().__init__(*args, **kwargs, title="Orca Plugin Manager")
-        self.app = None
+        self.app = app
         self.connect("destroy", self.on_cancelButton_clicked)
 
         self.set_default_size(400, 600)
@@ -62,9 +62,10 @@ class PluginManagerUi(Gtk.ApplicationWindow):
         model, list_iter = selection.get_selected()
         print('uninstall', model.get_value(list_iter,0))
         self.app.getPluginSystemManager().uninstallPlugin(model.get_value(list_iter,0))
+        self.refreshPluginList()
 
-        if list_iter:
-            self.listStore.remove(list_iter)
+        #if list_iter:
+        #    self.listStore.remove(list_iter)
         
     def installPlugin(self):
         print("Install")
@@ -72,13 +73,21 @@ class PluginManagerUi(Gtk.ApplicationWindow):
         if not ok:
             return
         self.app.getPluginSystemManager().installPlugin(filePath)
+        self.refreshPluginList()
+
     def applySettings(self):
         print("Apply")
-        selection = self.treeView.get_selection()
-        model, list_iter = selection.get_selected()
-        print(model.get_value(list_iter,0))
+        #selection = self.treeView.get_selection()
+        #model, list_iter = selection.get_selected()
+        #print(model.get_value(list_iter,0))
+        for row in self.listStore:
+            self.listStore
+            self.app.getPluginSystemManager().setPluginActive(row[0], row[1])
+        self.app.getPluginSystemManager().syncAllPluginsActive()
+        self.refreshPluginList()
+
     def rowActivated(self, tree_view, path, column):
-        print('active')
+        print('rowActivated')
 
     def on_oKButton_clicked(self, widget):
         self.applySettings()
@@ -91,7 +100,15 @@ class PluginManagerUi(Gtk.ApplicationWindow):
         self.uninstallPlugin()
     def on_cancelButton_clicked(self, widget):
         self.closeWindow()
-
+    def refreshPluginList(self):
+        self.clearPluginList()
+        pluginList = self.app.getPluginSystemManager().plugins
+        for plugin in pluginList:
+            name = plugin.get_module_name()
+            isActive = self.app.getPluginSystemManager().isPluginActive(plugin)
+            self.addPlugin(name, isActive)
+    def clearPluginList(self):
+        self.listStore.clear()
     def addPlugin(self, Name, Active, Description = ''):
         self.listStore.append([Name, Active, Description])
     def chooseFile(self):
@@ -122,15 +139,8 @@ class PluginManagerUi(Gtk.ApplicationWindow):
         return ok, filePath
     def on_cell_toggled(self, widget, path):
         self.listStore[path][1] = not self.listStore[path][1]
-    def run(self, app = None):
-        self.app = app
+    def run(self):
+        self.refreshPluginList()
         self.show_all()
         Gtk.main()
-
-
-if __name__ == "__main__":
-    ui = PluginManagerUi()
-    ui.addPlugin('InstallTest', True, 'bla')
-    ui.addPlugin('plugin2', True, 'bla')
-    ui.addPlugin('plugin3', True, 'bla')
-    ui.run()
+        self.destroy()

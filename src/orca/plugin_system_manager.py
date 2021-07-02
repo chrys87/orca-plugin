@@ -23,7 +23,6 @@ class API(GObject.GObject):
         GObject.GObject.__init__(self)
         self.app = app
 
-
 class PluginType(IntEnum):
     """Types of plugins we support, depending on their directory location."""
     # pylint: disable=comparison-with-callable,inconsistent-return-statements,no-else-return
@@ -75,15 +74,16 @@ class PluginSystemManager():
         for loader in self.DEFAULT_LOADERS:
             self.engine.enable_loader(loader)
 
-        self._setup_plugins_dir()
+        self._setupPluginsDir()
         self._setup_extension_set()
+        self._activePlugins = ['HelloOrca','ByeOrca', 'SelfVoice', 'Hello', 'Date', 'MouseReview', 'ClassicPreferences', ' PluginManager']
     @property
     def plugins(self):
         """Gets the engine's plugin list."""
         return self.engine.get_plugin_list()
 
     @classmethod
-    def get_plugin_type(cls, plugin_info):
+    def getPluginType(cls, plugin_info):
         """Gets the PluginType for the specified Peas.PluginInfo."""
         paths = [plugin_info.get_data_dir(), PluginType.CORE.get_root_dir()]
         if os.path.commonprefix(paths) == PluginType.CORE.get_root_dir():
@@ -105,7 +105,9 @@ class PluginSystemManager():
             return None
 
         return self.extension_set.get_extension(plugin)
-
+    def rescanPlugins(self):
+        self.engine.garbage_collect()
+        self.engine.rescan_plugins()
     def get_plugin_info(self, module_name):
         """Gets the plugin info for the specified plugin name.
         Args:
@@ -118,24 +120,36 @@ class PluginSystemManager():
                 return plugin
         return None
     def getActivePlugins(self):
-        return ['HelloOrca','ByeOrca', 'SelfVoice', 'Clipboard', 'Hello', 'Date', 'Time', 'MouseReview', 'ClassicPreferences', ' PluginManager']
-    def isPluginActive(self, plugin):
+        return self._activePlugins
+    def setPluginActive(self, pluginName, active):
+        if active:
+            if not pluginName in self.getActivePlugins():
+                self._activePlugins.append(pluginName)
+        else:
+            if pluginName in self.getActivePlugins():
+                self._activePlugins.remove(pluginName)
+    def isPluginNameActive(self, pluginName):
+        plugin_info = self.engine.get_plugin_info(pluginName)
+        self.isPluginActive(plugin_info)
+    def isPluginActive(self, pluginInfo):
         # TODO: currently all plugins are active, so settings infra yet
-        return True
+        #return True
+        if PluginSystemManager.getPluginType(pluginInfo) == PluginType.CORE:
+            return True
         active_plugin_names = self.getActivePlugins()
-        return plugin.get_module_name() in active_plugin_names
-    def relaod_all_plugins(self, ForceAllPlugins=False):
-        self.unload_all_plugins(ForceAllPlugins)
-        self.load_all_plugins(ForceAllPlugins)
+        return pluginInfo.get_module_name() in active_plugin_names
+    def syncAllPluginsActive(self, ForceAllPlugins=False):
+        self.unloadAllPlugins(ForceAllPlugins)
+        self.loadAllPlugins(ForceAllPlugins)
 
-    def load_all_plugins(self, ForceAllPlugins=False):
+    def loadAllPlugins(self, ForceAllPlugins=False):
         """Loads plugins from settings."""
         active_plugin_names = self.getActivePlugins()
         for plugin in self.plugins:
             if self.isPluginActive(plugin) or ForceAllPlugins:
-                self.load_plugin(plugin.get_module_name())
+                self.loadPlugin(plugin.get_module_name())
 
-    def load_plugin(self, plugin_name):
+    def loadPlugin(self, plugin_name):
         try:
             plugin_info = self.engine.get_plugin_info(plugin_name)
             if plugin_info not in self.plugins:
@@ -145,27 +159,26 @@ class PluginSystemManager():
         except e as Exception:
             print(e)
 
-    def unload_all_plugins(self, ForceAllPlugins=False):
+    def unloadAllPlugins(self, ForceAllPlugins=False):
         """Loads plugins from settings."""
         active_plugin_names = self.getActivePlugins()
         for plugin in self.plugins:
             if not self.isPluginActive(plugin) or ForceAllPlugins:
-                self.unload_plugin(plugin.get_module_name())
+                self.unloadPlugin(plugin.get_module_name())
 
-    def unload_plugin(self, plugin_name):
+    def unloadPlugin(self, plugin_name):
         try:
             plugin_info = self.engine.get_plugin_info(plugin_name)
             if plugin_info not in self.plugins:
                 print("Plugin missing: {}".format(plugin_name))
                 return
-            if PluginSystemManager.get_plugin_type(plugin_info) == PluginType.CORE:
+            if PluginSystemManager.getPluginType(plugin_info) == PluginType.CORE:
                 return
             self.engine.unload_plugin(plugin_info)
         except e as Exception:
             print(e)
     def installPlugin(self, pluginFilePath, pluginStore=PluginType.USER):
         if not self.isValidPluginFile(pluginFilePath):
-            print('out')
             return False
         pluginFolder = pluginStore.get_root_dir()
         if not pluginFolder.endswith('/'):
@@ -182,6 +195,7 @@ class PluginSystemManager():
         except Exception as e:
             print(e)
         print('install', pluginFilePath)
+        self.rescanPlugins()
         return True
     def isValidPluginFile(self, pluginFilePath):
         if not isinstance(pluginFilePath, str):
@@ -189,7 +203,6 @@ class PluginSystemManager():
         if pluginFilePath == '':
             return False
         if not os.path.exists(pluginFilePath):
-            print('notexist')
             return False
         pluginFolder = ''
         pluginFileExists = False
@@ -218,11 +231,14 @@ class PluginSystemManager():
             return False
         if not os.path.isdir(pluginFolder + pluginName):
             return False
+        if self.isPluginActive(pluginName):
+            self.unloadPlugin(pluginName)
         try:
             shutil.rmtree(pluginFolder + pluginName, ignore_errors=True)
         except Exception as e:
             print(e)
             return False
+        self.rescanPlugins()
         return True
     def _setup_extension_set(self):
         plugin_iface = API(self.app)
@@ -235,7 +251,7 @@ class PluginSystemManager():
         self.extension_set.connect("extension-added",
                                    self.__extension_added_cb)
 
-    def _setup_plugins_dir(self):
+    def _setupPluginsDir(self):
         core_plugins_dir = PluginType.CORE.get_root_dir()
         system_plugins_dir = PluginType.SYSTEM.get_root_dir()
         user_plugins_dir = PluginType.USER.get_root_dir()
@@ -356,8 +372,11 @@ class APIHelper():
         self.orcaKeyBindings.add(newKeyBinding)
 
         settings.keyBindingsMap["default"] = self.orcaKeyBindings
+        print(settings.keyBindingsMap["default"])
+
         return newKeyBinding
     def unregisterShortcut(self, KeyBindingToRemove):
+        print(KeyBindingToRemove)
         keybindings = self.app.getDynamicApiManager().getAPI('Keybindings')
         settings = self.app.getDynamicApiManager().getAPI('Settings')
         EventManager = self.app.getDynamicApiManager().getAPI('EventManager')
@@ -367,6 +386,7 @@ class APIHelper():
 
         self.orcaKeyBindings.remove(KeyBindingToRemove)
         settings.keyBindingsMap["default"] = self.orcaKeyBindings
+        print(settings.keyBindingsMap["default"])
     def importModule(self, moduleName, moduleLocation):
         if version in ["3.3","3.4"]:
             return SourceFileLoader(moduleName, moduleLocation).load_module()

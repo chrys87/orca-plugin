@@ -11,13 +11,12 @@ class HelloWorld(GObject.Object, Peas.Activatable):
         pass
     def do_activate(self):
         API = self.object
-        print('activate')
+        print('activate hello world plugin')
     def do_deactivate(self):
         API = self.object
-        print('deactivate')
+        print('deactivate hello world plugin')
     def do_update_state(self):
         API = self.object
-        print('update')
+        print('update hello world plugin')
     def process(self, app):
-        print('process')
-        app.getAPI('Speech').speak('hello world')
+        print('process hello world plugin')

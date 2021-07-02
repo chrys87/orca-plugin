@@ -548,7 +548,7 @@ def init(registry):
         signal.signal(signal.SIGALRM, settings.timeoutCallback)
         signal.alarm(settings.timeoutTime)
 
-    orcaApp.pluginSystemManager.load_all_plugins()
+    orcaApp.pluginSystemManager.loadAllPlugins()
     loadUserSettings()
 
     if settings.timeoutCallback and (settings.timeoutTime > 0):
@@ -641,7 +641,7 @@ def shutdown(script=None, inputEvent=None):
         signal.alarm(settings.timeoutTime)
 
     orcaApp.getSignalManager().emitSignal('stop-application-completed')
-    orcaApp.pluginSystemManager.unload_all_plugins(ForceAllPlugins=True)
+    orcaApp.pluginSystemManager.unloadAllPlugins(ForceAllPlugins=True)
 
     _scriptManager.deactivate()
     _eventManager.deactivate()

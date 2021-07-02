@@ -30,10 +30,5 @@ class PluginManager(GObject.Object, Peas.Activatable):
 
     def showUI(self):
         API = self.object
-        pluginManagerUi = PluginManagerUi.PluginManagerUi()
-        pluginList = API.app.getPluginSystemManager().plugins
-        for plugin in pluginList:
-            name = plugin.get_module_name()
-            isActive = API.app.getPluginSystemManager().isPluginActive(plugin)
-            pluginManagerUi.addPlugin(name, isActive)
-        pluginManagerUi.run(API.app)
+        pluginManagerUi = PluginManagerUi.PluginManagerUi(API.app)
+        pluginManagerUi.run()
