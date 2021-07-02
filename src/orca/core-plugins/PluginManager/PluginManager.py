@@ -11,6 +11,7 @@ class PluginManager(GObject.Object, Peas.Activatable):
     object = GObject.Property(type=GObject.Object)
     def __init__(self):
         self.keybinding = None
+        self._uiOpen = False
     def do_activate(self):
         API = self.object
         self.setKeybinding('e')
@@ -26,8 +27,15 @@ class PluginManager(GObject.Object, Peas.Activatable):
         self.keybinding = keybinding
     def startPluginManagerUi(self, script, inputEvent):
         self.showUI()
-
+    def getUiOpen(self):
+        return self._uiOpen
+    def setUiOpen(self, value):
+        self._uiOpen = value
     def showUI(self):
         API = self.object
+        if self.getUiOpen():
+            return
+        self.setUiOpen(True)
         pluginManagerUi = PluginManagerUi.PluginManagerUi(API.app)
         pluginManagerUi.run()
+        self.setUiOpen(False)
