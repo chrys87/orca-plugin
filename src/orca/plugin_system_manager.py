@@ -75,7 +75,7 @@ class PluginSystemManager():
             self.engine.enable_loader(loader)
 
         self._setupPluginsDir()
-        self._setup_extension_set()
+        self._setupExtensionSet()
         self._activePlugins = ['HelloOrca','ByeOrca', 'SelfVoice', 'Hello', 'Date', 'MouseReview', 'ClassicPreferences', ' PluginManager']
     @property
     def plugins(self):
@@ -83,28 +83,21 @@ class PluginSystemManager():
         return self.engine.get_plugin_list()
 
     @classmethod
-    def getPluginType(cls, plugin_info):
+    def getPluginType(cls, pluginInfo):
         """Gets the PluginType for the specified Peas.PluginInfo."""
-        paths = [plugin_info.get_data_dir(), PluginType.CORE.get_root_dir()]
+        paths = [pluginInfo.get_data_dir(), PluginType.CORE.get_root_dir()]
         if os.path.commonprefix(paths) == PluginType.CORE.get_root_dir():
             return PluginType.CORE
-        paths = [plugin_info.get_data_dir(), PluginType.SYSTEM.get_root_dir()]
+        paths = [pluginInfo.get_data_dir(), PluginType.SYSTEM.get_root_dir()]
         if os.path.commonprefix(paths) == PluginType.SYSTEM.get_root_dir():
             return PluginType.SYSTEM
         return PluginType.USER
 
-    def get_extension(self, pluginName):
-        """Gets the extension identified by the specified name.
-        Args:
-            pluginName (str): The name of the extension.
-        Returns:
-            The extension if exists. Otherwise, `None`.
-        """
-        plugin = self.getPluginInfoByName(pluginName)
-        if not plugin:
+    def getExtension(self, pluginInfo):
+        if not pluginInfo:
             return None
 
-        return self.extension_set.get_extension(plugin)
+        return self.extension_set.get_extension(pluginInfo)
     def rescanPlugins(self):
         self.engine.garbage_collect()
         self.engine.rescan_plugins()
@@ -115,22 +108,22 @@ class PluginSystemManager():
         Returns:
             Peas.PluginInfo: The plugin info if it exists. Otherwise, `None`.
         """
-        for plugin in self.plugins:
-            if plugin.get_module_name() == pluginName:
-                return plugin
+        for pluginInfo in self.plugins:
+            if pluginInfo.get_module_name() == pluginName and PluginSystemManager.getPluginType(pluginInfo) == pluginType:
+                return pluginInfo
         return None
     def getActivePlugins(self):
         return self._activePlugins
-    def setPluginActive(self, pluginName, active):
+    def setPluginActive(self, pluginInfo, active):
+        if PluginSystemManager.getPluginType(pluginInfo) == PluginType.CORE:
+            active = True
+        pluginName = pluginInfo.get_module_name() 
         if active:
-            if not pluginName in self.getActivePlugins():
-                self._activePlugins.append(pluginName)
+            if not pluginName  in self.getActivePlugins():
+                self._activePlugins.append(pluginName )
         else:
-            if pluginName in self.getActivePlugins():
-                self._activePlugins.remove(pluginName)
-    def isPluginNameActive(self, pluginName):
-        plugin_info = self.engine.get_plugin_info(pluginName)
-        self.isPluginActive(plugin_info)
+            if pluginName  in self.getActivePlugins():
+                self._activePlugins.remove(pluginName )
     def isPluginActive(self, pluginInfo):
         # TODO: currently all plugins are active, so settings infra yet
         #return True
@@ -144,37 +137,34 @@ class PluginSystemManager():
 
     def loadAllPlugins(self, ForceAllPlugins=False):
         """Loads plugins from settings."""
-        active_plugin_names = self.getActivePlugins()
-        for plugin in self.plugins:
-            if self.isPluginActive(plugin) or ForceAllPlugins:
-                self.loadPlugin(plugin.get_module_name())
+        for pluginInfo in self.plugins:
+            if self.isPluginActive(pluginInfo) or ForceAllPlugins:
+                self.loadPlugin(pluginInfo)
 
-    def loadPlugin(self, plugin_name):
+    def loadPlugin(self, pluginInfo):
         try:
-            plugin_info = self.engine.get_plugin_info(plugin_name)
-            if plugin_info not in self.plugins:
-                print("Plugin missing: {}".format(plugin_name))
+            if pluginInfo not in self.plugins:
+                print("Plugin missing: {}".format(pluginInfo.get_module_name()))
                 return
-            self.engine.load_plugin(plugin_info)
+            self.engine.load_plugin(pluginInfo)
         except e as Exception:
             print(e)
 
     def unloadAllPlugins(self, ForceAllPlugins=False):
         """Loads plugins from settings."""
-        active_plugin_names = self.getActivePlugins()
-        for plugin in self.plugins:
-            if not self.isPluginActive(plugin) or ForceAllPlugins:
-                self.unloadPlugin(plugin.get_module_name())
+        for pluginInfo in self.plugins:
+            if not self.isPluginActive(pluginInfo) or ForceAllPlugins:
+                self.unloadPlugin(pluginInfo)
 
-    def unloadPlugin(self, plugin_name):
+    def unloadPlugin(self, pluginInfo):
         try:
-            plugin_info = self.engine.get_plugin_info(plugin_name)
-            if plugin_info not in self.plugins:
-                print("Plugin missing: {}".format(plugin_name))
+            if pluginInfo not in self.plugins:
+                print("Plugin missing: {}".format(pluginInfo.get_module_name()))
                 return
-            if PluginSystemManager.getPluginType(plugin_info) == PluginType.CORE:
+            if PluginSystemManager.getPluginType(pluginInfo) == PluginType.CORE:
                 return
-            self.engine.unload_plugin(plugin_info)
+            self.engine.unload_plugin(pluginInfo)
+            self.engine.garbage_collect()
         except e as Exception:
             print(e)
     def installPlugin(self, pluginFilePath, pluginType=PluginType.USER):
@@ -223,33 +213,35 @@ class PluginSystemManager():
             print(e)
             return False
         return pluginFileExists
-    def uninstallPlugin(self, pluginName, pluginType=PluginType.USER):
-        pluginFolder = pluginType.get_root_dir()
+    def uninstallPlugin(self, pluginInfo):
+        if PluginSystemManager.getPluginType(pluginInfo) == PluginType.CORE:
+            return False
+        if PluginSystemManager.getPluginType(pluginInfo) == PluginType.SYSTEM:
+            return False
+        pluginFolder = pluginInfo.get_data_dir()
         if not pluginFolder.endswith('/'):
             pluginFolder += '/'
         if not os.path.isdir(pluginFolder):
             return False
-        if not os.path.isdir(pluginFolder + pluginName):
-            return False
-        if self.isPluginActive(pluginName):
-            self.unloadPlugin(pluginName)
+        if self.isPluginActive(pluginInfo):
+            self.unloadPlugin(pluginInfo)
         try:
-            shutil.rmtree(pluginFolder + pluginName, ignore_errors=True)
+            shutil.rmtree(pluginFolder, ignore_errors=True)
         except Exception as e:
             print(e)
             return False
         self.rescanPlugins()
         return True
-    def _setup_extension_set(self):
+    def _setupExtensionSet(self):
         plugin_iface = API(self.app)
         self.extension_set = Peas.ExtensionSet.new(self.engine,
                                                    Peas.Activatable,
                                                    ["object"],
                                                    [plugin_iface])
         self.extension_set.connect("extension-removed",
-                                   self.__extension_removed_cb)
+                                   self.__extensionRemoved)
         self.extension_set.connect("extension-added",
-                                   self.__extension_added_cb)
+                                   self.__extensionAdded)
 
     def _setupPluginsDir(self):
         core_plugins_dir = PluginType.CORE.get_root_dir()
@@ -263,14 +255,14 @@ class PluginSystemManager():
             self.engine.add_search_path(core_plugins_dir)
 
     @staticmethod
-    def __extension_removed_cb(unused_set, unused_plugin_info, extension):
+    def __extensionRemoved(unusedSet, unusedPluginInfo, extension):
         extension.deactivate()
 
     @staticmethod
-    def __extension_added_cb(unused_set, unused_plugin_info, extension):
+    def __extensionAdded(unusedSet, unusedPluginInfo, extension):
         extension.activate()
 
-    def __loaded_plugins_cb(self, engine, unused_pspec):
+    def __loadedPlugins(self, engine, unusedSet):
         """Handles the changing of the loaded plugin list."""
         self.app.settings.ActivePlugins = engine.get_property("loaded-plugins")
 

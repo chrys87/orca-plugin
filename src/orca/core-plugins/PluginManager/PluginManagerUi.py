@@ -11,7 +11,7 @@ class PluginManagerUi(Gtk.ApplicationWindow):
 
         self.set_default_size(400, 600)
 
-        self.listStore = Gtk.ListStore(str, bool, str)
+        self.listStore = Gtk.ListStore(str, bool, str, object,)
 
         self.treeView = Gtk.TreeView(model=self.listStore)
         self.treeView.connect("row-activated", self.rowActivated)
@@ -60,15 +60,14 @@ class PluginManagerUi(Gtk.ApplicationWindow):
     def uninstallPlugin(self):
         selection = self.treeView.get_selection()
         model, list_iter = selection.get_selected()
-        print('uninstall', model.get_value(list_iter,0))
-        self.app.getPluginSystemManager().uninstallPlugin(model.get_value(list_iter,0))
-        self.refreshPluginList()
-
-        #if list_iter:
-        #    self.listStore.remove(list_iter)
+        try:
+            if model.get_value(list_iter,3):
+                self.app.getPluginSystemManager().uninstallPlugin(model.get_value(list_iter,3))
+                self.refreshPluginList()
+        except:
+            pass
         
     def installPlugin(self):
-        print("Install")
         ok, filePath = self.chooseFile()
         if not ok:
             return
@@ -76,13 +75,10 @@ class PluginManagerUi(Gtk.ApplicationWindow):
         self.refreshPluginList()
 
     def applySettings(self):
-        print("Apply")
-        #selection = self.treeView.get_selection()
-        #model, list_iter = selection.get_selected()
-        #print(model.get_value(list_iter,0))
         for row in self.listStore:
-            self.listStore
-            self.app.getPluginSystemManager().setPluginActive(row[0], row[1])
+            pluginInfo = row[3]
+            isActive = row[1]
+            self.app.getPluginSystemManager().setPluginActive(pluginInfo, isActive)
         self.app.getPluginSystemManager().syncAllPluginsActive()
         self.refreshPluginList()
 
@@ -102,15 +98,17 @@ class PluginManagerUi(Gtk.ApplicationWindow):
         self.closeWindow()
     def refreshPluginList(self):
         self.clearPluginList()
-        pluginList = self.app.getPluginSystemManager().plugins
-        for plugin in pluginList:
-            name = plugin.get_module_name()
-            isActive = self.app.getPluginSystemManager().isPluginActive(plugin)
-            self.addPlugin(name, isActive)
+        plugin        #selection = self.treeView.get_selection()
+        #model, list_iter = selection.get_selected()
+        #print(model.get_value(list_iter,0))List = self.app.getPluginSystemManager().plugins
+        for pluginInfo in pluginList:
+            name = pluginInfo.get_module_name()
+            isActive = self.app.getPluginSystemManager().isPluginActive(pluginInfo)
+            self.addPlugin(name, isActive, pluginInfo)
     def clearPluginList(self):
         self.listStore.clear()
-    def addPlugin(self, Name, Active, Description = ''):
-        self.listStore.append([Name, Active, Description])
+    def addPlugin(self, Name, Active, pluginInfo, Description = ''):
+        self.listStore.append([Name, Active, Description, pluginInfo])
     def chooseFile(self):
         dialog = Gtk.FileChooserDialog(
             title="Please choose a file", parent=self, action=Gtk.FileChooserAction.OPEN
