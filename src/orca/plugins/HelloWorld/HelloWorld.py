@@ -18,5 +18,3 @@ class HelloWorld(GObject.Object, Peas.Activatable):
     def do_update_state(self):
         API = self.object
         print('update hello world plugin')
-    def process(self, app):
-        print('process hello world plugin')

@@ -37,24 +37,23 @@ class PluginManagerUi(Gtk.ApplicationWindow):
 
         self.add(self.mainVBox)
 
-        self.oKButton = Gtk.Button(label="OK")
+        self.oKButton = Gtk.Button.new_with_mnemonic("_OK")
         self.oKButton.connect("clicked", self._onOkButtonClicked)
         self.buttomBox.pack_start(self.oKButton, True, True, 0)
 
-        self.applyButton = Gtk.Button(label="Apply")
+        self.applyButton = Gtk.Button.new_with_mnemonic("_Apply")
         self.applyButton.connect("clicked", self._onApplyButtonClicked)
         self.buttomBox.pack_start(self.applyButton, True, True, 0)
 
-
-        self.applyButton = Gtk.Button(label="Install")
+        self.applyButton = Gtk.Button.new_with_mnemonic("_Install")
         self.applyButton.connect("clicked", self._onInstallButtonClicked)
         self.buttomBox.pack_start(self.applyButton, True, True, 0)
         
-        self.applyButton = Gtk.Button(label="Uninstall")
+        self.applyButton = Gtk.Button.new_with_mnemonic("_Uninstall")
         self.applyButton.connect("clicked", self._onUninstallButtonClicked)
         self.buttomBox.pack_start(self.applyButton, True, True, 0)
         
-        self.cancelButton = Gtk.Button(label="Cancel")
+        self.cancelButton = Gtk.Button.new_with_mnemonic("_Cancel")
         self.cancelButton.connect("clicked", self._onCancelButtonClicked)
         self.buttomBox.pack_start(self.cancelButton, True, True, 0)
 
