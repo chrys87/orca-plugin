@@ -10,8 +10,8 @@ class PluginManagerUi(Gtk.ApplicationWindow):
         self.connect("destroy", self._onCancelButtonClicked)
         self.connect('key-press-event', self._onKeyPressWindow)
 
-        self.set_default_size(400, 600)
-        self.set_position(Gtk.WindowPosition.CENTER_ON_PARENT)
+        self.set_default_size(450, 650)
+        self.set_position(Gtk.WindowPosition.CENTER_ALWAYS)
 
         self.listStore = Gtk.ListStore(str, bool, str, object,)
 
