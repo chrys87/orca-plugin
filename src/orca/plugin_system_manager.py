@@ -1,6 +1,7 @@
 #!/bin/python
 """PluginManager for loading orca plugins."""
-import os, inspect, sys, pyatspi
+import os, inspect, sys, pyatspi, tarfile, shutil
+
 from enum import IntEnum
 from gettext import gettext as _
 
@@ -26,11 +27,18 @@ class API(GObject.GObject):
 class PluginType(IntEnum):
     """Types of plugins we support, depending on their directory location."""
     # pylint: disable=comparison-with-callable,inconsistent-return-statements,no-else-return
-    # CORE: provides basic functionality and could not be unloaded or deactivated
+    
+    # CORE: provides basic functionality
+    # uninstallable: no
+    # deactivateable: no
     CORE = 1
     # SYSTEM: provides system wide plugins
+    # uninstallable: no
+    # deactivateable: yes
     SYSTEM = 2
     # USER: provides per user plugin
+    # uninstallable: yes
+    # deactivateable: yes
     USER = 3
 
     def __str__(self):
@@ -155,23 +163,22 @@ class PluginSystemManager():
             self.engine.unload_plugin(plugin_info)
         except e as Exception:
             print(e)
-    def installPlugin(self, pluginFilePath, pluginStore=''):
+    def installPlugin(self, pluginFilePath, pluginStore=PluginType.USER):
         if not self.isValidPluginFile(pluginFilePath):
             print('out')
             return False
-        if pluginStore == '':
-            pluginStore = PluginType.USER.get_root_dir()
-        if not pluginStore.endswith('/'):
-            pluginStore += '/'
-        if not os.path.exists(pluginStore):
-            os.mkdir(pluginStore)
+        pluginFolder = pluginStore.get_root_dir()
+        if not pluginFolder.endswith('/'):
+            pluginFolder += '/'
+        if not os.path.exists(pluginFolder):
+            os.mkdir(pluginFolder)
         else:
-            if not os.path.isdir(pluginStore):
+            if not os.path.isdir(pluginFolder):
                 return False
 
         try:
             with tarfile.open(pluginFilePath) as tar:
-                tar.extractall(path=pluginStore)
+                tar.extractall(path=pluginFolder)
         except Exception as e:
             print(e)
         print('install', pluginFilePath)
@@ -203,17 +210,16 @@ class PluginSystemManager():
             print(e)
             return False
         return pluginFileExists
-    def uninstallPlugin(self, pluginName, pluginStore=''):
-        if pluginStore == '':
-            pluginStore = PluginType.USER.get_root_dir()
-        if not pluginStore.endswith('/'):
-            pluginStore += '/'
-        if not os.path.isdir(pluginStore):
+    def uninstallPlugin(self, pluginName, pluginStore=PluginType.USER):
+        pluginFolder = pluginStore.get_root_dir()
+        if not pluginFolder.endswith('/'):
+            pluginFolder += '/'
+        if not os.path.isdir(pluginFolder):
             return False
-        if not os.path.isdir(pluginStore + pluginName):
+        if not os.path.isdir(pluginFolder + pluginName):
             return False
         try:
-            shutil.rmtree(pluginStore + pluginName, ignore_errors=True)
+            shutil.rmtree(pluginFolder + pluginName, ignore_errors=True)
         except Exception as e:
             print(e)
             return False

@@ -2,6 +2,7 @@ import gi
 gi.require_version('Peas', '1.0')
 from gi.repository import GObject
 from gi.repository import Peas
+import os, tarfile, shutil
 
 import PluginManagerUi
 
@@ -36,4 +37,4 @@ class PluginManager(GObject.Object, Peas.Activatable):
             name = plugin.get_module_name()
             isActive = API.app.getPluginSystemManager().isPluginActive(plugin)
             pluginManagerUi.addPlugin(name, isActive)
-        pluginManagerUi.run()
+        pluginManagerUi.run(API.app)

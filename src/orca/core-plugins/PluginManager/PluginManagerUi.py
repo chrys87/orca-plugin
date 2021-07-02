@@ -3,9 +3,6 @@ import gi
 gi.require_version("Gtk", "3.0")
 from gi.repository import Gtk
 
-# PMS_installPlugin
-import os, tarfile, shutil
-
 class PluginManagerUi(Gtk.ApplicationWindow):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs, title="Orca Plugin Manager")
@@ -61,11 +58,10 @@ class PluginManagerUi(Gtk.ApplicationWindow):
     def closeWindow(self):
         Gtk.main_quit()
     def uninstallPlugin(self):
-        print("Uninstall")
         selection = self.treeView.get_selection()
         model, list_iter = selection.get_selected()
-        print(model)
-        self.PMS_uninstallPlugin('InstallTest')
+        print('uninstall', model.get_value(list_iter,0))
+        self.app.getPluginSystemManager().uninstallPlugin(model.get_value(list_iter,0))
 
         if list_iter:
             self.listStore.remove(list_iter)
@@ -75,7 +71,7 @@ class PluginManagerUi(Gtk.ApplicationWindow):
         ok, filePath = self.chooseFile()
         if not ok:
             return
-        self.PMS_installPlugin(filePath)
+        self.app.getPluginSystemManager().installPlugin(filePath)
     def applySettings(self):
         print("Apply")
         selection = self.treeView.get_selection()
