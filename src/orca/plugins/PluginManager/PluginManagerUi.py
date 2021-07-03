@@ -13,20 +13,20 @@ class PluginManagerUi(Gtk.ApplicationWindow):
         self.set_default_size(450, 650)
         self.set_position(Gtk.WindowPosition.CENTER_ALWAYS)
 
-        self.listStore = Gtk.ListStore(str, bool, str, object,)
+        self.listStore = Gtk.ListStore(object,str, bool, str, )
 
         self.treeView = Gtk.TreeView(model=self.listStore)
         self.treeView.connect("row-activated", self._rowActivated)
         self.treeView.connect('key-press-event', self._onKeyPressTreeView)
 
         self.rendererText = Gtk.CellRendererText()
-        self.columnText = Gtk.TreeViewColumn("Name", self.rendererText, text=0)
+        self.columnText = Gtk.TreeViewColumn("Name", self.rendererText, text=1)
         self.treeView.append_column(self.columnText)
 
         self.rendererToggle = Gtk.CellRendererToggle()
         self.rendererToggle.connect("toggled", self._onCellToggled)
 
-        self.columnToggle = Gtk.TreeViewColumn("Active", self.rendererToggle, active=1)
+        self.columnToggle = Gtk.TreeViewColumn("Active", self.rendererToggle, active=2)
         self.treeView.append_column(self.columnToggle)
 
 
@@ -63,8 +63,8 @@ class PluginManagerUi(Gtk.ApplicationWindow):
         selection = self.treeView.get_selection()
         model, list_iter = selection.get_selected()
         try:
-            if model.get_value(list_iter,3):
-                self.app.getPluginSystemManager().uninstallPlugin(model.get_value(list_iter,3))
+            if model.get_value(list_iter,0):
+                self.app.getPluginSystemManager().uninstallPlugin(model.get_value(list_iter,0))
                 self.refreshPluginList()
         except:
             pass
@@ -95,8 +95,8 @@ class PluginManagerUi(Gtk.ApplicationWindow):
         #        self._on_scan()
     def applySettings(self):
         for row in self.listStore:
-            pluginInfo = row[3]
-            isActive = row[1]
+            pluginInfo = row[0]
+            isActive = row[2]
             self.app.getPluginSystemManager().setPluginActive(pluginInfo, isActive)
         self.app.getPluginSystemManager().syncAllPluginsActive()
         self.refreshPluginList()
@@ -119,13 +119,38 @@ class PluginManagerUi(Gtk.ApplicationWindow):
         self.clearPluginList()
         pluginList = self.app.getPluginSystemManager().plugins
         for pluginInfo in pluginList:
-            name = pluginInfo.get_module_name()
-            isActive = self.app.getPluginSystemManager().isPluginActive(pluginInfo)
-            self.addPlugin(name, isActive, pluginInfo)
+            self.addPlugin(pluginInfo)
     def clearPluginList(self):
         self.listStore.clear()
-    def addPlugin(self, Name, Active, pluginInfo, Description = ''):
-        self.listStore.append([Name, Active, Description, pluginInfo])
+
+    def addPlugin(self, pluginInfo):
+        hidden = self.app.getPluginSystemManager().isPluginHidden(pluginInfo)
+        if hidden:
+            return
+
+        name = self.app.getPluginSystemManager().getPluginName(pluginInfo)
+        moduleName = self.app.getPluginSystemManager().getPluginModuleName(pluginInfo)
+        version = self.app.getPluginSystemManager().getPluginVersion(pluginInfo)
+        website = self.app.getPluginSystemManager().getPluginWebsite(pluginInfo)
+        authors = self.app.getPluginSystemManager().getPluginAuthors(pluginInfo)
+        buildIn = self.app.getPluginSystemManager().isPluginBuildIn(pluginInfo)
+        description = self.app.getPluginSystemManager().getPluginDescription(pluginInfo)
+        iconName = self.app.getPluginSystemManager().getPluginIconName(pluginInfo)
+        copyright = self.app.getPluginSystemManager().getPluginCopyright(pluginInfo)
+        dependencies = self.app.getPluginSystemManager().getPluginDependencies(pluginInfo)
+
+        #settings = self.app.getPluginSystemManager().getPluginSettings(pluginInfo)
+        #hasDependencies = self.app.getPluginSystemManager().hasPluginDependency(pluginInfo)
+        loaded = self.app.getPluginSystemManager().isPluginLoaded(pluginInfo)
+        available = self.app.getPluginSystemManager().isPluginAvailable(pluginInfo)
+        active = self.app.getPluginSystemManager().isPluginActive(pluginInfo)
+
+        #externalData = self.app.getPluginSystemManager().getPluginExternalData(pluginInfo)
+        helpUri = self.app.getPluginSystemManager().getPlugingetHelpUri(pluginInfo)
+        moduleDir = self.app.getPluginSystemManager().getPluginModuleDir(pluginInfo)
+        dataDir = self.app.getPluginSystemManager().getPluginDataDir(pluginInfo)
+
+        self.listStore.append([pluginInfo, name, active, description])
     def chooseFile(self):
         dialog = Gtk.FileChooserDialog(
             title="Please choose a file", parent=self, action=Gtk.FileChooserAction.OPEN
@@ -153,9 +178,8 @@ class PluginManagerUi(Gtk.ApplicationWindow):
         dialog.destroy()
         return ok, filePath
     def _onCellToggled(self, widget, path):
-        self.listStore[path][1] = not self.listStore[path][1]
-    def run(self):
-        self.refreshPluginList()
+        self.listStore[path][2] = not self.listStore[path][2]
+    def present(self):
         orca_state = self.app.getDynamicApiManager().getAPI('OrcaState')
         ts = 0
         try:
@@ -165,6 +189,9 @@ class PluginManagerUi(Gtk.ApplicationWindow):
         if ts == 0:
             ts = Gtk.get_current_event_time()
         self.present_with_time(ts)
+    def run(self):
+        self.refreshPluginList()
+        self.present()
         self.show_all()
         Gtk.main()
         self.destroy()

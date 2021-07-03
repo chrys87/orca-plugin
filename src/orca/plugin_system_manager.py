@@ -100,6 +100,44 @@ class PluginSystemManager():
         return self._activePlugins
     def isPluginBuildIn(self, pluginInfo):
         return pluginInfo.is_builtin()
+    def isPluginHidden(self, pluginInfo):
+        return pluginInfo.is_hidden()
+    def getPluginAuthors(self, pluginInfo):
+        return pluginInfo.get_authors()
+    def getPluginCopyright(self, pluginInfo):
+        return pluginInfo.get_copyright()
+    def getPluginDataDir(self, pluginInfo):
+        return pluginInfo.get_data_dir()
+    def getPluginDependencies(self, pluginInfo):
+        return pluginInfo.get_dependencies()
+    def getPluginDescription(self, pluginInfo):
+        return pluginInfo.get_description()
+    def getPlugingetHelpUri(self, pluginInfo):
+        return pluginInfo.get_help_uri()
+    def getPluginIconName(self, pluginInfo):
+        return pluginInfo.get_icon_name()
+    def getPluginModuleDir(self, pluginInfo):
+        return pluginInfo.get_module_dir()
+    def getPluginModuleName(self, pluginInfo):
+        return pluginInfo.get_module_name()
+    def getPluginName(self, pluginInfo):
+        return pluginInfo.get_name()
+    def getPluginSettings(self, pluginInfo):
+        return pluginInfo.get_settings()
+    def getPluginVersion(self, pluginInfo):
+        return pluginInfo.get_version()
+    def getPluginWebsite(self, pluginInfo):
+        return pluginInfo.get_website()
+    # has_dependency and get_external_data seems broken-> takes exactly 2 arguments (1 given) but documentation doesnt say any parameter
+    #def hasPluginDependency(self, pluginInfo):
+    #    return pluginInfo.has_dependency()
+    #def getPluginExternalData(self, pluginInfo):
+    #    return pluginInfo.get_external_data()
+    def isPluginAvailable(self, pluginInfo):
+        return pluginInfo.is_available()
+    def isPluginLoaded(self, pluginInfo):
+        return pluginInfo.is_loaded()
+
     def setPluginActive(self, pluginInfo, active):
         if self.isPluginBuildIn(pluginInfo):
             active = True
