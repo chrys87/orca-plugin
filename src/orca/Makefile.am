@@ -76,7 +76,6 @@ orca_pythondir=$(pkgpythondir)
 SUBDIRS = \
 	backends \
 	scripts \
-	core-plugins \
 	plugins
 
 ui_DATA = \

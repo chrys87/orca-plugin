@@ -4,5 +4,5 @@ orca_python_PYTHON = \
 	PluginManager.py \
 	PluginManagerUi.py
 
-orca_pythondir=$(pkgpythondir)/core-plugins/PluginManager
+orca_pythondir=$(pkgpythondir)/plugins/PluginManager
 

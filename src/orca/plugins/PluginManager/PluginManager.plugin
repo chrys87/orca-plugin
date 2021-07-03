@@ -4,3 +4,4 @@ Loader=python3
 Name=Plugin Manager
 Description=Activate and Deactivate plugins
 Authors=Chrys chrys@linux-a11y.org
+Builtin=True

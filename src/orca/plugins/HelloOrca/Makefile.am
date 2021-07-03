@@ -3,5 +3,5 @@ orca_python_PYTHON = \
 	HelloOrca.plugin \
 	HelloOrca.py
 
-orca_pythondir=$(pkgpythondir)/core-plugins/HelloOrca
+orca_pythondir=$(pkgpythondir)/plugins/HelloOrca
 

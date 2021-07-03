@@ -26,33 +26,20 @@ class API(GObject.GObject):
 class PluginType(IntEnum):
     """Types of plugins we support, depending on their directory location."""
     # pylint: disable=comparison-with-callable,inconsistent-return-statements,no-else-return
-    
-    # CORE: provides basic functionality
-    # uninstallable: no
-    # deactivateable: no
-    CORE = 1
     # SYSTEM: provides system wide plugins
-    # uninstallable: no
-    # deactivateable: yes
-    SYSTEM = 2
+    SYSTEM = 1
     # USER: provides per user plugin
-    # uninstallable: yes
-    # deactivateable: yes
-    USER = 3
+    USER = 2
 
     def __str__(self):
-        if self.value == PluginType.CORE:
-            return _("Core plugin")
-        elif self.value == PluginType.SYSTEM:
+        if self.value == PluginType.SYSTEM:
             return _("System plugin")
         elif self.value == PluginType.USER:
             return _("User plugin")
 
     def get_root_dir(self):
         """Returns the directory where this type of plugins can be found."""
-        if self.value == PluginType.CORE:
-            return os.path.dirname(os.path.realpath(os.path.abspath(inspect.getfile(inspect.currentframe())))) + '/core-plugins'
-        elif self.value == PluginType.SYSTEM:
+        if self.value == PluginType.SYSTEM:
             return os.path.dirname(os.path.realpath(os.path.abspath(inspect.getfile(inspect.currentframe())))) + '/plugins'
         elif self.value == PluginType.USER:
             return os.path.expanduser('~') + '/.local/share/orca/plugins'
@@ -85,9 +72,6 @@ class PluginSystemManager():
     @classmethod
     def getPluginType(cls, pluginInfo):
         """Gets the PluginType for the specified Peas.PluginInfo."""
-        paths = [pluginInfo.get_data_dir(), PluginType.CORE.get_root_dir()]
-        if os.path.commonprefix(paths) == PluginType.CORE.get_root_dir():
-            return PluginType.CORE
         paths = [pluginInfo.get_data_dir(), PluginType.SYSTEM.get_root_dir()]
         if os.path.commonprefix(paths) == PluginType.SYSTEM.get_root_dir():
             return PluginType.SYSTEM
@@ -114,8 +98,10 @@ class PluginSystemManager():
         return None
     def getActivePlugins(self):
         return self._activePlugins
+    def isPluginBuildIn(self, pluginInfo):
+        return pluginInfo.is_builtin()
     def setPluginActive(self, pluginInfo, active):
-        if PluginSystemManager.getPluginType(pluginInfo) == PluginType.CORE:
+        if self.isPluginBuildIn(pluginInfo):
             active = True
         pluginName = pluginInfo.get_module_name() 
         if active:
@@ -125,7 +111,7 @@ class PluginSystemManager():
             if pluginName  in self.getActivePlugins():
                 self._activePlugins.remove(pluginName )
     def isPluginActive(self, pluginInfo):
-        if PluginSystemManager.getPluginType(pluginInfo) == PluginType.CORE:
+        if self.isPluginBuildIn(pluginInfo):
             return True
         active_plugin_names = self.getActivePlugins()
         return pluginInfo.get_module_name() in active_plugin_names
@@ -159,7 +145,7 @@ class PluginSystemManager():
             if pluginInfo not in self.plugins:
                 print("Plugin missing: {}".format(pluginInfo.get_module_name()))
                 return
-            if PluginSystemManager.getPluginType(pluginInfo) == PluginType.CORE:
+            if self.isPluginBuildIn(pluginInfo):
                 return
             self.engine.unload_plugin(pluginInfo)
             self.engine.garbage_collect()
@@ -212,8 +198,9 @@ class PluginSystemManager():
             return False
         return pluginFileExists
     def uninstallPlugin(self, pluginInfo):
-        if PluginSystemManager.getPluginType(pluginInfo) == PluginType.CORE:
+        if self.isPluginBuildIn(pluginInfo):
             return False
+        # do we want to allow removing system plugins?
         if PluginSystemManager.getPluginType(pluginInfo) == PluginType.SYSTEM:
             return False
         pluginFolder = pluginInfo.get_data_dir()
@@ -242,15 +229,12 @@ class PluginSystemManager():
                                    self.__extensionAdded)
 
     def _setupPluginsDir(self):
-        core_plugins_dir = PluginType.CORE.get_root_dir()
         system_plugins_dir = PluginType.SYSTEM.get_root_dir()
         user_plugins_dir = PluginType.USER.get_root_dir()
         if os.path.exists(user_plugins_dir):
             self.engine.add_search_path(user_plugins_dir)
         if os.path.exists(system_plugins_dir):
             self.engine.add_search_path(system_plugins_dir)
-        if os.path.exists(core_plugins_dir):
-            self.engine.add_search_path(core_plugins_dir)
 
     @staticmethod
     def __extensionRemoved(unusedSet, unusedPluginInfo, extension):
