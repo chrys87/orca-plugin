@@ -10,10 +10,10 @@ class PluginManagerUi(Gtk.ApplicationWindow):
         self.connect("destroy", self._onCancelButtonClicked)
         self.connect('key-press-event', self._onKeyPressWindow)
 
-        self.set_default_size(450, 650)
+        self.set_default_size(650, 650)
         self.set_position(Gtk.WindowPosition.CENTER_ALWAYS)
 
-        self.listStore = Gtk.ListStore(object,str, bool, str, )
+        self.listStore = Gtk.ListStore(object,str, bool, bool, str, str,str,str,str,str,str,str,str,str,str)
 
         self.treeView = Gtk.TreeView(model=self.listStore)
         self.treeView.connect("row-activated", self._rowActivated)
@@ -36,7 +36,10 @@ class PluginManagerUi(Gtk.ApplicationWindow):
         self.mainVBox.pack_start(self.buttomBox, False, True, 0)
 
         self.add(self.mainVBox)
-
+        self.oKButton = Gtk.Button.new_with_mnemonic("_Details")
+        self.oKButton.connect("clicked", self._onDetailsButtonClicked)
+        self.buttomBox.pack_start(self.oKButton, True, True, 0)
+        
         self.oKButton = Gtk.Button.new_with_mnemonic("_OK")
         self.oKButton.connect("clicked", self._onOkButtonClicked)
         self.buttomBox.pack_start(self.oKButton, True, True, 0)
@@ -80,7 +83,6 @@ class PluginManagerUi(Gtk.ApplicationWindow):
         _, key_val = event.get_keyval()
         if key_val == Gdk.KEY_Escape:
             self.closeWindow()
-
     def _onKeyPressTreeView(self, _, event):
         _, key_val = event.get_keyval()
         if key_val == Gdk.KEY_Return:
@@ -103,6 +105,33 @@ class PluginManagerUi(Gtk.ApplicationWindow):
 
     def _rowActivated(self, tree_view, path, column):
         print('rowActivated')
+    def showDetails(self):
+        selection = self.treeView.get_selection()
+        model, list_iter = selection.get_selected()
+        try:
+            if model.get_value(list_iter,0):
+                name = model.get_value(list_iter,1)
+                description = model.get_value(list_iter,8)
+                authors = model.get_value(list_iter,9)
+                website =model.get_value(list_iter,10)
+                copyright = model.get_value(list_iter,11)
+                license = '' #model.get_value(list_iter,0)
+                version = model.get_value(list_iter,12)
+                dialog = Gtk.AboutDialog(self)
+                dialog.set_authors(authors)
+                dialog.set_website(website)
+                dialog.set_copyright(copyright)
+                dialog.set_license(license)
+                dialog.set_version(version)
+                dialog.set_program_name(name)
+                dialog.set_comments(description)
+                dialog.run()
+                dialog.destroy()
+        except:
+            pass
+
+    def _onDetailsButtonClicked(self, widget):
+        self.showDetails()
 
     def _onOkButtonClicked(self, widget):
         self.applySettings()
@@ -149,8 +178,36 @@ class PluginManagerUi(Gtk.ApplicationWindow):
         helpUri = self.app.getPluginSystemManager().getPlugingetHelpUri(pluginInfo)
         moduleDir = self.app.getPluginSystemManager().getPluginModuleDir(pluginInfo)
         dataDir = self.app.getPluginSystemManager().getPluginDataDir(pluginInfo)
+        
+        if len(authors) == 0:
+            authors = ''
+        elif len(authors) == 1:
+            authors = authors[0]
+        else:
+            authors = ' '.join(authors)
 
-        self.listStore.append([pluginInfo, name, active, description])
+        if len(dependencies) == 0:
+            dependencies = ''
+        elif len(dependencies) == 1:
+            dependencies = dependencies[0]
+        else:
+            dependencies = ' '.join(dependencies)
+        # pluginInfo (object) = 0
+        # name (str) = 1
+        # active (bool) = 2
+        # buildIn (bool) = 3
+        # dataDir (str) = 4
+        # moduleDir (str) = 5
+        # dependencies (str) = 6
+        # moduleName (str) = 7
+        # description (str) = 8
+        # authors (str) = 9
+        # website (str) = 10
+        # copyright (str) = 11
+        # version (str) = 12
+        # helpUri (str) = 13
+        # iconName (str) = 14
+        self.listStore.append([pluginInfo, name, active, buildIn, dataDir, moduleDir, dependencies, moduleName, description, authors, website, copyright, version, helpUri, iconName])
     def chooseFile(self):
         dialog = Gtk.FileChooserDialog(
             title="Please choose a file", parent=self, action=Gtk.FileChooserAction.OPEN
@@ -178,6 +235,7 @@ class PluginManagerUi(Gtk.ApplicationWindow):
         dialog.destroy()
         return ok, filePath
     def _onCellToggled(self, widget, path):
+
         self.listStore[path][2] = not self.listStore[path][2]
     def present(self):
         orca_state = self.app.getDynamicApiManager().getAPI('OrcaState')
