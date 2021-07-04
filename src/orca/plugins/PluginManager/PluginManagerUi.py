@@ -12,8 +12,22 @@ class PluginManagerUi(Gtk.ApplicationWindow):
 
         self.set_default_size(650, 650)
         self.set_position(Gtk.WindowPosition.CENTER_ALWAYS)
-
-        self.listStore = Gtk.ListStore(object,str, bool, bool, str, str,str,str,str,str,str,str,str,str,str)
+        # pluginInfo (object) = 0
+        # name (str) = 1
+        # active (bool) = 2
+        # buildIn (bool) = 3
+        # dataDir (str) = 4
+        # moduleDir (str) = 5
+        # dependencies (object) = 6
+        # moduleName (str) = 7
+        # description (str) = 8
+        # authors (object) = 9
+        # website (str) = 10
+        # copyright (str) = 11
+        # version (str) = 12
+        # helpUri (str) = 13
+        # iconName (str) = 14
+        self.listStore = Gtk.ListStore(object,str, bool, bool, str, str,object,str,str,object,str,str,str,str,str)
 
         self.treeView = Gtk.TreeView(model=self.listStore)
         self.treeView.connect("row-activated", self._rowActivated)
@@ -179,29 +193,16 @@ class PluginManagerUi(Gtk.ApplicationWindow):
         moduleDir = self.app.getPluginSystemManager().getPluginModuleDir(pluginInfo)
         dataDir = self.app.getPluginSystemManager().getPluginDataDir(pluginInfo)
         
-        if len(authors) == 0:
-            authors = ''
-        elif len(authors) == 1:
-            authors = authors[0]
-        else:
-            authors = ' '.join(authors)
-
-        if len(dependencies) == 0:
-            dependencies = ''
-        elif len(dependencies) == 1:
-            dependencies = dependencies[0]
-        else:
-            dependencies = ' '.join(dependencies)
         # pluginInfo (object) = 0
         # name (str) = 1
         # active (bool) = 2
         # buildIn (bool) = 3
         # dataDir (str) = 4
         # moduleDir (str) = 5
-        # dependencies (str) = 6
+        # dependencies (object) = 6
         # moduleName (str) = 7
         # description (str) = 8
-        # authors (str) = 9
+        # authors (object) = 9
         # website (str) = 10
         # copyright (str) = 11
         # version (str) = 12
