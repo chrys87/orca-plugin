@@ -284,7 +284,7 @@ class PluginSystemManager():
         if not os.path.isdir(pluginFolder):
             return False
         if self.isPluginActive(pluginInfo):
-            self.unloadPlugin(pluginInfo)
+            self.setPluginActive(pluginInfo, False)
         try:
             shutil.rmtree(pluginFolder, ignore_errors=True)
         except Exception as e:

@@ -160,7 +160,6 @@ class PluginManagerUi(Gtk.ApplicationWindow):
         self.closeWindow()
     def refreshPluginList(self):
         self.clearPluginList()
-        print(self.app.getPluginSystemManager().getIgnoredPlugins())
         pluginList = self.app.getPluginSystemManager().plugins
         for pluginInfo in pluginList:
             self.addPlugin(pluginInfo)
