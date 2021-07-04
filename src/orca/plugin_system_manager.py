@@ -64,6 +64,7 @@ class PluginSystemManager():
         self._setupPluginsDir()
         self._setupExtensionSet()
         self._activePlugins = [plugin.get_module_name() for plugin in self.plugins]
+        self._ignorePluginModulePath = []
     @property
     def plugins(self):
         """Gets the engine's plugin list."""
@@ -137,22 +138,36 @@ class PluginSystemManager():
         return pluginInfo.is_available()
     def isPluginLoaded(self, pluginInfo):
         return pluginInfo.is_loaded()
+    
+    def getIgnoredPlugins(self):
+        return self._ignorePluginModulePath
+    def setIgnoredPlugins(self, pluginModulePath, ignored):
+        if ignored:
+            if not pluginModulePath  in self.getIgnoredPlugins():
+                self._ignorePluginModulePath.append(pluginModulePath )
+        else:
+            if pluginModulePath  in self.getIgnoredPlugins():
+                self._ignorePluginModulePath.remove(pluginModulePath )
 
     def setPluginActive(self, pluginInfo, active):
         if self.isPluginBuildIn(pluginInfo):
             active = True
-        pluginName = pluginInfo.get_module_name() 
+        pluginName = self.getPluginModuleName(pluginInfo)
         if active:
             if not pluginName  in self.getActivePlugins():
-                self._activePlugins.append(pluginName )
+                if self.loadPlugin(pluginInfo):
+                    self._activePlugins.append(pluginName )
         else:
             if pluginName  in self.getActivePlugins():
-                self._activePlugins.remove(pluginName )
+                if self.unloadPlugin(pluginInfo):
+                    self._activePlugins.remove(pluginName )
     def isPluginActive(self, pluginInfo):
         if self.isPluginBuildIn(pluginInfo):
             return True
+        if self.isPluginLoaded(pluginInfo):
+            return True
         active_plugin_names = self.getActivePlugins()
-        return pluginInfo.get_module_name() in active_plugin_names
+        return self.getPluginModuleName(pluginInfo) in active_plugin_names
     def syncAllPluginsActive(self, ForceAllPlugins=False):
         self.unloadAllPlugins(ForceAllPlugins)
         self.loadAllPlugins(ForceAllPlugins)
@@ -167,10 +182,12 @@ class PluginSystemManager():
         try:
             if pluginInfo not in self.plugins:
                 print("Plugin missing: {}".format(pluginInfo.get_module_name()))
-                return
+                return False
             self.engine.load_plugin(pluginInfo)
         except e as Exception:
             print(e)
+            return False
+        return True
 
     def unloadAllPlugins(self, ForceAllPlugins=False):
         """Loads plugins from settings."""
@@ -182,13 +199,15 @@ class PluginSystemManager():
         try:
             if pluginInfo not in self.plugins:
                 print("Plugin missing: {}".format(pluginInfo.get_module_name()))
-                return
+                return False
             if self.isPluginBuildIn(pluginInfo):
-                return
+                return False
             self.engine.unload_plugin(pluginInfo)
             self.engine.garbage_collect()
         except e as Exception:
             print(e)
+            return False
+        return True
     def installPlugin(self, pluginFilePath, pluginType=PluginType.USER):
         if not self.isValidPluginFile(pluginFilePath):
             return False
@@ -200,15 +219,34 @@ class PluginSystemManager():
         else:
             if not os.path.isdir(pluginFolder):
                 return False
-
         try:
             with tarfile.open(pluginFilePath) as tar:
                 tar.extractall(path=pluginFolder)
         except Exception as e:
             print(e)
+        pluginModulePath = self.getModuleDirByPluginFile(pluginFilePath)
+        if pluginModulePath != '':
+            pluginModulePath = pluginFolder + pluginModulePath
+            self.setIgnoredPlugins(pluginModulePath, False)
         print('install', pluginFilePath)
         self.rescanPlugins()
         return True
+    def getModuleDirByPluginFile(self, pluginFilePath):
+        if not isinstance(pluginFilePath, str):
+            return ''
+        if pluginFilePath == '':
+            return ''
+        if not os.path.exists(pluginFilePath):
+            return ''
+        try:
+            with tarfile.open(pluginFilePath) as tar:
+                tarMembers = tar.getmembers()
+                for tarMember in tarMembers:
+                    if tarMember.isdir():
+                        return tarMember.name
+        except Exception as e:
+            print(e)
+        return ''
     def isValidPluginFile(self, pluginFilePath):
         if not isinstance(pluginFilePath, str):
             return False
@@ -229,7 +267,6 @@ class PluginSystemManager():
                         if tarMember.name.endswith('.plugin'):
                             pluginFileExists = True
                     if not tarMember.name.startswith(pluginFolder):
-                        print(pluginFolder, tarMember.name)
                         return False
         except Exception as e:
             print(e)
@@ -253,6 +290,8 @@ class PluginSystemManager():
         except Exception as e:
             print(e)
             return False
+        pluginModulePath = self.getPluginModuleDir(pluginInfo)
+        self.setIgnoredPlugins(pluginModulePath, True)
         self.rescanPlugins()
         return True
     def _setupExtensionSet(self):

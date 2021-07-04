@@ -160,6 +160,7 @@ class PluginManagerUi(Gtk.ApplicationWindow):
         self.closeWindow()
     def refreshPluginList(self):
         self.clearPluginList()
+        print(self.app.getPluginSystemManager().getIgnoredPlugins())
         pluginList = self.app.getPluginSystemManager().plugins
         for pluginInfo in pluginList:
             self.addPlugin(pluginInfo)
@@ -167,12 +168,17 @@ class PluginManagerUi(Gtk.ApplicationWindow):
         self.listStore.clear()
 
     def addPlugin(self, pluginInfo):
+        ignoredPlugins = self.app.getPluginSystemManager().getIgnoredPlugins()
+        moduleDir = self.app.getPluginSystemManager().getPluginModuleDir(pluginInfo)
+        if moduleDir in ignoredPlugins:
+            return
+
         hidden = self.app.getPluginSystemManager().isPluginHidden(pluginInfo)
         if hidden:
             return
 
-        name = self.app.getPluginSystemManager().getPluginName(pluginInfo)
         moduleName = self.app.getPluginSystemManager().getPluginModuleName(pluginInfo)
+        name = self.app.getPluginSystemManager().getPluginName(pluginInfo)
         version = self.app.getPluginSystemManager().getPluginVersion(pluginInfo)
         website = self.app.getPluginSystemManager().getPluginWebsite(pluginInfo)
         authors = self.app.getPluginSystemManager().getPluginAuthors(pluginInfo)
@@ -190,7 +196,6 @@ class PluginManagerUi(Gtk.ApplicationWindow):
 
         #externalData = self.app.getPluginSystemManager().getPluginExternalData(pluginInfo)
         helpUri = self.app.getPluginSystemManager().getPlugingetHelpUri(pluginInfo)
-        moduleDir = self.app.getPluginSystemManager().getPluginModuleDir(pluginInfo)
         dataDir = self.app.getPluginSystemManager().getPluginDataDir(pluginInfo)
         
         # pluginInfo (object) = 0
