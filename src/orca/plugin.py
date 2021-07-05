@@ -29,25 +29,68 @@ class Plugin():
     def getPluginInfo(self):
         return self.pluginInfo
     def updatePluginInfoAttributes(self):
+        self.moduleDir = ''
+        self.hidden = False
+        self.moduleName = ''
+        self.name = ''
+        self.version = ''
+        self.website = ''
+        self.authors = []
+        self.buildIn = False
+        self.description = ''
+        self.iconName = ''
+        self.copyright = ''
+        self.dependencies = False
+        self.helpUri = ''
+        self.dataDir = ''
         pluginInfo = self.getPluginInfo()
-        self.moduleDir = self.app.getPluginSystemManager().getPluginModuleDir(pluginInfo)
+        if pluginInfo == None:
+            return
+        self.moduleName = self.getApp().getPluginSystemManager().getPluginModuleName(pluginInfo)
+        self.name = self.getApp().getPluginSystemManager().getPluginName(pluginInfo)
+        self.version = self.getApp().getPluginSystemManager().getPluginVersion(pluginInfo)
+        self.moduleDir = self.getApp().getPluginSystemManager().getPluginModuleDir(pluginInfo)
+        self.buildIn = self.getApp().getPluginSystemManager().isPluginBuildIn(pluginInfo)
+        self.description = self.getApp().getPluginSystemManager().getPluginDescription(pluginInfo)
+        self.hidden = self.getApp().getPluginSystemManager().isPluginHidden(pluginInfo)
+        self.website = self.getApp().getPluginSystemManager().getPluginWebsite(pluginInfo)
+        self.authors = self.getApp().getPluginSystemManager().getPluginAuthors(pluginInfo)
+        self.iconName = self.getApp().getPluginSystemManager().getPluginIconName(pluginInfo)
+        self.copyright = self.getApp().getPluginSystemManager().getPluginCopyright(pluginInfo)
+        self.dependencies = self.getApp().getPluginSystemManager().getPluginDependencies(pluginInfo)
 
-        self.hidden = self.app.getPluginSystemManager().isPluginHidden(pluginInfo)
+        #settings = self.getApp().getPluginSystemManager().getPluginSettings(pluginInfo)
+        #hasDependencies = self.getApp().getPluginSystemManager().hasPluginDependency(pluginInfo)
 
-        self.moduleName = self.app.getPluginSystemManager().getPluginModuleName(pluginInfo)
-        self.name = self.app.getPluginSystemManager().getPluginName(pluginInfo)
-        self.version = self.app.getPluginSystemManager().getPluginVersion(pluginInfo)
-        self.website = self.app.getPluginSystemManager().getPluginWebsite(pluginInfo)
-        self.authors = self.app.getPluginSystemManager().getPluginAuthors(pluginInfo)
-        self.buildIn = self.app.getPluginSystemManager().isPluginBuildIn(pluginInfo)
-        self.description = self.app.getPluginSystemManager().getPluginDescription(pluginInfo)
-        self.iconName = self.app.getPluginSystemManager().getPluginIconName(pluginInfo)
-        self.copyright = self.app.getPluginSystemManager().getPluginCopyright(pluginInfo)
-        self.dependencies = self.app.getPluginSystemManager().getPluginDependencies(pluginInfo)
+        #externalData = self.getApp().getPluginSystemManager().getPluginExternalData(pluginInfo)
+        self.helpUri = self.getApp().getPluginSystemManager().getPlugingetHelpUri(pluginInfo)
+        self.dataDir = self.getApp().getPluginSystemManager().getPluginDataDir(pluginInfo)
 
-        #settings = self.app.getPluginSystemManager().getPluginSettings(pluginInfo)
-        #hasDependencies = self.app.getPluginSystemManager().hasPluginDependency(pluginInfo)
-
-        #externalData = self.app.getPluginSystemManager().getPluginExternalData(pluginInfo)
-        self.helpUri = self.app.getPluginSystemManager().getPlugingetHelpUri(pluginInfo)
-        self.dataDir = self.app.getPluginSystemManager().getPluginDataDir(pluginInfo)
+    def isPluginBuildIn(self):
+        return self.buildIn
+    def isPluginHidden(self):
+        return self.hidden
+    def getAuthors(self):
+        return self.authors
+    def getCopyright(self):
+        return self.copyright
+    def getDataDir(self):
+        return self.dataDir
+    def getDependencies(self):
+        return self.dependencies
+    def getDescription(self):
+        return self.description
+    def getgetHelpUri(self):
+        return self.helpUri
+    def getIconName(self):
+        return self.iconName
+    def getModuleDir(self):
+        return self.moduleDir
+    def getModuleName(self):
+        return self.moduleName
+    def getName(self):
+        return self.name
+    def getVersion(self):
+        return self.version
+    def getWebsite(self):
+        return self.website
