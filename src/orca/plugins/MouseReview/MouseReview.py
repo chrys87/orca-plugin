@@ -27,6 +27,7 @@ __copyright__ = "Copyright (c) 2008 Eitan Isaacson" \
                 "Copyright (c) 2016 Igalia, S.L."
 __license__   = "LGPL"
 
+from orca import plugin
 
 import gi, math, pyatspi,time
 gi.require_version('Peas', '1.0')
@@ -56,11 +57,12 @@ _eventManager = None
 _scriptManager = None
 _settingsManager = None
 
-class MouseReview(GObject.Object, Peas.Activatable):
+class MouseReview(GObject.Object, Peas.Activatable, plugin.Plugin):
     #__gtype_name__ = 'MouseReview'
 
     object = GObject.Property(type=GObject.Object)
     def __init__(self):
+        plugin.Plugin.__init__(self)
         self.mouse_review = None
     def do_activate(self):
         API = self.object

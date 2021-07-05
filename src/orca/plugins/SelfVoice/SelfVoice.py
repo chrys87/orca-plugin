@@ -5,6 +5,8 @@
 # Append message to be spoken with <#PERSISTENT#> to present a persistent message in braille
 # <#APPEND#> is only usable for a persistent message
 
+from orca import plugin
+
 import gi
 gi.require_version('Peas', '1.0')
 from gi.repository import GObject
@@ -15,11 +17,12 @@ from threading import Thread, Lock
 APPEND_CODE = '<#APPEND#>'
 PERSISTENT_CODE = '<#PERSISTENT#>'
 
-class SelfVoice(GObject.Object, Peas.Activatable):
+class SelfVoice(GObject.Object, Peas.Activatable, plugin.Plugin):
     __gtype_name__ = 'SelfVoice'
 
     object = GObject.Property(type=GObject.Object)
     def __init__(self):
+        plugin.Plugin.__init__(self)
         self.lock = Lock()
         self.active = False
         self.voiceThread = Thread(target=self.voiceWorker)

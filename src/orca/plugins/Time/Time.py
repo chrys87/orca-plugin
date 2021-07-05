@@ -3,12 +3,14 @@ gi.require_version('Peas', '1.0')
 from gi.repository import GObject
 from gi.repository import Peas
 
-class Time(GObject.Object, Peas.Activatable):
+from orca import plugin
+
+class Time(GObject.Object, Peas.Activatable, plugin.Plugin):
     #__gtype_name__ = 'Time'
 
     object = GObject.Property(type=GObject.Object)
     def __init__(self):
-        pass
+        plugin.Plugin.__init__(self)
     def do_activate(self):
         API = self.object
         API.app.getSignalManager().connectSignal("setup-inputeventhandlers-completed", self.setupCompatBinding)
@@ -21,6 +23,8 @@ class Time(GObject.Object, Peas.Activatable):
         API.app.getSignalManager().disconnectSignalByFunction(self.setupCompatBinding)
         inputEventHandlers = API.app.getDynamicApiManager().getAPI('inputEventHandlers')
         del inputEventHandlers['presentTimeHandler']
+        #API.app.getDynamicApiManager().registerAPI('inputEventHandlers', inputEventHandlers)
+        inputEventHandlers = API.app.getDynamicApiManager().getAPI('inputEventHandlers')
     def do_update_state(self):
         API = self.object
     def presentTime(self, script, inputEvent):

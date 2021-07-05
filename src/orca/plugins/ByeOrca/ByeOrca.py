@@ -1,15 +1,18 @@
+from orca import plugin
+
 import gi
 gi.require_version('Peas', '1.0')
 from gi.repository import GObject
 from gi.repository import Peas
 import time
 
-class ByeOrca(GObject.Object, Peas.Activatable):
+
+class ByeOrca(GObject.Object, Peas.Activatable, plugin.Plugin):
     #__gtype_name__ = 'ByeOrca'
 
     object = GObject.Property(type=GObject.Object)
     def __init__(self):
-        pass
+        plugin.Plugin.__init__(self)
     def do_activate(self):
         API = self.object
         API.app.getSignalManager().connectSignal("stop-application-completed", self.process)

@@ -1,3 +1,5 @@
+from orca import plugin
+
 import gi, os
 gi.require_version('Peas', '1.0')
 from gi.repository import GObject
@@ -5,11 +7,12 @@ from gi.repository import Peas
 gi.require_version("Gtk", "3.0")
 from gi.repository import Gtk, Gdk
 
-class Clipboard(GObject.Object, Peas.Activatable):
+class Clipboard(GObject.Object, Peas.Activatable, plugin.Plugin):
     #__gtype_name__ = 'Clipboard'
 
     object = GObject.Property(type=GObject.Object)
     def __init__(self):
+        plugin.Plugin.__init__(self)
         self.keybinding = None
     def do_activate(self):
         API = self.object
