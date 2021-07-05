@@ -313,14 +313,13 @@ class PluginSystemManager():
         if os.path.exists(system_plugins_dir):
             self.engine.add_search_path(system_plugins_dir)
 
-    @staticmethod
-    def __extensionRemoved(unusedSet, unusedPluginInfo, extension):
+    def __extensionRemoved(self, unusedSet, pluginInfo, extension):
         extension.deactivate()
 
-    @staticmethod
-    def __extensionAdded(unusedSet, unusedPluginInfo, extension):
+    def __extensionAdded(self, unusedSet, pluginInfo, extension):
+        extension.setApp(self.app)
+        extension.setPluginInfo(pluginInfo)
         extension.activate()
-
     def __loadedPlugins(self, engine, unusedSet):
         """Handles the changing of the loaded plugin list."""
         self.app.settings.ActivePlugins = engine.get_property("loaded-plugins")
