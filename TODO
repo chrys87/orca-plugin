@@ -1,6 +1,8 @@
 All Orca TODO's are maintained as RFE's and bugs in the GNOME bugzilla
 database:  http://bugzilla.gnome.org/buglist.cgi?query=product%3Aorca
 
+Is compatible to upstream: Yes
+
 Roadmap for Plugin Based Orca:
 Stage 1 (ALL DONE)
 - (DONE): implement Plugin System Manager what handles all our plugin stuff
