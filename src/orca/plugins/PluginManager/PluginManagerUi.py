@@ -81,6 +81,21 @@ class PluginManagerUi(Gtk.ApplicationWindow):
         model, list_iter = selection.get_selected()
         try:
             if model.get_value(list_iter,0):
+                pluginInfo = model.get_value(list_iter,0)
+                pluginName = self.app.getPluginSystemManager().getPluginName(pluginInfo)
+                dialog = Gtk.MessageDialog(None,
+                        Gtk.DialogFlags.MODAL,
+                        type=Gtk.MessageType.INFO,
+                        buttons=Gtk.ButtonsType.YES_NO)
+
+                dialog.set_markup("<b>%s</b>" % 'Remove Plugin {}?'.format(pluginName))
+                dialog.format_secondary_markup('Do you really want to remove Plugin {}?'.format(pluginName))
+                response = dialog.run()
+                if response == Gtk.ResponseType.YES:
+                    dialog.destroy()
+                else:
+                    dialog.destroy()
+                    return
                 self.app.getPluginSystemManager().uninstallPlugin(model.get_value(list_iter,0))
                 self.refreshPluginList()
         except:

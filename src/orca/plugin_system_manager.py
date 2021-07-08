@@ -99,6 +99,9 @@ class PluginSystemManager():
         return None
     def getActivePlugins(self):
         return self._activePlugins
+    def setActivePlugins(self, activePlugins):
+        self._activePlugins = activePlugins
+        self.syncAllPluginsActive()
     def isPluginBuildIn(self, pluginInfo):
         return pluginInfo.is_builtin()
     def isPluginHidden(self, pluginInfo):

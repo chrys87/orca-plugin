@@ -117,6 +117,7 @@ userCustomizableSettings = [
     "presentDateFormat",
     "presentTimeFormat",
     "activeProfile",
+    "activePlugins",
     "startingProfile",
     "spellcheckSpellError",
     "spellcheckSpellSuggestion",
@@ -207,7 +208,7 @@ voices = {
 startingProfile = ['Default', 'default']
 activeProfile   = ['Default', 'default']
 profile         = ['Default', 'default']
-
+activePlugins = ['Clipboard']
 # Speech
 speechFactoryModules         = ["speechdispatcherfactory"]
 speechServerFactory          = "speechdispatcherfactory"

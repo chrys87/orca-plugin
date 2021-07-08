@@ -465,6 +465,9 @@ def loadUserSettings(script=None, inputEvent=None, skipReloadMessage=False):
     if _settingsManager.getSetting('enableSound'):
         player.init()
 
+    activePlugins = orcaApp.getSettingsManager().getSetting('activePlugins')
+    orcaApp.getPluginSystemManager().setActivePlugins(activePlugins)
+
     global _orcaModifiers
     custom = [k for k in settings.orcaModifierKeys if k not in _orcaModifiers]
     _orcaModifiers += custom
@@ -548,7 +551,6 @@ def init(registry):
         signal.signal(signal.SIGALRM, settings.timeoutCallback)
         signal.alarm(settings.timeoutTime)
 
-    orcaApp.pluginSystemManager.loadAllPlugins()
     loadUserSettings()
 
     if settings.timeoutCallback and (settings.timeoutTime > 0):
@@ -641,7 +643,7 @@ def shutdown(script=None, inputEvent=None):
         signal.alarm(settings.timeoutTime)
 
     orcaApp.getSignalManager().emitSignal('stop-application-completed')
-    orcaApp.pluginSystemManager.unloadAllPlugins(ForceAllPlugins=True)
+    orcaApp.getPluginSystemManager().unloadAllPlugins(ForceAllPlugins=True)
 
     _scriptManager.deactivate()
     _eventManager.deactivate()
