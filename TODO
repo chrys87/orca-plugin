@@ -1,2 +1,67 @@
 All Orca TODO's are maintained as RFE's and bugs in the GNOME bugzilla
 database:  http://bugzilla.gnome.org/buglist.cgi?query=product%3Aorca
+
+Roadmap for Plugin Based Orca:
+Stage 1 (ALL DONE)
+- (DONE): implement Plugin System Manager what handles all our plugin stuff
+- (DONE): migrate some example plugins
+    -- (DONE): Clipboard
+    -- (DONE): Preferences
+    -- (DONE): SelfVoice
+    -- (DONE): Time
+    -- (DONE): Date
+    -- (DONE): MouseReview
+    -- (DONE): HelloOrca
+    -- (DONE): ByeOrca
+    -- (DONE): HelloWorld
+- (DONE): implement a base plugin class to have an unify Plugin API
+- (DONE): Dynamic API Manager to let plugins register its own bits of functionality for global usage (also used for compat)
+- (DONE): initial "orca" class to hold all of orcas API. so we can easy share it with plugins
+- (DONE): create a basic plugin manager:
+    -- (DONE): install
+    -- (DONE): uninstall
+    -- (DONE): activate plugins
+    -- (DONE): details
+- (DONE): compatibiltiy: 
+    -- (DONE): ability to register shortcuts in current structure
+    -- (DONE): place current objects in Dynamic API Manager
+    -- (DONE): use existing settings to store plugin activ states
+
+Stage 2 (WIP)
+- (TODO): Translation API: Plugins store its own translation. we should provide an unify way to consume it. maybe implemented into plugin.plugin?
+- (TODO): Orca should track by Plugins registered stuff like shortcuts, gestures, signals and all kind of that
+- (TODO): Orca should unregister the by the Plugins registered stuff by itself on unload
+
+Stage 3 (TODO)
+- (TODO): Per Plugin settings: Plugins come along with its own settings (structure, defaults). We need an unify API to:
+    -- (TODO): install (along with the plugin)
+    -- (TODO): uninstall (along with the plugin)
+    -- (TODO): upgrade
+    -- (TODO): load
+    -- (TODO): save
+    -- (TODO): reset
+    -- (TODO): check compatibiltiy
+    -> (TODO): all with keep the following scopes in mind: global, profile, app
+
+Stage 4 (TODO)
+- (TODO): generic preferences
+    -- (TODO): List based
+    -- (TODO): generic
+    -- (TODO): agnostic to installed plugins
+    -- (TODO): searchable
+    -- (TODO): set values
+    -- (TODO): reset to default value
+    -- (TODO): load
+    -- (TODO): save
+    -- (TODO): export
+    -- (TODO): import
+    -- (TODO): profiles
+    -- (TODO): keyboard
+    -- (TODO): punctuation
+    -- (TODO): per application
+
+Stage 5 (TODO)
+- (TODO): Create an clean "orca" class and object based API
+- (TODO): move all parts into plugins
+- (TODO): create useful signals
+- (TODO): Bugfixing and hardening

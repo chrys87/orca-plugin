@@ -31,6 +31,7 @@ Orca also has the following dependencies:
 * Python 3         - Python platform
 * pygobject-3.0    - Python bindings for the GObject library
 * gtk+-3.0         - GTK+ toolkit
+* libpeas          - GObject based Plugin engine
 * json-py          - a JSON (<https://json.org/>) reader and writer in Python
 * python-speechd   - Python bindings for Speech Dispatcher (optional)
 * BrlTTY           - BrlTTY (<https://mielke.cc/brltty/>) support for braille (optional)
@@ -38,7 +39,6 @@ Orca also has the following dependencies:
 * liblouis         - Liblouis (<http://liblouis.org/>) support for contracted braille (optional)
 * py-setproctitle  - Python library to set the process title (optional)
 * gstreamer-1.0    - GStreamer - Streaming media framework (optional)
-
 You are strongly encouraged to also have the latest stable versions
 of AT-SPI2 and ATK for the GNOME 40.x release.
 
