@@ -91,10 +91,8 @@ class PluginManagerUi(Gtk.ApplicationWindow):
                 dialog.set_markup("<b>%s</b>" % 'Remove Plugin {}?'.format(pluginName))
                 dialog.format_secondary_markup('Do you really want to remove Plugin {}?'.format(pluginName))
                 response = dialog.run()
-                if response == Gtk.ResponseType.YES:
-                    dialog.destroy()
-                else:
-                    dialog.destroy()
+                dialog.destroy()
+                if response != Gtk.ResponseType.YES:
                     return
                 self.app.getPluginSystemManager().uninstallPlugin(model.get_value(list_iter,0))
                 self.refreshPluginList()
