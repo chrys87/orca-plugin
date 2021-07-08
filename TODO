@@ -15,7 +15,7 @@ Stage 1 (ALL DONE)
     -- (DONE): ByeOrca
     -- (DONE): HelloWorld
 - (DONE): implement a base plugin class to have an unify Plugin API
-- (DONE): Dynamic API Manager to let plugins register its own bits of functionality for global usage (also used for compat)
+- (DONE): Dynamic API Manager to let plugins register its own bits of functionality for global usage (also used for compatibiltiy)
 - (DONE): initial "orca" class to hold all of orcas API. so we can easy share it with plugins
 - (DONE): create a basic plugin manager:
     -- (DONE): install
