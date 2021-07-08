@@ -96,7 +96,6 @@ class Backend:
             defaults. """
         if profile is None:
             profile = 'default'
-
         general['pronunciations'] = pronunciations
         general['keybindings'] = keybindings
 
