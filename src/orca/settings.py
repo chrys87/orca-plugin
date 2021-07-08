@@ -208,7 +208,10 @@ voices = {
 startingProfile = ['Default', 'default']
 activeProfile   = ['Default', 'default']
 profile         = ['Default', 'default']
-activePlugins = ['Clipboard']
+
+# Plugins
+activePlugins = ['Clipboard', 'MouseReview', 'Date', 'ByeOrca', 'Time', 'HelloOrca']
+
 # Speech
 speechFactoryModules         = ["speechdispatcherfactory"]
 speechServerFactory          = "speechdispatcherfactory"

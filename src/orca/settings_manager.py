@@ -477,6 +477,8 @@ class SettingsManager(object):
                 self.profileGeneral[key] = value
             elif self.general.get(key) != value:
                 self.profileGeneral[key] = value
+            #elif key == 'activePlugins':
+            #    self.profileGeneral[key] = value
 
         msg = 'SETTINGS MANAGER: General settings for profile set'
         debug.println(debug.LEVEL_INFO, msg, True)
