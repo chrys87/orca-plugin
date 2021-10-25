@@ -727,9 +727,6 @@ class Utilities(script_utilities.Utilities):
             obj, offset = self.getCaretContext()
 
         nextobj, nextoffset = self.findNextCaretInOrder(obj, offset)
-        if (obj, offset) == (nextobj, nextoffset):
-            nextobj, nextoffset = self.findNextCaretInOrder(nextobj, nextoffset)
-
         if skipSpace:
             text = self.queryNonEmptyText(nextobj)
             while text and text.getText(nextoffset, nextoffset + 1) in [" ", "\xa0"]:
@@ -743,9 +740,6 @@ class Utilities(script_utilities.Utilities):
             obj, offset = self.getCaretContext()
 
         prevobj, prevoffset = self.findPreviousCaretInOrder(obj, offset)
-        if (obj, offset) == (prevobj, prevoffset):
-            prevobj, prevoffset = self.findPreviousCaretInOrder(prevobj, prevoffset)
-
         if skipSpace:
             text = self.queryNonEmptyText(prevobj)
             while text and text.getText(prevoffset, prevoffset + 1) in [" ", "\xa0"]:
@@ -1922,6 +1916,16 @@ class Utilities(script_utilities.Utilities):
             debug.println(debug.LEVEL_INFO, msg, True)
             contents = self.getLineContentsAtOffset(obj, offset, layoutMode, useCache)
 
+        if line == contents:
+            start, end = self.getHyperlinkRange(obj)
+            msg = "WEB: Got same line. %s has range in %s of %i-%i" % (obj, obj.parent, start, end)
+            debug.println(debug.LEVEL_INFO, msg, True)
+            if start >= 0:
+                obj, offset = self.previousContext(obj.parent, start, True)
+                msg = "WEB: Trying again with %s, %i" % (obj, offset)
+                debug.println(debug.LEVEL_INFO, msg, True)
+                contents = self.getLineContentsAtOffset(obj, offset, layoutMode, useCache)
+
         return contents
 
     def getNextLineContents(self, obj=None, offset=-1, layoutMode=None, useCache=True):
@@ -1970,6 +1974,16 @@ class Utilities(script_utilities.Utilities):
             msg = "WEB: Got same line. Trying again with %s, %i" % (obj, offset)
             debug.println(debug.LEVEL_INFO, msg, True)
             contents = self.getLineContentsAtOffset(obj, offset, layoutMode, useCache)
+
+        if line == contents:
+            start, end = self.getHyperlinkRange(obj)
+            msg = "WEB: Got same line. %s has range in %s of %i-%i" % (obj, obj.parent, start, end)
+            debug.println(debug.LEVEL_INFO, msg, True)
+            if end >= 0:
+                obj, offset = self.nextContext(obj.parent, end, True)
+                msg = "WEB: Trying again with %s, %i" % (obj, offset)
+                debug.println(debug.LEVEL_INFO, msg, True)
+                contents = self.getLineContentsAtOffset(obj, offset, layoutMode, useCache)
 
         if not contents:
             msg = "WEB: Could not get line contents for %s, %i" % (obj, offset)
@@ -3431,6 +3445,10 @@ class Utilities(script_utilities.Utilities):
 
         return self.queryNonEmptyText(obj) is None
 
+    def isEmptyToolTip(self, obj):
+        return obj and obj.getRole() == pyatspi.ROLE_TOOL_TIP \
+            and self.queryNonEmptyText(obj) is None
+
     def isBrowserUIAlert(self, obj):
         if not (obj and obj.getRole() == pyatspi.ROLE_ALERT):
             return False
@@ -3957,7 +3975,7 @@ class Utilities(script_utilities.Utilities):
         return rv
 
     def hasValidName(self, obj):
-        if not obj.name:
+        if not (obj and obj.name):
             return False
 
         if len(obj.name.split()) > 1:
@@ -4672,6 +4690,10 @@ class Utilities(script_utilities.Utilities):
             msg = "WEB: Empty anchor cannot have caret context %s" % obj
             debug.println(debug.LEVEL_INFO, msg, True)
             return False
+        if self.isEmptyToolTip(obj):
+            msg = "WEB: Empty tool tip cannot have caret context %s" % obj
+            debug.println(debug.LEVEL_INFO, msg, True)
+            return False
         if self.hasNoSize(obj):
             msg = "WEB: Allowing sizeless object to have caret context %s" % obj
             debug.println(debug.LEVEL_INFO, msg, True)
@@ -5094,6 +5116,10 @@ class Utilities(script_utilities.Utilities):
                 allText = text.getText(0, -1)
                 for i in range(offset + 1, len(allText)):
                     child = self.getChildAtOffset(obj, i)
+                    if child and allText[i] != self.EMBEDDED_OBJECT_CHARACTER:
+                        msg = "ERROR: Child %s found at offset with char '%s'" % \
+                            (child, allText[i].replace("\n", "\\n"))
+                        debug.println(debug.LEVEL_INFO, msg, True)
                     if self._canHaveCaretContext(child):
                         if self._treatObjectAsWhole(child, -1):
                             return child, 0
@@ -5159,6 +5185,10 @@ class Utilities(script_utilities.Utilities):
                     offset = len(allText)
                 for i in range(offset - 1, -1, -1):
                     child = self.getChildAtOffset(obj, i)
+                    if child and allText[i] != self.EMBEDDED_OBJECT_CHARACTER:
+                        msg = "ERROR: Child %s found at offset with char '%s'" % \
+                            (child, allText[i].replace("\n", "\\n"))
+                        debug.println(debug.LEVEL_INFO, msg, True)
                     if self._canHaveCaretContext(child):
                         if self._treatObjectAsWhole(child, -1):
                             return child, 0

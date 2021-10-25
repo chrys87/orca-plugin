@@ -555,7 +555,7 @@ class Utilities:
             if self.EMBEDDED_OBJECT_CHARACTER in displayedText:
                 displayedText = None
 
-        if not displayedText and role != pyatspi.ROLE_COMBO_BOX:
+        if not displayedText and role not in [pyatspi.ROLE_COMBO_BOX, pyatspi.ROLE_SPIN_BUTTON]:
             # TODO - JD: This should probably get nuked. But all sorts of
             # existing code might be relying upon this bogus hack. So it
             # will need thorough testing when removed.
@@ -2813,6 +2813,12 @@ class Utilities:
         child = hyperlink.getObject(0)
         msg = "INFO: Hyperlink object at index %i for %s is %s" % (index, obj, child)
         debug.println(debug.LEVEL_INFO, msg, True)
+
+        if offset != hyperlink.startIndex:
+            msg = "ERROR: The hyperlink start index (%i) should match the offset (%i)" \
+                % (hyperlink.startIndex, offset)
+            debug.println(debug.LEVEL_INFO, msg, True)
+
         return child
 
     def characterOffsetInParent(self, obj):
