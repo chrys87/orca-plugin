@@ -2596,14 +2596,20 @@ class Script(script.Script):
             entry = self.utilities.getEntryForEditableComboBox(event.source)
             if entry and entry.getState().contains(pyatspi.STATE_FOCUSED):
                 return
-
+        
+        # If a wizard-like notebook page being reviewed changes, we might not get
+        # any events to update the locusOfFocus. As a result, subsequent flat
+        # review commands will continue to present the stale content.
+        if role == pyatspi.ROLE_PAGE_TAB_LIST and self.flatReviewContext:
+            self.flatReviewContext = None
+        
         orcaApp = orca.getManager()
         mouse_review = orcaApp.getDynamicApiManager().getAPI('MouseReview')
         
         mouseReviewItem = None
         if mouse_review != None:
             mouseReviewItem = mouse_review.getCurrentItem()
-
+            
         selectedChildren = self.utilities.selectedChildren(obj)
         for child in selectedChildren:
             if pyatspi.findAncestor(orca_state.locusOfFocus, lambda x: x == child):
@@ -2760,6 +2766,7 @@ class Script(script.Script):
             self.speakCharacter(string)
         else:
             voice = self.speechGenerator.voice(string=string)
+            string = self.utilities.adjustForRepeats(string)
             speech.speak(string, voice)
 
     def onTextInserted(self, event):
@@ -2824,6 +2831,7 @@ class Script(script.Script):
                 self.speakCharacter(string)
             else:
                 voice = self.speechGenerator.voice(string=string)
+                string = self.utilities.adjustForRepeats(string)
                 speech.speak(string, voice)
 
         if len(string) != 1:
