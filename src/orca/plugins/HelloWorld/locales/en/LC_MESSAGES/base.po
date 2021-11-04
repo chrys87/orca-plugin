@@ -1,0 +1,26 @@
+# Copyright (C) YEAR ORGANIZATION
+#
+# Chrys <mail@chrys.de>, 2021.
+msgid ""
+msgstr ""
+"Project-Id-Version: \n"
+"POT-Creation-Date: 2021-11-04 14:12+0100\n"
+"PO-Revision-Date: 2021-11-04 14:12+0100\n"
+"Last-Translator: Chrys <mail@chrys.de>\n"
+"Language-Team: German <kde-i18n-de@kde.org>\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Generated-By: pygettext.py 1.5\n"
+"Language: de_DE\n"
+"Plural-Forms: nplurals=2; plural=(n != 1);\n"
+"X-Generator: Lokalize 21.08.2\n"
+
+#: test.py:6
+msgid "Hello World"
+msgstr "Englischer Text"
+
+#: test.py:7
+msgid "This is a translatable string"
+msgstr ""
+
