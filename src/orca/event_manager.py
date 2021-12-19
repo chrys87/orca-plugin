@@ -787,6 +787,7 @@ class EventManager:
                   "object:text-changed:insert",
                   "object:text-changed:delete:system",
                   "object:text-changed:insert:system",
+                  "object:text-attributes-changed",
                   "object:children-changed:add",
                   "object:children-changed:add:system",
                   "object:property-change:accessible-name",
@@ -815,6 +816,7 @@ class EventManager:
                   "object:text-changed:insert",
                   "object:text-changed:delete:system",
                   "object:text-changed:insert:system",
+                  "object:text-attributes-changed",
                   "object:children-changed:add",
                   "object:children-changed:add:system",
                   "object:property-change:accessible-name",
@@ -835,6 +837,9 @@ class EventManager:
 
         if event.type.startswith("object:state-changed:selected"):
             return event.detail1
+
+        if event.type.startswith("object:text-selection-changed"):
+            return True
 
         if event.type.startswith("window:activate"):
             return True
