@@ -2830,7 +2830,7 @@ class Script(script.Script):
             if len(string) == 1:
                 self.speakCharacter(string)
             else:
-                voice = self.speechGenerator.voice(string=string)
+                voice = self.speechGenerator.voice(obj=event.source, string=string)
                 string = self.utilities.adjustForRepeats(string)
                 speech.speak(string, voice)
 
@@ -3265,7 +3265,7 @@ class Script(script.Script):
             sentence = self.utilities.substring(obj, sentenceStartOffset + 1,
                                          sentenceEndOffset + 1)
 
-        voice = self.speechGenerator.voice(string=sentence)
+        voice = self.speechGenerator.voice(obj=obj, string=sentence)
         sentence = self.utilities.adjustForRepeats(sentence)
         speech.speak(sentence, voice)
         return True
@@ -3341,7 +3341,7 @@ class Script(script.Script):
             word = self.utilities.\
                 substring(obj, wordStartOffset + 1, wordEndOffset + 1)
 
-        voice = self.speechGenerator.voice(string=word)
+        voice = self.speechGenerator.voice(obj=obj, string=word)
         word = self.utilities.adjustForRepeats(word)
         speech.speak(word, voice)
         return True
@@ -3413,7 +3413,7 @@ class Script(script.Script):
             endOffset = startOffset + len(line)
             orca.emitRegionChanged(obj, startOffset, endOffset, orca.CARET_TRACKING)
 
-            voice = self.speechGenerator.voice(string=line)
+            voice = self.speechGenerator.voice(obj=obj, string=line)
             line = self.utilities.adjustForLinks(obj, line, startOffset)
             line = self.utilities.adjustForRepeats(line)
             if self.utilities.shouldVerbalizeAllPunctuation(obj):
@@ -3451,7 +3451,7 @@ class Script(script.Script):
 
             orca.emitRegionChanged(obj, startOffset, endOffset, orca.CARET_TRACKING)
 
-            voice = self.speechGenerator.voice(string=phrase)
+            voice = self.speechGenerator.voice(obj=obj, string=phrase)
             phrase = self.utilities.adjustForRepeats(phrase)
             if self.utilities.shouldVerbalizeAllPunctuation(obj):
                 phrase = self.utilities.verbalizeAllPunctuation(phrase)
@@ -3751,7 +3751,7 @@ class Script(script.Script):
                 lastEndOffset = endOffset
                 offset = endOffset
 
-                voice = self.speechGenerator.voice(string=lineString)
+                voice = self.speechGenerator.voice(obj=obj, string=lineString)
                 if voice and isinstance(voice, list):
                     voice = voice[0]
 

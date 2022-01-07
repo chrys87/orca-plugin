@@ -1660,6 +1660,21 @@ class Utilities:
     def isSwitch(self, obj):
         return False
 
+    def getObjectFromPath(self, path):
+        start = self._script.app
+        rv = None
+        for p in path:
+            if p == -1:
+                continue
+            try:
+                start = start[p]
+            except:
+                break
+        else:
+            rv = start
+
+        return rv
+
     def _hasSamePath(self, obj1, obj2):
         path1 = pyatspi.utils.getPath(obj1)
         path2 = pyatspi.utils.getPath(obj2)
@@ -3131,6 +3146,31 @@ class Utilities:
 
         return self._script.attributeNamesDict.get(attribName, attribName)
 
+    def getAllTextAttributesForObject(self, obj):
+        """Returns a list of (start, end, attrsDict) tuples for obj."""
+        try:
+            text = obj.queryText()
+        except:
+            return []
+
+        msg = "INFO: Getting all text attributes for %s" % obj
+        debug.println(debug.LEVEL_INFO, msg, True)
+
+        rv = []
+        offset = 0
+        while offset < text.characterCount:
+            attrList, start, end = text.getAttributeRun(offset)
+            msg = "INFO: Attributes at %i: %s (%i-%i)" % (offset, attrList, start, end)
+            debug.println(debug.LEVEL_INFO, msg, True)
+
+            attrDict = dict([attr.split(':', 1) for attr in attrList])
+            rv.append((max(start, offset), end, attrDict))
+            offset = max(end, offset + 1)
+
+        msg = "INFO: Result: %s" % rv
+        debug.println(debug.LEVEL_INFO, msg, True)
+        return rv
+
     def textAttributes(self, acc, offset=None, get_defaults=False):
         """Get the text attributes run for a given offset in a given accessible
 
@@ -3195,6 +3235,65 @@ class Utilities:
             localizedValue = text_attribute_names.getTextAttributeName(value, self._script)
 
         return "%s: %s" % (localizedKey, localizedValue)
+
+    def getLanguageAndDialectForObject(self, obj):
+        """Returns a (language, dialect) tuple for obj."""
+
+        locale, encoding = obj.objectLocale.split(".")
+        if not locale:
+            locale, encoding = local.getdefaultlocale()
+
+        language, dialect = locale.split("_")
+        return language, dialect
+
+    def splitSubstringByLanguage(self, obj, start, end):
+        """Returns a list of (start, end, string, language, dialect) tuples."""
+
+        rv = []
+        allSubstrings = self.getLanguageAndDialectFromTextAttributes(obj)
+        for startOffset, endOffset, language, dialect in allSubstrings:
+            if start >= endOffset:
+                continue
+            if end <= startOffset:
+                break
+            startOffset = max(start, startOffset)
+            endOffset = min(end, endOffset)
+            string = self.substring(obj, startOffset, endOffset)
+            rv.append([startOffset, endOffset, string, language, dialect])
+
+        return rv
+
+    def getLanguageAndDialectForSubstring(self, obj, start, end):
+        """Returns a (language, dialect) tuple. If multiple languages apply to
+        the substring, language and dialect will be empty strings. Callers must
+        do any preprocessing to avoid that condition."""
+
+        allSubstrings = self.getLanguageAndDialectFromTextAttributes(obj)
+        for startOffset, endOffset, language, dialect in allSubstrings:
+            if startOffset <= start and endOffset >= end:
+                return language, dialect
+
+        return "", ""
+
+    def getLanguageAndDialectFromTextAttributes(self, obj):
+        """Returns a list of (start, end, language, dialect) tuples for obj
+        based on what is exposed via text attributes."""
+
+        rv = []
+        attributeSet = self.getAllTextAttributesForObject(obj)
+        lastLanguage = lastDialect = ""
+        for (start, end, attrs) in attributeSet:
+            language = attrs.get("language", "")
+            dialect = ""
+            if "-" in language:
+                language, dialect = language.split("-")
+            if rv and lastLanguage == language and lastDialect == dialect:
+                rv[-1] = rv[-1][0], end, language, dialect
+            else:
+                rv.append((start, end, language, dialect))
+            lastLanguage, lastDialect = language, dialect
+
+        return rv
 
     def willEchoCharacter(self, event):
         """Given a keyboard event containing an alphanumeric key,

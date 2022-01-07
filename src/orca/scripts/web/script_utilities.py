@@ -52,6 +52,8 @@ class Utilities(script_utilities.Utilities):
 
         self._objectAttributes = {}
         self._currentTextAttrs = {}
+        self._allTextAttrs = {}
+        self._languageAndDialects = {}
         self._caretContexts = {}
         self._priorContexts = {}
         self._contextPathsRolesAndNames = {}
@@ -72,6 +74,7 @@ class Utilities(script_utilities.Utilities):
         self._isFocusableWithMathChild = {}
         self._mathNestingLevel = {}
         self._isOffScreenLabel = {}
+        self._labelIsAncestorOfLabelled = {}
         self._elementLinesAreSingleChars= {}
         self._elementLinesAreSingleWords= {}
         self._hasNoSize = {}
@@ -150,6 +153,8 @@ class Utilities(script_utilities.Utilities):
     def clearCachedObjects(self):
         debug.println(debug.LEVEL_INFO, "WEB: cleaning up cached objects", True)
         self._objectAttributes = {}
+        self._allTextAttrs = {}
+        self._languageAndDialects = {}
         self._inDocumentContent = {}
         self._inTopLevelWebApp = {}
         self._isTextBlockElement = {}
@@ -166,6 +171,7 @@ class Utilities(script_utilities.Utilities):
         self._isFocusableWithMathChild = {}
         self._mathNestingLevel = {}
         self._isOffScreenLabel = {}
+        self._labelIsAncestorOfLabelled = {}
         self._elementLinesAreSingleChars= {}
         self._elementLinesAreSingleWords= {}
         self._hasNoSize = {}
@@ -219,6 +225,8 @@ class Utilities(script_utilities.Utilities):
         self._currentWordContents = None
         self._currentCharacterContents = None
         self._currentTextAttrs = {}
+        self._allTextAttrs = {}
+        self._languageAndDialects = {}
 
     def isDocument(self, obj):
         if not obj:
@@ -932,6 +940,49 @@ class Utilities(script_utilities.Utilities):
 
         return super().localizeTextAttribute(key, value)
 
+    def getAllTextAttributesForObject(self, obj):
+        """Returns a list of (start, end, attrsDict) tuples for obj."""
+
+        if not (obj and self.inDocumentContent(obj)):
+            return super().getAllTextAttributesForObject(obj)
+
+        rv = self._allTextAttrs.get(hash(obj))
+        if rv is not None:
+            return rv
+
+        rv = super().getAllTextAttributesForObject(obj)
+        self._allTextAttrs[hash(obj)] = rv
+        return rv
+
+    def adjustContentsForLanguage(self, contents):
+        rv = []
+        for content in contents:
+            split = self.splitSubstringByLanguage(*content[0:3])
+            for start, end, string, language, dialect in split:
+                rv.append([content[0], start, end, string])
+
+        return rv
+
+    def getLanguageAndDialectFromTextAttributes(self, obj):
+        if not self.inDocumentContent(obj):
+            return super().getLanguageAndDialectFromTextAttributes(obj)
+
+        rv = self._languageAndDialects.get(hash(obj))
+        if rv is not None:
+            return rv
+
+        rv = super().getLanguageAndDialectFromTextAttributes(obj)
+
+        # Embedded objects such as images and certain widgets won't implement the text interface
+        # and thus won't expose text attributes. Therefore try to get the info from the parent.
+        if not rv:
+            start, end = self.getHyperlinkRange(obj)
+            language, dialect = self.getLanguageAndDialectForSubstring(obj.parent, start, end)
+            rv.append((0, 1, language, dialect))
+
+        self._languageAndDialects[hash(obj)] = rv
+        return rv
+
     def findObjectInContents(self, obj, offset, contents, usingCache=False):
         if not obj or not contents:
             return -1
@@ -1442,7 +1493,10 @@ class Utilities(script_utilities.Utilities):
             string = string[rangeStart:rangeEnd]
             end = start + len(string)
 
-        return [[obj, start, end, string]]
+        if boundary in [pyatspi.TEXT_BOUNDARY_WORD_START, pyatspi.TEXT_BOUNDARY_CHAR]:
+            return [[obj, start, end, string]]
+
+        return self.adjustContentsForLanguage([[obj, start, end, string]])
 
     def getSentenceContentsAtOffset(self, obj, offset, useCache=True):
         if not obj:
@@ -1690,7 +1744,9 @@ class Utilities(script_utilities.Utilities):
                 extents = self.getExtents(acc, start, end)
             except:
                 extents = "(exception)"
-            msg = "     %i. chars: %i-%i: '%s' extents=%s\n" % (i, start, end, string, extents)
+            language, dialect = self.getLanguageAndDialectForSubstring(acc, start, end)
+            msg = "     %i. chars: %i-%i: '%s' extents=%s language='%s' dialect='%s'\n" % \
+                (i, start, end, string, extents, language, dialect)
             msg += debug.getAccessibleDetails(debug.LEVEL_INFO, acc, indent)
             debug.println(debug.LEVEL_INFO, msg, True)
 
@@ -3251,6 +3307,23 @@ class Utilities(script_utilities.Utilities):
         self._elementLinesAreSingleChars[hash(obj)] = rv
         return rv
 
+    def labelIsAncestorOfLabelled(self, obj):
+        if not (obj and self.inDocumentContent(obj)):
+            return False
+
+        rv = self._labelIsAncestorOfLabelled.get(hash(obj))
+        if rv is not None:
+            return rv
+
+        rv = False
+        for target in self.targetsForLabel(obj):
+            if pyatspi.findAncestor(target, lambda x: x == obj):
+                rv = True
+                break
+
+        self._labelIsAncestorOfLabelled[hash(obj)] = rv
+        return rv
+
     def isOffScreenLabel(self, obj):
         if not (obj and self.inDocumentContent(obj)):
             return False
@@ -3258,6 +3331,9 @@ class Utilities(script_utilities.Utilities):
         rv = self._isOffScreenLabel.get(hash(obj))
         if rv is not None:
             return rv
+
+        if self.labelIsAncestorOfLabelled(obj):
+            return False
 
         rv = False
         targets = self.labelTargets(obj)
@@ -3515,6 +3591,9 @@ class Utilities(script_utilities.Utilities):
         rv = self._isClickableElement.get(hash(obj))
         if rv is not None:
             return rv
+
+        if self.labelIsAncestorOfLabelled(obj):
+            return False
 
         rv = False
         if not obj.getState().contains(pyatspi.STATE_FOCUSABLE) \
@@ -4870,21 +4949,6 @@ class Utilities(script_utilities.Utilities):
         rv = self._contextPathsRolesAndNames.get(hash(documentFrame.parent))
         if not rv:
             return [-1], None, None
-
-        return rv
-
-    def getObjectFromPath(self, path):
-        start = self._script.app
-        rv = None
-        for p in path:
-            if p == -1:
-                continue
-            try:
-                start = start[p]
-            except:
-                break
-        else:
-            rv = start
 
         return rv
 

@@ -74,7 +74,7 @@ class SpeechGenerator(speech_generator.SpeechGenerator):
         label, objects = self._script.labelInference.infer(obj)
         if label:
             result.append(label)
-            result.extend(self.voice(speech_generator.DEFAULT))
+            result.extend(self.voice(speech_generator.DEFAULT, obj=obj, **args))
 
         return result
 
@@ -96,7 +96,6 @@ class SpeechGenerator(speech_generator.SpeechGenerator):
             return []
 
         result = []
-        acss = self.voice(speech_generator.SYSTEM)
         role = args.get('role', obj.getRole())
         force = args.get('force', False)
 
@@ -125,16 +124,15 @@ class SpeechGenerator(speech_generator.SpeechGenerator):
                     result.extend(self.__generateHeadingRole(obj.parent))
 
             if result:
-                result.extend(acss)
+                result.extend(self.voice(speech_generator.SYSTEM, obj=obj, **args))
 
             if role == pyatspi.ROLE_LINK \
                and obj.childCount and obj[0].getRole() == pyatspi.ROLE_IMAGE:
                 # If this is a link with a child which is an image, we
                 # want to indicate that.
                 #
-                acss = self.voice(speech_generator.HYPERLINK)
                 result.append(self.getLocalizedRoleName(obj[0]))
-                result.extend(acss)
+                result.extend(self.voice(speech_generator.SYSTEM, obj=obj, **args))
 
         return result
 
@@ -186,7 +184,6 @@ class SpeechGenerator(speech_generator.SpeechGenerator):
                 self, obj, **args)
 
         result = []
-        acss = self.voice(speech_generator.SYSTEM)
         mnemonic, shortcut, accelerator = \
             self._script.utilities.mnemonicShortcutAccelerator(obj)
         if shortcut:
@@ -194,6 +191,6 @@ class SpeechGenerator(speech_generator.SpeechGenerator):
                settings.VERBOSITY_LEVEL_VERBOSE:
                 shortcut = 'Alt Shift %s' % shortcut
             result = [keynames.localizeKeySequence(shortcut)]
-            result.extend(acss)
+            result.extend(self.voice(speech_generator.SYSTEM, obj=obj, **args))
 
         return result

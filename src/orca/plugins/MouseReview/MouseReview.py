@@ -213,7 +213,7 @@ class _StringContext:
             debug.println(debug.LEVEL_INFO, msg, True)
             return False
 
-        voice = self._script.speechGenerator.voice(string=self._string)
+        voice = self._script.speechGenerator.voice(obj=self._obj, string=self._string)
         string = self._script.utilities.adjustForRepeats(self._string)
         # TODO
         #orca.emitRegionChanged(self._obj, self._start, self._end, orca.MOUSE_REVIEW)
