@@ -1224,21 +1224,32 @@ class SpeechGenerator(generator.Generator):
         if args.get('inMouseReview') and obj.getState().contains(pyatspi.STATE_EDITABLE):
             return []
 
-        result = generator.Generator._generateCurrentLineText(self, obj, **args)
-        if not (result and result[0]):
+        result = self._generateSubstring(obj, **args)
+        if result and result[0]:
+            return result
+
+        [text, caretOffset, startOffset] = self._script.getTextLineAtCaret(obj)
+        if self._script.EMBEDDED_OBJECT_CHARACTER in text:
             return []
 
-        if result == ['\n'] and _settingsManager.getSetting('speakBlankLines') \
+        if text == '\n' and _settingsManager.getSetting('speakBlankLines') \
            and not self._script.inSayAll() and args.get('total', 1) == 1:
             result = [messages.BLANK]
+            result.extend(self.voice(string=text, obj=obj, **args))
+            return result
 
-        result[0] = self._script.utilities.adjustForRepeats(result[0])
-
-        if self._script.utilities.shouldVerbalizeAllPunctuation(obj):
-            result[0] = self._script.utilities.verbalizeAllPunctuation(result[0])
-
-        if len(result) == 1:
-            result.extend(self.voice(DEFAULT, obj=obj, **args))
+        result = []
+        endOffset = startOffset + len(text)
+        split = self._script.utilities.splitSubstringByLanguage(obj, startOffset, endOffset)
+        for start, end, string, language, dialect in split:
+            if not string:
+                continue
+            args["language"], args["dialect"] = language, dialect
+            voice = self.voice(string=string, obj=obj, **args)
+            string = self._script.utilities.adjustForLinks(obj, string, start)
+            rv = [self._script.utilities.adjustForRepeats(string)]
+            rv.extend(voice)
+            result.append(rv)
 
         return result
 
@@ -2862,6 +2873,12 @@ class SpeechGenerator(generator.Generator):
         voicename = voiceType.get(key) or voiceType.get(DEFAULT)
         voices = _settingsManager.getSetting('voices')
         voice = acss.ACSS(voices.get(voiceType.get(DEFAULT)))
+
+        language = args.get('language')
+        dialect = args.get('dialect')
+        msg = "SPEECH GENERATOR: %s voice requested with language='%s', dialect='%s'" % \
+            (key, language, dialect)
+        debug.println(debug.LEVEL_INFO, msg, True)
 
         if key in [None, DEFAULT]:
             string = args.get('string', '')
