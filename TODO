@@ -29,11 +29,19 @@ Stage 1 (ALL DONE)
 
 Stage 2 (WIP)
 - (TODO): Translation API: Plugins store its own translation. we should provide an unify way to consume it. maybe implemented into plugin.plugin?
-- (TODO): Orca should track by Plugins registered stuff like shortcuts, gestures, signals and all kind of that
+- (TODO): Orca should track by Plugins registered stuff like 
+    -- (TODO): shortcuts
+    -- (TODO): gestures
+    -- (TODO): event subscription
+    -- (TODO): signals
 - (TODO): Orca should unregister the by the Plugins registered stuff by itself on unload
+    -- (TODO): shortcuts
+    -- (TODO): gestures
+    -- (TODO): event subscription
+    -- (TODO): signals
 
 Stage 3 (TODO)
-- (TODO): Per Plugin settings: Plugins come along with its own settings (structure, defaults). We need an unify API to:
+- (TODO): Per Plugin settings: Plugins come along with its own settings (structure, defaults). We need an unify API to. The Settings are handled by Gsettings instead of JSON:
     -- (TODO): install (along with the plugin)
     -- (TODO): uninstall (along with the plugin)
     -- (TODO): upgrade
@@ -41,7 +49,9 @@ Stage 3 (TODO)
     -- (TODO): save
     -- (TODO): reset
     -- (TODO): check compatibiltiy
-    -> (TODO): all with keep the following scopes in mind: global, profile, app
+    -- (TODO): scope: global
+    -- (TODO): scope: profiles
+    -- (TODO): scope: per application
 
 Stage 4 (TODO)
 - (TODO): generic preferences
@@ -55,13 +65,18 @@ Stage 4 (TODO)
     -- (TODO): save
     -- (TODO): export
     -- (TODO): import
-    -- (TODO): profiles
     -- (TODO): keyboard
     -- (TODO): punctuation
-    -- (TODO): per application
+    -- (TODO): scope: global
+    -- (TODO): scope: profiles
+    -- (TODO): scope: per application
 
 Stage 5 (TODO)
 - (TODO): Create an clean "orca" class and object based API
-- (TODO): move all parts into plugins
 - (TODO): create useful signals
+- (TODO): move all parts into plugins
+    -- (TODO): Move source into Plugins
+    -- (TODO): Move Settings into Plugins
+    -- (TODO): Move Translation into Plugins
 - (TODO): Bugfixing and hardening
+- (TODO): Release :)
