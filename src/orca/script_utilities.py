@@ -3163,9 +3163,14 @@ class Utilities:
         rv = []
         offset = startOffset
         while offset < endOffset:
-            attrList, start, end = text.getAttributeRun(offset)
-            msg = "INFO: Attributes at %i: %s (%i-%i)" % (offset, attrList, start, end)
-            debug.println(debug.LEVEL_INFO, msg, True)
+            try:
+                attrList, start, end = text.getAttributeRun(offset)
+                msg = "INFO: Attributes at %i: %s (%i-%i)" % (offset, attrList, start, end)
+                debug.println(debug.LEVEL_INFO, msg, True)
+            except:
+                msg = "ERROR: Exception getting attributes at %i" % (offset)
+                debug.println(debug.LEVEL_INFO, msg, True)
+                return rv
 
             attrDict = dict([attr.split(':', 1) for attr in attrList])
             rv.append((max(start, offset), end, attrDict))
@@ -3291,7 +3296,7 @@ class Utilities:
             language = attrs.get("language", "")
             dialect = ""
             if "-" in language:
-                language, dialect = language.split("-")
+                language, dialect = language.split("-", 1)
             if rv and lastLanguage == language and lastDialect == dialect:
                 rv[-1] = rv[-1][0], end, language, dialect
             else:

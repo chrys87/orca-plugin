@@ -48,24 +48,6 @@ _speechserver = None
 # The last time something was spoken.
 _timestamp = 0
 
-def getSpeechServerFactories():
-    """Imports all known SpeechServer factory modules.  Returns a list
-    of modules that implement the getSpeechServers method, which
-    returns a list of speechserver.SpeechServer instances.
-    """
-
-    factories = []
-
-    moduleNames = settings.speechFactoryModules
-    for moduleName in moduleNames:
-        try:
-            module = importlib.import_module('orca.%s' % moduleName)
-            factories.append(module)
-        except:
-            debug.printException(debug.LEVEL_CONFIGURATION)
-
-    return factories
-
 def _initSpeechServer(moduleName, speechServerInfo):
 
     global _speechserver
@@ -147,6 +129,8 @@ def __resolveACSS(acss=None):
         return acss
     elif isinstance(acss, list) and len(acss) == 1:
         return ACSS(acss[0])
+    elif isinstance(acss, dict):
+        return ACSS(acss)
     else:
         voices = settings.voices
         return ACSS(voices[settings.DEFAULT_VOICE])
@@ -295,13 +279,6 @@ def speakCharacter(character, acss=None):
     if _speechserver:
         _speechserver.speakCharacter(character, acss=acss)
 
-def isSpeaking():
-    """Returns True if the system is currently speaking."""
-    if _speechserver:
-        return _speechserver.isSpeaking()
-    else:
-        return False
-
 def getInfo():
     info = None
     if _speechserver:
@@ -375,32 +352,3 @@ def shutdown():
 def reset(text=None, acss=None):
     if _speechserver:
         _speechserver.reset(text, acss)
-
-def testNoSettingsInit():
-    init()
-    speak("testing")
-    speak("this is higher", ACSS({'average-pitch' : 7}))
-    speak("this is slower", ACSS({'rate' : 3}))
-    speak("this is faster", ACSS({'rate' : 80}))
-    speak("this is quiet",  ACSS({'gain' : 2}))
-    speak("this is loud",   ACSS({'gain' : 10}))
-    speak("this is normal")
-
-def test():
-    from . import speechserver
-    factories = getSpeechServerFactories()
-    for factory in factories:
-        print(factory.__name__)
-        servers = factory.SpeechServer.getSpeechServers()
-        for server in servers:
-            try:
-                print("    ", server.getInfo())
-                for family in server.getVoiceFamilies():
-                    name = family[speechserver.VoiceFamily.NAME]
-                    print("      ", name)
-                    acss = ACSS({ACSS.FAMILY : family})
-                    server.speak(name, acss)
-                    server.speak("testing")
-                server.shutdown()
-            except:
-                debug.printException(debug.LEVEL_OFF)

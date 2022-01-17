@@ -32,7 +32,6 @@ import orca.debug as debug
 import orca.orca as orca
 import orca.orca_state as orca_state
 import orca.scripts.default as default
-import orca.speech as speech
 
 from .script_utilities import Utilities
 
@@ -75,7 +74,7 @@ class Script(default.Script):
 
         msg = "GTK: locusOfFocus believed to be typeahead. Presenting change."
         debug.println(debug.LEVEL_INFO, msg, True)
-        self.presentObject(event.any_data)
+        self.presentObject(event.any_data, interrupt=True)
 
     def onCheckedChanged(self, event):
         """Callback for object:state-changed:checked accessibility events."""
@@ -90,8 +89,7 @@ class Script(default.Script):
         if not pyatspi.findAncestor(obj, isListBox):
             return
 
-        self.updateBraille(obj)
-        speech.speak(self.speechGenerator.generateSpeech(obj, alreadyFocused=True))
+        self.presentObject(obj, alreadyFocused=True, interrupt=True)
 
     def onFocus(self, event):
         """Callback for focus: accessibility events."""
@@ -208,7 +206,7 @@ class Script(default.Script):
            or obj.getRole() in [pyatspi.ROLE_ALERT, pyatspi.ROLE_INFO_BAR]:
             if obj.parent and obj.parent.getRole() == pyatspi.ROLE_APPLICATION:
                 return
-            self.presentObject(event.source)
+            self.presentObject(event.source, interrupt=True)
             return
 
         super().onShowingChanged(event)
