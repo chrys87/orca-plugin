@@ -91,6 +91,7 @@ from orca import pronunciation_dict
 from orca import orca_gtkbuilder
 from orca import signal_manager
 from orca import dynamic_api_manager
+from orca import eventsynthesizer
 
 _eventManager = event_manager.getManager()
 _scriptManager = script_manager.getManager()
@@ -883,6 +884,7 @@ class Orca(GObject.Object):
         self.getDynamicApiManager().registerAPI('InputEvent', input_event)
         self.getDynamicApiManager().registerAPI('SpeechServer', speechserver)
         self.getDynamicApiManager().registerAPI('OrcaGtkbuilder', orca_gtkbuilder)
+        self.getDynamicApiManager().registerAPI('EventSynthesizer', eventsynthesizer)
         # orca lets say, special compat handling....
         self.getDynamicApiManager().registerAPI('EmitRegionChanged', emitRegionChanged)
         self.getDynamicApiManager().registerAPI('LoadUserSettings', loadUserSettings)
