@@ -92,6 +92,9 @@ from orca import orca_gtkbuilder
 from orca import signal_manager
 from orca import dynamic_api_manager
 from orca import eventsynthesizer
+from orca import translation_manager
+from orca import resource_manager
+
 
 _eventManager = event_manager.getManager()
 _scriptManager = script_manager.getManager()
@@ -665,8 +668,8 @@ def shutdown(script=None, inputEvent=None):
     orcaApp.getSignalManager().emitSignal('stop-application-completed')
     orcaApp.getPluginSystemManager().unloadAllPlugins(ForceAllPlugins=True)
 
-    _scriptManager.deactivate()
     _eventManager.deactivate()
+    _scriptManager.deactivate()
 
     # Shutdown all the other support.
     #
@@ -836,6 +839,8 @@ class Orca(GObject.Object):
         self.pluginSystemManager = plugin_system_manager.PluginSystemManager(self)
         self.signalManager = signal_manager.SignalManager(self)
         self.dynamicApiManager = dynamic_api_manager.DynamicApiManager(self)
+        self.translationManager = translation_manager.TranslationManager(self)
+        self.resourceManager = resource_manager.ResourceManager(self)
         self.debugManager = debug
         self.createCompatAPI()
     def getAPIHelper(self):
@@ -854,7 +859,10 @@ class Orca(GObject.Object):
         return self.scriptManager
     def getDebugManager(self):
         return self.debugManager
-
+    def getTranslationManager(self):
+        return self.translationManager
+    def getResourceManager(self):
+        return self.resourceManager
     def run(self, cacheValues=True):
         return main(cacheValues)
     def stop(self):
@@ -862,6 +870,8 @@ class Orca(GObject.Object):
     def createCompatAPI(self):
         # add dynamic API
         # for now add compatibility API
+        self.getResourceManager().addResourceContext('')
+
         self.getDynamicApiManager().registerAPI('Logger', _logger)
         self.getDynamicApiManager().registerAPI('SettingsManager', settings_manager)
         self.getDynamicApiManager().registerAPI('ScriptManager', script_manager)
@@ -896,4 +906,5 @@ def getManager():
     return orcaApp
 
 if __name__ == "__main__":
+    GObject.threads_init()
     sys.exit(orcaApp.run())

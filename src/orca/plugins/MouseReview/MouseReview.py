@@ -63,7 +63,6 @@ class MouseReview(GObject.Object, Peas.Activatable, plugin.Plugin):
     object = GObject.Property(type=GObject.Object)
     def __init__(self):
         plugin.Plugin.__init__(self)
-        self.mouse_review = None
     def do_activate(self):
         API = self.object
         global _mouseReviewCapable
@@ -93,37 +92,36 @@ class MouseReview(GObject.Object, Peas.Activatable, plugin.Plugin):
         _eventManager = event_manager.getManager()
         _scriptManager = script_manager.getManager()
         _settingsManager = settings_manager.getManager()
-        self.Initialize(API.app)
-        API.app.getSignalManager().connectSignal("setup-inputeventhandlers-completed", self.setupCompatBinding)
-        API.app.getSignalManager().connectSignal("load-setting-completed", self.Initialize)
+        self.Initialize()
+        self.connectSignal("setup-inputeventhandlers-completed", self.setupCompatBinding)
+        self.connectSignal("load-setting-completed", self.Initialize)
     def do_deactivate(self):
         API = self.object
         global _mouseReviewCapable
         if not _mouseReviewCapable:
             return
-        self.mouse_review.deactivate()
-        API.app.getDynamicApiManager().unregisterAPI('MouseReview')
-        API.app.getSignalManager().disconnectSignalByFunction(self.setupCompatBinding)
-        API.app.getSignalManager().disconnectSignalByFunction( self.Initialize)
-        inputEventHandlers = API.app.getDynamicApiManager().getAPI('inputEventHandlers')
-        del inputEventHandlers['toggleMouseReviewHandler']
+        mouse_review = API.app.getDynamicApiManager().getAPI('MouseReview')
 
+        mouse_review.deactivate()
     def do_update_state(self):
         API = self.object
     def setupCompatBinding(self, app):
-        cmdnames = app.getDynamicApiManager().getAPI('Cmdnames')
-        inputEventHandlers = app.getDynamicApiManager().getAPI('inputEventHandlers')
-        inputEventHandlers['toggleMouseReviewHandler'] = app.getAPIHelper().createInputEventHandler(self.mouse_review.toggle, cmdnames.MOUSE_REVIEW_TOGGLE)
-    def Initialize(self, app):
-        if self.mouse_review == None:
-            self.mouse_review = MouseReviewer()
-            app.getDynamicApiManager().registerAPI('MouseReview', self.mouse_review)
-        settings_manager = app.getDynamicApiManager().getAPI('SettingsManager')
+        API = self.object
+        mouse_review = API.app.getDynamicApiManager().getAPI('MouseReview')
+        cmdnames = API.app.getDynamicApiManager().getAPI('Cmdnames')
+        inputEventHandlers = API.app.getDynamicApiManager().getAPI('inputEventHandlers')
+        inputEventHandlers['toggleMouseReviewHandler'] = API.app.getAPIHelper().createInputEventHandler(mouse_review.toggle, cmdnames.MOUSE_REVIEW_TOGGLE)
+    def Initialize(self):
+        API = self.object
+
+        mouse_review = MouseReviewer()
+        self.registerAPI('MouseReview', mouse_review)
+        settings_manager = API.app.getDynamicApiManager().getAPI('SettingsManager')
         _settingsManager = settings_manager.getManager()
         if _settingsManager.getSetting('enableMouseReview'):
-            self.mouse_review.activate()
+            mouse_review.activate()
         else:
-            self.mouse_review.deactivate()
+            mouse_review.deactivate()
 
 class _StringContext:
     """The textual information associated with an _ItemContext."""

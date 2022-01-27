@@ -5,13 +5,15 @@ from gi.repository import Gtk, Gdk
 
 class PluginManagerUi(Gtk.ApplicationWindow):
     def __init__(self, app, *args, **kwargs):
-        super().__init__(*args, **kwargs, title="Orca Plugin Manager")
+        super().__init__(*args, **kwargs, title=_("Orca Plugin Manager"))
         self.app = app
+        self.translationContext = None
         self.connect("destroy", self._onCancelButtonClicked)
         self.connect('key-press-event', self._onKeyPressWindow)
-
+    def createUI(self):
         self.set_default_size(650, 650)
         self.set_position(Gtk.WindowPosition.CENTER_ALWAYS)
+
         # pluginInfo (object) = 0
         # name (str) = 1
         # active (bool) = 2
@@ -34,13 +36,13 @@ class PluginManagerUi(Gtk.ApplicationWindow):
         self.treeView.connect('key-press-event', self._onKeyPressTreeView)
 
         self.rendererText = Gtk.CellRendererText()
-        self.columnText = Gtk.TreeViewColumn("Name", self.rendererText, text=1)
+        self.columnText = Gtk.TreeViewColumn(_("Name"), self.rendererText, text=1)
         self.treeView.append_column(self.columnText)
 
         self.rendererToggle = Gtk.CellRendererToggle()
         self.rendererToggle.connect("toggled", self._onCellToggled)
 
-        self.columnToggle = Gtk.TreeViewColumn("Active", self.rendererToggle, active=2)
+        self.columnToggle = Gtk.TreeViewColumn(_("Active"), self.rendererToggle, active=2)
         self.treeView.append_column(self.columnToggle)
 
 
@@ -50,30 +52,33 @@ class PluginManagerUi(Gtk.ApplicationWindow):
         self.mainVBox.pack_start(self.buttomBox, False, True, 0)
 
         self.add(self.mainVBox)
-        self.oKButton = Gtk.Button.new_with_mnemonic("_Details")
+        self.oKButton = Gtk.Button.new_with_mnemonic(_("_Details"))
         self.oKButton.connect("clicked", self._onDetailsButtonClicked)
         self.buttomBox.pack_start(self.oKButton, True, True, 0)
         
-        self.oKButton = Gtk.Button.new_with_mnemonic("_OK")
+        self.oKButton = Gtk.Button.new_with_mnemonic(_("_OK"))
         self.oKButton.connect("clicked", self._onOkButtonClicked)
         self.buttomBox.pack_start(self.oKButton, True, True, 0)
 
-        self.applyButton = Gtk.Button.new_with_mnemonic("_Apply")
+        self.applyButton = Gtk.Button.new_with_mnemonic(_("_Apply"))
         self.applyButton.connect("clicked", self._onApplyButtonClicked)
         self.buttomBox.pack_start(self.applyButton, True, True, 0)
 
-        self.applyButton = Gtk.Button.new_with_mnemonic("_Install")
+        self.applyButton = Gtk.Button.new_with_mnemonic(_("_Install"))
         self.applyButton.connect("clicked", self._onInstallButtonClicked)
         self.buttomBox.pack_start(self.applyButton, True, True, 0)
         
-        self.applyButton = Gtk.Button.new_with_mnemonic("_Uninstall")
+        self.applyButton = Gtk.Button.new_with_mnemonic(_("_Uninstall"))
         self.applyButton.connect("clicked", self._onUninstallButtonClicked)
         self.buttomBox.pack_start(self.applyButton, True, True, 0)
         
-        self.cancelButton = Gtk.Button.new_with_mnemonic("_Cancel")
+        self.cancelButton = Gtk.Button.new_with_mnemonic(_("_Cancel"))
         self.cancelButton.connect("clicked", self._onCancelButtonClicked)
         self.buttomBox.pack_start(self.cancelButton, True, True, 0)
-
+    def setTranslationContext(self, translationContext):
+        self.translationContext = translationContext
+        global _
+        _ = translationContext.gettext
     def closeWindow(self):
         Gtk.main_quit()
     def uninstallPlugin(self):
@@ -88,8 +93,8 @@ class PluginManagerUi(Gtk.ApplicationWindow):
                         type=Gtk.MessageType.INFO,
                         buttons=Gtk.ButtonsType.YES_NO)
 
-                dialog.set_markup("<b>%s</b>" % 'Remove Plugin {}?'.format(pluginName))
-                dialog.format_secondary_markup('Do you really want to remove Plugin {}?'.format(pluginName))
+                dialog.set_markup("<b>%s</b>" % _('Remove Plugin {}?').format(pluginName))
+                dialog.format_secondary_markup(_('Do you really want to remove Plugin {}?').format(pluginName))
                 response = dialog.run()
                 dialog.destroy()
                 if response != Gtk.ResponseType.YES:
@@ -242,7 +247,7 @@ class PluginManagerUi(Gtk.ApplicationWindow):
         self.listStore.append([pluginInfo, name, active, buildIn, dataDir, moduleDir, dependencies, moduleName, description, authors, website, copyright, version, helpUri, iconName])
     def chooseFile(self):
         dialog = Gtk.FileChooserDialog(
-            title="Please choose a file", parent=self, action=Gtk.FileChooserAction.OPEN
+            title=_("Please choose a file"), parent=self, action=Gtk.FileChooserAction.OPEN
         )
         dialog.add_buttons(
             Gtk.STOCK_CANCEL,
@@ -252,7 +257,7 @@ class PluginManagerUi(Gtk.ApplicationWindow):
         )
 
         filter_plugin = Gtk.FileFilter()
-        filter_plugin.set_name("Plugin Archive")
+        filter_plugin.set_name(_("Plugin Archive"))
         filter_plugin.add_mime_type("application/gzip")
         dialog.add_filter(filter_plugin)
         

@@ -1,3 +1,7 @@
+import os, inspect
+import gi
+from gi.repository import GObject
+
 class Plugin():
     #__gtype_name__ = 'BasePlugin'
 
@@ -18,7 +22,7 @@ class Plugin():
         self.dependencies = False
         self.helpUri = ''
         self.dataDir = ''
-
+        self.translationContext = None
     def setApp(self, app):
         self.app = app
     def getApp(self):
@@ -65,7 +69,32 @@ class Plugin():
         #externalData = self.getApp().getPluginSystemManager().getPluginExternalData(pluginInfo)
         self.helpUri = self.getApp().getPluginSystemManager().getPlugingetHelpUri(pluginInfo)
         self.dataDir = self.getApp().getPluginSystemManager().getPluginDataDir(pluginInfo)
+        self.updateTranslationContext()
 
+    def updateTranslationContext(self, domain = None, localeDir = None,  language = None, fallbackToOrcaTranslation = True):
+        self.translationContext = None
+        useLocaleDir = '{}/locale/'.format(self.getModuleDir())
+        if localeDir:
+            if os.path.isdir(localeDir):
+                useLocaleDir = localeDir
+        useName = self.getModuleName()
+        useDomain = useName
+        if domain:
+            useDomain = domain
+        useLanguage = None
+        if language:
+            useLanguage = language
+        self.translationContext = self.getApp().getTranslationManager().initTranslation(useName, domain=useDomain, localeDir=useLocaleDir, language=useLanguage, fallbackToOrcaTranslation=fallbackToOrcaTranslation)
+        # Point _ to the translation object in the globals namespace of the caller frame
+        try:
+            callerFrame = inspect.currentframe().f_back
+            # Install our gettext and ngettext function to the upper frame
+            callerFrame.f_globals['_'] = self.translationContext.gettext
+            callerFrame.f_globals['ngettext'] = self.translationContext.ngettext
+        finally:
+            del callerFrame # Avoid reference problems with frames (per python docs)
+    def getTranslationContext(self):
+        return self.translationContext
     def isPluginBuildIn(self):
         return self.buildIn
     def isPluginHidden(self):
@@ -94,3 +123,15 @@ class Plugin():
         return self.version
     def getWebsite(self):
         return self.website
+    def registerGestureByString(self, function, name, gestureString, learnModeEnabled = True):
+        keybinding = self.getApp().getAPIHelper().registerGestureByString(self.getModuleName(), function, name, gestureString, 'default', 'orca', learnModeEnabled)
+        return keybinding
+    def registerSignal(self, signalName, signalFlag = GObject.SignalFlags.RUN_LAST, closure = GObject.TYPE_NONE, accumulator=()):
+        ok = self.getApp().getSignalManager().registerSignal(self.getModuleName(), signalName, signalFlag, closure, accumulator)
+        return ok
+    def connectSignal(self, signalName, function, param = None):
+        ok = self.getApp().getSignalManager().connectSignal(self.getModuleName(), signalName, function, param)
+        return ok
+    def registerAPI(self, key, value, application = ''):
+        ok = self.getApp().getDynamicApiManager().registerAPI(key, value, contextName = self.getModuleName(), application = '')
+        return ok

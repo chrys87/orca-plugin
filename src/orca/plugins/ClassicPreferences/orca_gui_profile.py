@@ -85,6 +85,7 @@ class OrcaProfileGUI(Gtk.Dialog):
         self.searchString = None
         self.profileString = None
         self.prefsDialog = None
+        self.translationContext = None
 
     def init(self):
         self.profileString = ''
@@ -123,6 +124,12 @@ class OrcaProfileGUI(Gtk.Dialog):
         global OS
 
         OS = None
+
+def setTranslationContext(newTranslationContext):
+    global _, translationContext
+    translationContext = newTranslationContext
+    _ = newTranslationContext.gettext
+
 
 def showProfileUI(prefsDialog=None):
     global OS

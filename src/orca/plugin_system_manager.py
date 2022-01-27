@@ -16,6 +16,7 @@ gi.require_version('Peas', '1.0')
 from gi.repository import GObject
 from gi.repository import Peas
 
+from orca import resource_manager
 
 class API(GObject.GObject):
     """Interface that gives access to all the objects of Orca."""
@@ -182,12 +183,17 @@ class PluginSystemManager():
                 self.loadPlugin(pluginInfo)
 
     def loadPlugin(self, pluginInfo):
+        resourceManager = self.app.getResourceManager()
+        moduleName = pluginInfo.get_module_name()
         try:
             if pluginInfo not in self.plugins:
-                print("Plugin missing: {}".format(pluginInfo.get_module_name()))
+                print("Plugin missing: {}".format(moduleName))
                 return False
+            resourceContext = resourceManager.getResourceContext(moduleName)
+            if not resourceContext:
+                resourceManager.addResourceContext(moduleName)
             self.engine.load_plugin(pluginInfo)
-        except e as Exception:
+        except Exception as e:
             print(e)
             return False
         return True
@@ -199,16 +205,21 @@ class PluginSystemManager():
                 self.unloadPlugin(pluginInfo)
 
     def unloadPlugin(self, pluginInfo):
+        resourceManager = self.app.getResourceManager()
+        moduleName = pluginInfo.get_module_name()
         try:
             if pluginInfo not in self.plugins:
-                print("Plugin missing: {}".format(pluginInfo.get_module_name()))
+                print("Plugin missing: {}".format(moduleName))
                 return False
             if self.isPluginBuildIn(pluginInfo):
                 return False
             self.engine.unload_plugin(pluginInfo)
+            resourceContext = resourceManager.getResourceContext(moduleName)
+            if resourceContext:
+                self.app.getResourceManager().removeResourceContext(moduleName)
             self.engine.garbage_collect()
-        except e as Exception:
-            print(e)
+        except Exception as e:
+            print('unloadPlugin:',e)
             return False
         return True
     def installPlugin(self, pluginFilePath, pluginType=PluginType.USER):
@@ -367,17 +378,21 @@ class APIHelper():
         EventManager = self.app.getDynamicApiManager().getAPI('EventManager')
         newInputEventHandler = EventManager.input_event.InputEventHandler(function, name, learnModeEnabled)
         return newInputEventHandler
-    def registerGestureByString(self, function, name, gestureString, learnModeEnabled = True):
+    def registerGestureByString(self, contextName, function, name, gestureString, profile, application, learnModeEnabled = True):
         gestureList = gestureString.split(',')
         registeredGestures = []
         for gesture in gestureList:
             if gesture.startswith('kb:'):
                 shortcutString = gesture[3:]
-                registuredGesture = self.registerShortcutByString(function, name, shortcutString, learnModeEnabled)
+                registuredGesture = self.registerShortcutByString(contextName, function, name, shortcutString, profile, application, learnModeEnabled)
                 if registuredGesture:
                     registeredGestures.append(registuredGesture)
         return registeredGestures
-    def registerShortcutByString(self, function, name, shortcutString, learnModeEnabled = True):
+    def registerShortcutByString(self, contextName, function, name, shortcutString, profile, application, learnModeEnabled = True):
+        keybindings = self.app.getDynamicApiManager().getAPI('Keybindings')
+        settings = self.app.getDynamicApiManager().getAPI('Settings')
+        resourceManager = self.app.getResourceManager()
+
         clickCount = 0
         orcaKey = False
         shiftKey = False
@@ -401,12 +416,7 @@ class APIHelper():
                 key = shortcutElementLower
         if clickCount == 0:
             clickCount = 1
-        return self.registerShortcut(function, key, name, clickCount, orcaKey, shiftKey, ctrlKey, altKey, learnModeEnabled)
-
-    def registerShortcut(self, function, key, name, clickCount = 1, orcaKey = True, shiftKey = False, ctrlKey = False, altKey = False, learnModeEnabled = True):
-        keybindings = self.app.getDynamicApiManager().getAPI('Keybindings')
-        settings = self.app.getDynamicApiManager().getAPI('Settings')
-
+        
         if self.orcaKeyBindings == None:
             self.orcaKeyBindings = keybindings.KeyBindings()
         newInputEventHandler = self.createInputEventHandler(function, name, learnModeEnabled)
@@ -425,7 +435,13 @@ class APIHelper():
         self.orcaKeyBindings.add(newKeyBinding)
 
         settings.keyBindingsMap["default"] = self.orcaKeyBindings
+
+        resourceContext = resourceManager.getResourceContext(contextName)
+        resourceEntry = resource_manager.ResourceEntry('keyboard', newKeyBinding, function, function, shortcutString)
+        resourceContext.addGesture(profile, application, newKeyBinding, resourceEntry)
+
         return newKeyBinding
+
     def unregisterShortcut(self, KeyBindingToRemove):
         keybindings = self.app.getDynamicApiManager().getAPI('Keybindings')
         settings = self.app.getDynamicApiManager().getAPI('Settings')

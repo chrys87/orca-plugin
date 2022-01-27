@@ -202,7 +202,14 @@ class OrcaSetupGUI(orca_gtkbuilder.GtkBuilderWrapper):
         self.startingProfileCombo = None
         self._capturedKey = []
         self.script = None
+        self.translationContext = None
 
+    def setTranslationContext(self, translationContext):
+        self.translationContext = translationContext
+        global _, orca_gui_profile
+        _ = translationContext.gettext
+        if orca_gui_profile != None:
+            orca_gui_profile.setTranslationContext(translationContext)
     def init(self, script):
         """Initialize the Orca configuration GUI. Read the users current
         set of preferences and set the GUI state to match. Setup speech

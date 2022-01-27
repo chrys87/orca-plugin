@@ -13,22 +13,13 @@ class Clipboard(GObject.Object, Peas.Activatable, plugin.Plugin):
     object = GObject.Property(type=GObject.Object)
     def __init__(self):
         plugin.Plugin.__init__(self)
-        self.keybinding = None
     def do_activate(self):
         API = self.object
-        self.setKeybinding('w')
+        self.registerGestureByString(self.speakClipboard, _('clipboard'), 'kb:orca+r')
     def do_deactivate(self):
         API = self.object
-        self.setKeybinding(None)
     def do_update_state(self):
         API = self.object
-    def setKeybinding(self, keybinding):
-        API = self.object
-        if keybinding == None:
-            API.app.getAPIHelper().unregisterShortcut(self.keybinding)
-        else:
-            keybinding = keybinding = API.app.getAPIHelper().registerShortcut(self.speakClipboard, keybinding, 'clipboard')
-        self.keybinding = keybinding
     def speakClipboard(self, script, inputEvent):
         API = self.object
         Message = self.getClipboard()

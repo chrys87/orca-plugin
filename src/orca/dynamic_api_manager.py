@@ -1,19 +1,49 @@
 import gi
 from gi.repository import GObject
 
+from orca import resource_manager
 
 class DynamicApiManager():
     def __init__(self, app):
         self.app = app
         self.orcaAPI = {'Orca': self.app}
-    def registerAPI(self, key, value):
-        # add dynamic API
-        self.orcaAPI[key] = value
-    def unregisterAPI(self, key):
+    def registerAPI(self, key, value, contextName = '', application = ''):
+        # add profile
         try:
-            del self.orcaAPI[key]
+            d = self.orcaAPI[application]
+        except KeyError: 
+            self.orcaAPI[application]= {}
+        # add dynamic API
+        self.orcaAPI[application][key] = value
+
+        resourceManager = self.app.getResourceManager()
+        resourceContext = resourceManager.getResourceContext(contextName)
+        resourceEntry = resource_manager.ResourceEntry('api', key, value, value, key)
+        resourceContext.addAPI(application, key, resourceEntry)
+
+    def unregisterAPI(self, key, application = ''):
+        try:
+            del self.orcaAPI[application][key]
         except:
-            print('API Key: "{}" not found,'.format(key))
-    def getAPI(self, key):
+            print('API Key: "{}/{}" not found,'.format(application, key))
+    def getAPI(self, key, application = '', fallback = True):
         # get dynamic API
-        return self.orcaAPI.get(key)
+        api = None
+        try:
+            api = self.orcaAPI[application][key]
+            return api
+        except:
+            if not fallback:
+                print('API Key: "{}/{}" not found,'.format(application, key))
+                return None
+
+        # we already tried this
+        if application == '':
+            return api
+
+        try:
+            api = self.orcaAPI[application]['']
+        except:
+            print('API Key: "{}/{}" not found,'.format(application, key))
+        
+        return api

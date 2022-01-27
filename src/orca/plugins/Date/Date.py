@@ -13,7 +13,7 @@ class Date(GObject.Object, Peas.Activatable, plugin.Plugin):
         plugin.Plugin.__init__(self)
     def do_activate(self):
         API = self.object
-        API.app.getSignalManager().connectSignal("setup-inputeventhandlers-completed", self.setupCompatBinding)
+        self.connectSignal("setup-inputeventhandlers-completed", self.setupCompatBinding)
     def setupCompatBinding(self, app):
         cmdnames = app.getDynamicApiManager().getAPI('Cmdnames')
         inputEventHandlers = app.getDynamicApiManager().getAPI('inputEventHandlers')

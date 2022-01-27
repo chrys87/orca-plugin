@@ -54,6 +54,7 @@ orca_python_PYTHON = \
 	plugin_system_manager.py \
 	pronunciation_dict.py \
 	punctuation_settings.py \
+	resource_manager.py \
 	script.py \
 	script_manager.py \
 	script_utilities.py \
@@ -69,6 +70,8 @@ orca_python_PYTHON = \
 	speechserver.py \
 	structural_navigation.py \
 	text_attribute_names.py \
+	translation_context.py \
+	translation_manager.py \
 	tutorialgenerator.py 
 
 orca_pythondir=$(pkgpythondir)

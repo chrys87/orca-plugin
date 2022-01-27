@@ -28,17 +28,22 @@ Stage 1 (ALL DONE)
     -- (DONE): use existing settings to store plugin activ states
 
 Stage 2 (WIP)
-- (TODO): Translation API: Plugins store its own translation. we should provide an unify way to consume it. maybe implemented into plugin.plugin?
-- (TODO): Orca should track by Plugins registered stuff like 
-    -- (TODO): shortcuts
-    -- (TODO): gestures
-    -- (TODO): event subscription
-    -- (TODO): signals
+- (DONE): Translation API: Plugins store its own translation. we should provide an unify way to consume it. maybe implemented into plugin.plugin?
+    -- (DONE): plugins can bring its own translations
+    -- (DONE): plugins can use orcas build in translations
+- (DONE): Orca should track by Plugins registered stuff like 
+    -- (DONE): gestures
+    -- (DONE): event subscription
+    -- (DONE): signals
+    -- (DONE): api
 - (TODO): Orca should unregister the by the Plugins registered stuff by itself on unload
-    -- (TODO): shortcuts
     -- (TODO): gestures
     -- (TODO): event subscription
     -- (TODO): signals
+    -- (TODO): api
+- (TODO): Dont trust plugins, hardening core against crashes in callbacks
+    -- (TODO): gestures
+    -- (TODO): event subscription
 
 Stage 3 (TODO)
 - (TODO): Per Plugin settings: Plugins come along with its own settings (structure, defaults). We need an unify API to. The Settings are handled by Gsettings instead of JSON:
@@ -49,7 +54,6 @@ Stage 3 (TODO)
     -- (TODO): save
     -- (TODO): reset
     -- (TODO): check compatibiltiy
-    -- (TODO): scope: global
     -- (TODO): scope: profiles
     -- (TODO): scope: per application
 
@@ -80,3 +84,17 @@ Stage 5 (TODO)
     -- (TODO): Move Translation into Plugins
 - (TODO): Bugfixing and hardening
 - (TODO): Release :)
+
+Known Bugs:
+- (DONE) PluginManager is not translated on first start
+- (TODO) Plugins enable / disable state not stored without manuall add setting to orca.config
+- (TODO) Profile selector does not open at preferences page
+- (DONE) ByeOrca is not announced
+
+
+Plguin readme:
+Translation
+# read text from python file
+xgettext -d orca-plugin -o orca-plugin.pot ../HelloWorld.py
+# compile to mo
+msgfmt -o orca-plugin.mo orca-plugin

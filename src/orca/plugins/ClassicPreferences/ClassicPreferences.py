@@ -15,7 +15,7 @@ class ClassicPreferences(GObject.Object, Peas.Activatable, plugin.Plugin):
         plugin.Plugin.__init__(self)
     def do_activate(self):
         API = self.object
-        API.app.getSignalManager().connectSignal("setup-inputeventhandlers-completed", self.setupCompatBinding)
+        self.connectSignal("setup-inputeventhandlers-completed", self.setupCompatBinding)
     def setupCompatBinding(self, app):
         cmdnames = app.getDynamicApiManager().getAPI('Cmdnames')
         inputEventHandlers = app.getDynamicApiManager().getAPI('inputEventHandlers')
@@ -23,7 +23,6 @@ class ClassicPreferences(GObject.Object, Peas.Activatable, plugin.Plugin):
         inputEventHandlers['appPreferencesSettingsHandler'] = app.getAPIHelper().createInputEventHandler(self.showAppPreferencesGUI, cmdnames.SHOW_APP_PREFERENCES_GUI)
     def do_deactivate(self):
         API = self.object
-        API.app.getSignalManager().disconnectSignalByFunction(self.setupCompatBinding)
         inputEventHandlers = API.app.getDynamicApiManager().getAPI('inputEventHandlers')
         del inputEventHandlers['preferencesSettingsHandler']
         del inputEventHandlers['appPreferencesSettingsHandler']
@@ -82,4 +81,5 @@ class ClassicPreferences(GObject.Object, Peas.Activatable, plugin.Plugin):
 
         orca_state.orcaOS = orca_gui_prefs.OrcaSetupGUI(uiFile, "orcaSetupWindow", prefs, API.app)
         orca_state.orcaOS.init(script)
+        orca_state.orcaOS.setTranslationContext(self.getTranslationContext())
         orca_state.orcaOS.showGUI()
