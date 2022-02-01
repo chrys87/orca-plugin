@@ -136,7 +136,7 @@ class ResourceManager():
         self.resourceContextDict = {}
     def getResourceContextDict(self):
         return self.resourceContextDict
-'''    
+    '''
     def searchResourceContextByAPI(self, api, application):
         for contextName, resourceContext in self.getResourceContextDict().items():
             resourceContext.hasAPI(api, application):
@@ -156,7 +156,7 @@ class ResourceManager():
             resourceContext.hasGesture(api, application):
                 return resourceContext
         return None
-'''
+    '''
     def addResourceContext(self, contextName):
         try:
             d = self.resourceContextDict[contextName]
