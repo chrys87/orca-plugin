@@ -36,11 +36,11 @@ Stage 2 (WIP)
     -- (DONE): event subscription
     -- (DONE): signals
     -- (DONE): api
-- (TODO): Orca should unregister the by the Plugins registered stuff by itself on unload
-    -- (TODO): gestures
-    -- (TODO): event subscription
-    -- (TODO): signals
-    -- (TODO): api
+- (WIP): Orca should unregister the by the Plugins registered stuff by itself on unload
+    -- (WIP): gestures
+    -- (WIP): event subscription
+    -- (WIP): signals
+    -- (WIP): api
 - (TODO): Dont trust plugins, hardening core against crashes in callbacks
     -- (TODO): gestures
     -- (TODO): event subscription
