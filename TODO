@@ -44,9 +44,9 @@ Stage 2 (WIP)
 - (TODO):
     -- (TODO): allow None context (orca core)
     -- (TODO): improve API
-- (TODO): Dont trust plugins, hardening core against crashes in callbacks
-    -- (TODO): gestures
-    -- (TODO): event subscription
+- (DONE): Dont trust plugins, hardening core against crashes in callbacks
+    -- (DONE): gestures
+    -- (DONE): event subscription
 
 Stage 3 (TODO)
 - (TODO): Per Plugin settings: Plugins come along with its own settings (structure, defaults). We need an unify API to. The Settings are handled by Gsettings instead of JSON:

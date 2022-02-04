@@ -6,7 +6,7 @@ class TryFunction():
             self.function(app)
         except Exception as e:
             print('try',e)
-    def runInputEvent(self,script, inputEvent):
+    def runInputEvent(self, script, inputEvent):
         try:
             self.function(script, inputEvent)
         except Exception as e:
