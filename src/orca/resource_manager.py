@@ -74,13 +74,13 @@ class ResourceContext():
         # add entry
         self.gestures[profile][application][gesture] = entry
         print('add', 'gesture', self.getName(), profile, application, entry.getResourceText())
-    def removeGesture(self, gesture):
+    def removeGesture(self, entry):
         print('try remove gesture')
         gestureCopy = self.getGestures().copy()
         for profile, applicationDict in gestureCopy.items():
             for application, keyDict in applicationDict.items():
                 try:
-                    del self.getGestures()[profile][application][gesture]
+                    del self.getGestures()[profile][application][entry]
                     if len(self.getGestures()[profile][application]) == 0:
                         del self.getGestures()[profile][application]
                     if len(self.getGestures()[profile]) == 0:
