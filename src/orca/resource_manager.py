@@ -24,6 +24,7 @@ class ResourceContext():
         self.gestures = {} # gestures added by the context
         self.subscriptions = {} # subscription to signals by the context
         self.apis = {}
+        self.signals = {}
     def getName(self):
         return self.name
     def getGestures(self):
@@ -74,13 +75,12 @@ class ResourceContext():
         # add entry
         self.gestures[profile][application][gesture] = entry
         print('add', 'gesture', self.getName(), profile, application, entry.getResourceText())
-    def removeGesture(self, entry):
-        print('try remove gesture')
+    def removeGesture(self, gesture):
         gestureCopy = self.getGestures().copy()
         for profile, applicationDict in gestureCopy.items():
-            for application, keyDict in applicationDict.items():
+            for application, keyDict in applicationDict.copy().items():
                 try:
-                    del self.getGestures()[profile][application][entry]
+                    del self.getGestures()[profile][application][gesture]
                     if len(self.getGestures()[profile][application]) == 0:
                         del self.getGestures()[profile][application]
                     if len(self.getGestures()[profile]) == 0:
@@ -89,20 +89,22 @@ class ResourceContext():
                     pass
                 except Exception as e:
                     print(e)
-        print('remove', 'gesture', self.getName(), profile, application, entry.getResourceText())
+
+        print('remove', 'gesture', self.getName(), profile, application, gesture)
 
     def addSubscription(self, subscription, entry):
         # add entry
+        print('pre', self.subscriptions)
         try:
             e = self.subscriptions[subscription]
         except KeyError:
             self.subscriptions[subscription] = []
         self.subscriptions[subscription].append(entry)
+        print('post', self.subscriptions)
+
         print('add', 'subscription', self.getName(), entry.getResourceText())
     def removeSubscriptionByFunction(self, function):
-        print('remove subscription by function:', function)
-        subscriptionsCopy = self.getSubscriptions().copy()
-        for signalName, functionList in subscriptionsCopy.items():
+        for signalName, functionList in self.getSubscriptions().copy().items():
             try:
                 del self.getSubscriptions()[function]
             except ValueError as e: 
@@ -133,24 +135,22 @@ class ResourceContext():
         
     def unregisterAllAPI(self):
         dynamicApiManager = self.app.getDynamicApiManager()
-        apiCopy = self.getAPIs().copy()
 
-        for application, value in apiCopy.items():
+        for application, value in self.getAPIs().copy().items():
             for key, entry in value.items():
                 dynamicApiManager.unregisterAPI(self.getName(), key, application)
                 print('unregister api ', self.getName(), entry.getEntryType(), entry.getResourceText())
     def unregisterAllGestures(self):
         APIHelper = self.app.getAPIHelper()
         
-        gestureCopy = self.getGestures().copy()
-        for profile, profileValue in gestureCopy.items():
-            for application, applicationValue in profileValue.items():
-                for gesture, entry in applicationValue.items():
+        for profile, profileValue in self.getGestures().copy().items():
+            for application, applicationValue in profileValue.copy().items():
+                for gesture, entry in applicationValue.copy().items():
                     if entry.getEntryType() == 'keyboard':
                         try:
                             APIHelper.unregisterShortcut(self.getName(), entry.getResource())
                         except Exception as e:
-                            pass
+                            print(e)
                         print('unregister gesture', self.getName(), entry.getEntryType(), profile, application, entry.getResourceText())
     def unregisterAllSignals(self):
         pass
@@ -159,9 +159,7 @@ class ResourceContext():
     def unregisterAllSubscriptions(self):
         SignalManager = self.app.getSignalManager()
         
-        subscriptionsCopy = self.getSubscriptions().copy()
-
-        for subscription, entryList in subscriptionsCopy.items():
+        for subscription, entryList in self.getSubscriptions().copy().items():
             for entry in entryList:
                 try:
                     SignalManager.disconnectSignalByFunction(self.getName(), entry.mappedFunction)
@@ -175,55 +173,17 @@ class ResourceManager():
         self.resourceContextDict = {}
     def getResourceContextDict(self):
         return self.resourceContextDict
-    '''
-    def searchResourceContextByAPI(self, api, application):
-        resourceContextList = []
-        for contextName, resourceContext in self.getResourceContextDict().items():
-            resourceContext.hasAPI(api, application):
-                resourceContextList.append(resourceContext)
-        return resourceContextList
-    def removeResourceContextByAPI(self, application, api):
-        resourceContextList = self.searchResourceContextByAPI(application, api)
-        for resourceContext in resourceContextList:
-            resourceContext.removeAPI(application, api)
 
-    def searchResourceContextBySubscription(self, function):
-        resourceContextList = []
-        for contextName, resourceContext in self.getResourceContextDict().items():
-            resourceContext.hasSubscriptionWithFunction(function):
-                resourceContextList.append(resourceContext)
-        return resourceContextList
-    def removeResourceContextSubscriptionByFunction(self, function):
-        resourceContextList = self.searchResourceContextBySubscription(function)
-        for resourceContext in resourceContextList:
-            resourceContext.removeSubscriptionByFunction(function)
-
-    def searchResourceContextBySubscription(self, api, application):
-        for contextName, resourceContext in self.getResourceContextDict().items():
-            return resourceContext
-        return None
-    def searchResourceContextBySignal(self, api, application):
-        for contextName, resourceContext in self.getResourceContextDict().items():
-            resourceContext.hasSignal(api, application):
-                return resourceContext
-        return None
-    def searchResourceContextByGesture(self, api, application):
-        for contextName, resourceContext in self.getResourceContextDict().items():
-            resourceContext.hasGesture(api, application):
-                return resourceContext
-        return None
-    '''
     def addResourceContext(self, contextName):
         try:
             d = self.resourceContextDict[contextName]
             return
         except KeyError:
             pass
-
         resourceContext = ResourceContext(self.app, contextName)
-
         self.resourceContextDict[contextName] = resourceContext
         print('add {}'.format(contextName))
+
     def removeResourceContext(self, contextName):
         try:
             self.resourceContextDict[contextName].unregisterAllResources()
@@ -249,64 +209,3 @@ class ResourceManager():
                     print('    application', k2)
                     for k3, v3 in v2.items():
                         print('    value', k3, v3)
-'''
-class ResourceContext():
-    def __init__(self, app, name):
-        self.app = app
-        self.name = name
-        self.signals = {} # signals added by the context
-        self.gestures = {} # gestures added by the context
-        self.subscriptions = {} # subscription to signals by the context
-    def getGestures(self):
-        return self.gestures
-    def getSignals(self):
-        return self.signals
-    def getSubscriptions(self):
-        return self.subscriptions
-    def addSignal(self, signal):
-        pass
-    def removeSignal(self):
-        pass
-    def gestureExists(self, gesture):
-        return self.doesExist(self.getGestures(), gesture)
-    def signalExists(self, signal):
-        return self.doesExist(self.getSignals(), signal)
-    def subscriptionExists(self, subscription):
-        return self.doesExist(self.getSubscriptions(), subscription)
-    def doesExist(self, searchDict, key):
-        try:
-            dummy = self.searchDict[key]
-            return True
-        except KeyError:
-            return False
-    def addGesture(self, profile, application, gesture, entry):
-        # add profile
-        try:
-            d = self.gestures[profile]
-        except KeyError: 
-            self.gestures[profile]= {}
-        # add application
-        try:
-            d = self.gestures[profile][application]
-        except KeyError: 
-            self.gestures[profile][application] = {}
-        # add entry
-        self.gestures[profile][application][gesture] = entry
-    def removeGesture(self):
-        pass
-    def addSubscription(self, subscription):
-        pass
-    def removeSubscription(self):
-        pass
-    def unregisterAllResourcesForContext(self):
-        self.unregisterAllGestures()
-        self.unregisterAllSignals()
-        self.unregisterAllSubscriptions()
-
-    def unregisterAllGestures(self):
-        pass
-    def unregisterAllSignals(self):
-        pass
-    def unregisterAllSubscriptions(self):
-        pass
-'''

@@ -130,8 +130,8 @@ class Plugin():
         keybinding = self.getApp().getAPIHelper().registerGestureByString(self.getModuleName(), function, name, gestureString, 'default', 'orca', learnModeEnabled)
         return keybinding
     def unregisterShortcut(self, function, name, gestureString, learnModeEnabled = True):
-        self.getApp().getAPIHelper().unregisterShortcut(self.getModuleName(), keybinding)
-
+        ok = self.getApp().getAPIHelper().unregisterShortcut(self.getModuleName(), keybinding)
+        return ok
     def registerSignal(self, signalName, signalFlag = GObject.SignalFlags.RUN_LAST, closure = GObject.TYPE_NONE, accumulator=()):
         ok = self.signalManager.registerSignal(self.getModuleName(), signalName, signalFlag, closure, accumulator)
         return ok
