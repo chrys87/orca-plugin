@@ -20,7 +20,6 @@ class Date(GObject.Object, Peas.Activatable, plugin.Plugin):
         inputEventHandlers['presentDateHandler'] = app.getAPIHelper().createInputEventHandler(self.presentDate, cmdnames.PRESENT_CURRENT_DATE)
     def do_deactivate(self):
         API = self.object
-        API.app.getSignalManager().disconnectSignalByFunction(self.setupCompatBinding)
         inputEventHandlers = API.app.getDynamicApiManager().getAPI('inputEventHandlers')
         del inputEventHandlers['presentDateHandler']
     def presentDate(self, script, inputEvent):

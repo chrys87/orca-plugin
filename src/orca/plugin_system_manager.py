@@ -442,16 +442,23 @@ class APIHelper():
 
         return newKeyBinding
 
-    def unregisterShortcut(self, KeyBindingToRemove):
+    def unregisterShortcut(self, contextName, KeyBindingToRemove):
+        ok = False
         keybindings = self.app.getDynamicApiManager().getAPI('Keybindings')
         settings = self.app.getDynamicApiManager().getAPI('Settings')
-        EventManager = self.app.getDynamicApiManager().getAPI('EventManager')
-        
+        resourceManager = self.app.getResourceManager()
+
         if self.orcaKeyBindings == None:
             self.orcaKeyBindings = keybindings.KeyBindings()
-
-        self.orcaKeyBindings.remove(KeyBindingToRemove)
-        settings.keyBindingsMap["default"] = self.orcaKeyBindings
+        try:
+            self.orcaKeyBindings.remove(KeyBindingToRemove)
+            settings.keyBindingsMap["default"] = self.orcaKeyBindings
+            resourceContext = resourceManager.getResourceContext(contextName)
+            resourceContext.removeGesture(KeyBindingToRemove)
+            ok = True
+        except KeyError:
+            pass
+        return ok
     def importModule(self, moduleName, moduleLocation):
         if version in ["3.3","3.4"]:
             return SourceFileLoader(moduleName, moduleLocation).load_module()

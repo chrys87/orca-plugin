@@ -832,6 +832,7 @@ class Orca(GObject.Object):
     def __init__(self):
         GObject.Object.__init__(self)
         # add members
+        self.resourceManager = resource_manager.ResourceManager(self)
         self.APIHelper = plugin_system_manager.APIHelper(self)
         self.eventManager = _eventManager
         self.settingsManager = _settingsManager
@@ -840,7 +841,6 @@ class Orca(GObject.Object):
         self.signalManager = signal_manager.SignalManager(self)
         self.dynamicApiManager = dynamic_api_manager.DynamicApiManager(self)
         self.translationManager = translation_manager.TranslationManager(self)
-        self.resourceManager = resource_manager.ResourceManager(self)
         self.debugManager = debug
         self.createCompatAPI()
     def getAPIHelper(self):
