@@ -189,9 +189,7 @@ class PluginSystemManager():
             if pluginInfo not in self.plugins:
                 print("Plugin missing: {}".format(moduleName))
                 return False
-            resourceContext = resourceManager.getResourceContext(moduleName)
-            if not resourceContext:
-                resourceManager.addResourceContext(moduleName)
+            resourceManager.addResourceContext(moduleName)
             self.engine.load_plugin(pluginInfo)
         except Exception as e:
             print(e)
@@ -214,9 +212,7 @@ class PluginSystemManager():
             if self.isPluginBuildIn(pluginInfo):
                 return False
             self.engine.unload_plugin(pluginInfo)
-            resourceContext = resourceManager.getResourceContext(moduleName)
-            if resourceContext:
-                self.app.getResourceManager().removeResourceContext(moduleName)
+            self.app.getResourceManager().removeResourceContext(moduleName)
             self.engine.garbage_collect()
         except Exception as e:
             print('unloadPlugin:',e)
@@ -419,7 +415,9 @@ class APIHelper():
         
         if self.orcaKeyBindings == None:
             self.orcaKeyBindings = keybindings.KeyBindings()
-        newInputEventHandler = self.createInputEventHandler(function, name, learnModeEnabled)
+
+        tryFunction = resource_manager.TryFunction(function)
+        newInputEventHandler = self.createInputEventHandler(tryFunction.runInputEvent, name, learnModeEnabled)
 
         currModifierMask = keybindings.NO_MODIFIER_MASK
         if orcaKey:
@@ -437,7 +435,7 @@ class APIHelper():
         settings.keyBindingsMap["default"] = self.orcaKeyBindings
 
         resourceContext = resourceManager.getResourceContext(contextName)
-        resourceEntry = resource_manager.ResourceEntry('keyboard', newKeyBinding, function, function, shortcutString)
+        resourceEntry = resource_manager.ResourceEntry('keyboard', newKeyBinding, function, tryFunction, shortcutString)
         resourceContext.addGesture(profile, application, newKeyBinding, resourceEntry)
 
         return newKeyBinding

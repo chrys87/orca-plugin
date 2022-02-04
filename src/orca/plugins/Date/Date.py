@@ -31,4 +31,3 @@ class Date(GObject.Object, Peas.Activatable, plugin.Plugin):
         message = time.strftime(dateFormat, time.localtime())
         API.app.getDynamicApiManager().getAPI('OrcaState').activeScript.presentMessage(message, resetStyles=False)
 
-

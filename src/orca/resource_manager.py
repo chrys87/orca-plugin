@@ -1,9 +1,27 @@
+class TryFunction():
+    def __init__(self, function):
+        self.function = function
+    def runSignal(self, app):
+        try:
+            self.function(app)
+        except Exception as e:
+            print('try',e)
+    def runInputEvent(self,script, inputEvent):
+        try:
+            self.function(script, inputEvent)
+        except Exception as e:
+            print('try',e)
+    def getFunction(self):
+        return self.function
+    def setFunction(self, function):
+        self.function = function
+
 class ResourceEntry():
-    def __init__(self, entryType, resource, function, mappedFunction, resourceText):
+    def __init__(self, entryType, resource, function, tryFunction, resourceText):
         self.entryType = entryType # 'keyboard' = Keyboard, 'subscription' = Subscription, 'signal' = Signal
         self.resource = resource
         self.function = function
-        self.mappedFunction = mappedFunction
+        self.tryFunction = tryFunction
         self.resourceText = resourceText
 
     def getEntryType(self):
@@ -14,8 +32,8 @@ class ResourceEntry():
         return self.resource
     def getFunction(self):
         return self.function
-    def getMappedFunction(self):
-        return self.mappedFunction
+    def getTryFunction(self):
+        return self.tryFunction
 
 class ResourceContext():
     def __init__(self, app, name):
@@ -94,15 +112,13 @@ class ResourceContext():
 
     def addSubscription(self, subscription, entry):
         # add entry
-        print('pre', self.subscriptions)
         try:
             e = self.subscriptions[subscription]
         except KeyError:
             self.subscriptions[subscription] = []
         self.subscriptions[subscription].append(entry)
-        print('post', self.subscriptions)
-
         print('add', 'subscription', self.getName(), entry.getResourceText())
+
     def removeSubscriptionByFunction(self, function):
         for signalName, functionList in self.getSubscriptions().copy().items():
             try:
@@ -162,7 +178,7 @@ class ResourceContext():
         for subscription, entryList in self.getSubscriptions().copy().items():
             for entry in entryList:
                 try:
-                    SignalManager.disconnectSignalByFunction(self.getName(), entry.mappedFunction)
+                    SignalManager.disconnectSignalByFunction(self.getName(), entry.tryFunction)
                 except Exception as e:
                     print(e)
                 print('unregister subscription', self.getName(), entry.getEntryType(), entry.getResourceText())
@@ -174,12 +190,11 @@ class ResourceManager():
     def getResourceContextDict(self):
         return self.resourceContextDict
 
-    def addResourceContext(self, contextName):
-        try:
-            d = self.resourceContextDict[contextName]
-            return
-        except KeyError:
-            pass
+    def addResourceContext(self, contextName, overwrite = False):
+        resourceContext = self.getResourceContext(contextName)
+        if resourceContext:
+            if not overwrite:
+                return
         resourceContext = ResourceContext(self.app, contextName)
         self.resourceContextDict[contextName] = resourceContext
         print('add {}'.format(contextName))
@@ -191,7 +206,7 @@ class ResourceManager():
             pass
         try:
             del self.resourceContextDict[contextName]
-        except:
+        except KeyError:
             pass
         print('rm {}'.format(contextName))
 

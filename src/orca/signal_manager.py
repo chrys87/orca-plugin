@@ -25,10 +25,11 @@ class SignalManager():
         signalID = None
         #try:
         if self.signalExist(signalName):
-            signalID = self.app.connect(signalName, function)
+            tryFunction = resource_manager.TryFunction(function)
+            signalID = self.app.connect(signalName, tryFunction.runSignal)
 
             resourceContext = self.resourceManager.getResourceContext(contextName)
-            resourceEntry = resource_manager.ResourceEntry('subscription', signalID, function, function, signalName)
+            resourceEntry = resource_manager.ResourceEntry('subscription', signalID, function, tryFunction, signalName)
             resourceContext.addSubscription(function, resourceEntry)
         #    else:
         #        print('signal {} does not exist'.format(signalName))

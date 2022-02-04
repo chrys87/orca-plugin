@@ -27,3 +27,4 @@ class HelloWorld(GObject.Object, Peas.Activatable, plugin.Plugin):
         API = self.object
         Message = self.getTranslationContext().gettext("Hello World")
         API.app.getDynamicApiManager().getAPI('OrcaState').activeScript.presentMessage('1:' + Message, resetStyles=False)
+        asdf
