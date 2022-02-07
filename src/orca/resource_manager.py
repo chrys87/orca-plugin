@@ -121,12 +121,14 @@ class ResourceContext():
 
     def removeSubscriptionByFunction(self, function):
         for signalName, functionDict in self.getSubscriptions().copy().items():
-            for function, entry in functionDict.copy().items():
+            for functionKey, entry in functionDict.copy().items():
                 try:
-                    del self.getSubscriptions()[signalName][entry.function]
+                    if function == entry.function:
+                            del self.getSubscriptions()[signalName][entry.function]
+                    elif function == entry.tryFunction:
+                            del self.getSubscriptions()[signalName][entry.function]
                 except KeyError as e: 
                     print(e)
-
                 try:
                     if len(self.getSubscriptions()[signalName]) == 0:
                         del self.getSubscriptions()[signalName]
@@ -177,8 +179,8 @@ class ResourceContext():
     def unregisterAllSubscriptions(self):
         SignalManager = self.app.getSignalManager()
 
-        for signalName, entryList in self.getSubscriptions().copy().items():
-            for function, entry in entryList.copy().items():
+        for signalName, entryDict in self.getSubscriptions().copy().items():
+            for function, entry in entryDict.copy().items():
                 try:
                     SignalManager.disconnectSignalByFunction(self.getName(), entry.tryFunction)
                 except Exception as e:
