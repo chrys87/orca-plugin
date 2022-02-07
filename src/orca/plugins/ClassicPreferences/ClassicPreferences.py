@@ -17,6 +17,7 @@ class ClassicPreferences(GObject.Object, Peas.Activatable, plugin.Plugin):
         API = self.object
         self.connectSignal("setup-inputeventhandlers-completed", self.setupCompatBinding)
     def setupCompatBinding(self, app):
+        print('drin')
         cmdnames = app.getDynamicApiManager().getAPI('Cmdnames')
         inputEventHandlers = app.getDynamicApiManager().getAPI('inputEventHandlers')
         inputEventHandlers['preferencesSettingsHandler'] = app.getAPIHelper().createInputEventHandler(self.showPreferencesGUI, cmdnames.SHOW_PREFERENCES_GUI)
