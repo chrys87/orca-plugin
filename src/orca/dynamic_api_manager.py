@@ -8,7 +8,13 @@ class DynamicApiManager():
         self.app = app
         self.resourceManager = self.app.getResourceManager()
         self.api = {'Orca': self.app}
-    def registerAPI(self, key, value, application = '', contextName = None):
+    def registerAPI(self, key, value, application = '', contextName = None, overwrite = False):
+        if not overwrite:
+            try:
+                d = self.api[application][key]
+                return
+            except KeyError: 
+                pass
         # add profile
         try:
             d = self.api[application]

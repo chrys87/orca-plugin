@@ -22,8 +22,6 @@ class Time(GObject.Object, Peas.Activatable, plugin.Plugin):
         API = self.object
         inputEventHandlers = API.app.getDynamicApiManager().getAPI('inputEventHandlers')
         del inputEventHandlers['presentTimeHandler']
-        #API.app.getDynamicApiManager().registerAPI('inputEventHandlers', inputEventHandlers)
-        inputEventHandlers = API.app.getDynamicApiManager().getAPI('inputEventHandlers')
     def do_update_state(self):
         API = self.object
     def presentTime(self, script, inputEvent):
