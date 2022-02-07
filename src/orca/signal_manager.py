@@ -13,10 +13,12 @@ class SignalManager():
         ok = False
         if not self.signalExist(signalName):
             GObject.signal_new(signalName, self.app, signalFlag, closure,accumulator)
-            resourceContext = self.resourceManager.getResourceContext(contextName)
-            resourceEntry = resource_manager.ResourceEntry('signal', signalName, signalName, signalName, signalName)
-            resourceContext.addSignal(signalName, resourceEntry)
             ok = True
+        if contextName:
+            resourceContext = self.resourceManager.getResourceContext(contextName)
+            if resourceContext:
+                resourceEntry = resource_manager.ResourceEntry('signal', signalName, signalName, signalName, signalName)
+                resourceContext.addSignal(signalName, resourceEntry)
         return ok
 
     def signalExist(self, signalName):
@@ -27,10 +29,11 @@ class SignalManager():
         if self.signalExist(signalName):
             tryFunction = resource_manager.TryFunction(function)
             signalID = self.app.connect(signalName, tryFunction.runSignal)
-
+        if contextName:
             resourceContext = self.resourceManager.getResourceContext(contextName)
-            resourceEntry = resource_manager.ResourceEntry('subscription', signalID, function, tryFunction, signalName)
-            resourceContext.addSubscription(function, resourceEntry)
+            if resourceContext:
+                resourceEntry = resource_manager.ResourceEntry('subscription', signalID, function, tryFunction, signalName)
+                resourceContext.addSubscription(signalName, function, resourceEntry)
         #    else:
         #        print('signal {} does not exist'.format(signalName))
         #except Exception as e:
@@ -38,13 +41,15 @@ class SignalManager():
         return signalID
     def disconnectSignalByFunction(self, contextName, function):
         ok = False
-        resourceContext = self.resourceManager.getResourceContext(contextName)
         try:
             self.app.disconnect_by_func(function)
-            resourceContext.removeSubscriptionByFunction(function)
             ok = True
         except:
             pass
+        if contextName:
+            resourceContext = self.resourceManager.getResourceContext(contextName)
+            if resourceContext:
+                resourceContext.removeSubscriptionByFunction(function)
         return ok
     def emitSignal(self, signalName):
         # emit an signal

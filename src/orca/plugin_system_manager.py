@@ -433,10 +433,12 @@ class APIHelper():
         self.orcaKeyBindings.add(newKeyBinding)
 
         settings.keyBindingsMap["default"] = self.orcaKeyBindings
-
-        resourceContext = resourceManager.getResourceContext(contextName)
-        resourceEntry = resource_manager.ResourceEntry('keyboard', newKeyBinding, function, tryFunction, shortcutString)
-        resourceContext.addGesture(profile, application, newKeyBinding, resourceEntry)
+        
+        if contextName:
+            resourceContext = resourceManager.getResourceContext(contextName)
+            if resourceContext:
+                resourceEntry = resource_manager.ResourceEntry('keyboard', newKeyBinding, function, tryFunction, shortcutString)
+                resourceContext.addGesture(profile, application, newKeyBinding, resourceEntry)
 
         return newKeyBinding
 
@@ -451,11 +453,14 @@ class APIHelper():
         try:
             self.orcaKeyBindings.remove(KeyBindingToRemove)
             settings.keyBindingsMap["default"] = self.orcaKeyBindings
-            resourceContext = resourceManager.getResourceContext(contextName)
-            resourceContext.removeGesture(KeyBindingToRemove)
             ok = True
         except KeyError:
             pass
+        if contextName:
+            resourceContext = resourceManager.getResourceContext(contextName)
+            if resourceContext:
+                resourceContext.removeGesture(KeyBindingToRemove)
+
         return ok
     def importModule(self, moduleName, moduleLocation):
         if version in ["3.3","3.4"]:
