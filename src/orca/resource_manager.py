@@ -216,6 +216,7 @@ class ResourceManager():
         
         # temp
         try:
+            print('_________', 'summery', self.resourceContextDict[contextName].getName(), '_________')
             print('api', self.resourceContextDict[contextName].getAPIs())
             print('signals', self.resourceContextDict[contextName].getSignals())
             print('subscriptions', self.resourceContextDict[contextName].getSubscriptions())

@@ -15,7 +15,7 @@ class Clipboard(GObject.Object, Peas.Activatable, plugin.Plugin):
         plugin.Plugin.__init__(self)
     def do_activate(self):
         API = self.object
-        self.registerGestureByString(self.speakClipboard, _('clipboard'), 'kb:orca+r')
+        self.registerGestureByString(self.speakClipboard, _('clipboard'), 'kb:orca+c')
     def do_deactivate(self):
         API = self.object
     def do_update_state(self):
@@ -32,34 +32,44 @@ class Clipboard(GObject.Object, Peas.Activatable, plugin.Plugin):
 
         ClipboardText = ClipboardObj.wait_for_text()
         ClipboardImage = ClipboardObj.wait_for_image()
-
+        ClipboardURI = ClipboardObj.wait_for_uris()
         if (ClipboardText != None):
             FoundClipboardContent = True
             if (ClipboardObj.wait_is_uris_available()):
-                UriList = ClipboardText.split('\n')
-                ObjectNo = 0
-                for Uri in UriList:
-                    ObjectNo += 1
-                    if (os.path.isdir(Uri)):
-                        Message = Message + "Folder" #Folder
-                    if (os.path.isfile(Uri)):
-                        Message = Message + "File" #File
-                    if (os.path.ismount(Uri)):
-                        Message = Message + "Disk" #Mountpoint
-                    if (os.path.islink(Uri)):
-                        Message = Message + "Link" #Link
+                noOfObjects = 0
+                noOfFolder = 0
+                noOfFiles = 0
+                noOfDisks = 0
+                noOfLinks = 0
+                for Uri in ClipboardURI:
+                    if Uri == '':
+                        continue
+                    noOfObjects += 1
+                    uriWithoutProtocoll = Uri[Uri.find('://') + 3:]
                     Message += " " + Uri[Uri.rfind('/') + 1:] + " "
-                if (ObjectNo > 1):			
-                    Message = str(ObjectNo) + " Objects in clipboard " + Message # X Objects in Clipboard Object Object
+                    if (os.path.isdir(uriWithoutProtocoll)):
+                        noOfFolder += 1
+                        Message = Message + _("Folder") #Folder
+                    if (os.path.isfile(uriWithoutProtocoll)):
+                        noOfFiles += 1
+                        Message = Message + _("File") #File
+                    if (os.path.ismount(uriWithoutProtocoll)):
+                        noOfDisks += 1
+                        Message = Message + _("Disk") #Mountpoint
+                    if (os.path.islink(uriWithoutProtocoll)):
+                        noOfLinks += 1
+                        Message = Message + _("Link") #Link
+                if (noOfObjects > 1):			
+                    Message = str(noOfObjects) + _(" Objects in clipboard ") + Message # X Objects in Clipboard Object Object
                 else:
-                    Message = str(ObjectNo) + " Object in clipboard " + Message # 1 Object in Clipboard Object
+                    Message = str(noOfObjects) + _(" Object in clipboard ") + Message # 1 Object in Clipboard Object
             else:		
-                Message = "Text in clipboard " + ClipboardText # Text in Clipboard
+                Message = _("Text in clipboard ") + ClipboardText # Text in Clipboard
 
         if (ClipboardImage != None):
             FoundClipboardContent = True
-            Message = "The clipboard contains a image" # Image is in Clipboard
+            Message = _("The clipboard contains a image") # Image is in Clipboard
 
         if (not FoundClipboardContent):
-            Message = "The clipboard is empty"
+            Message = _("The clipboard is empty")
         return Message
