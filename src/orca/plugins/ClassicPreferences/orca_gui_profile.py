@@ -37,6 +37,8 @@ guilabels = None
 OS = None
 newProfile = None
 
+app = None
+
 class OrcaProfileGUI(Gtk.Dialog):
 
     def __init__(self, app):
@@ -130,6 +132,9 @@ def setTranslationContext(newTranslationContext):
     translationContext = newTranslationContext
     _ = newTranslationContext.gettext
 
+def setApp(newApp):
+    global app
+    app = newApp
 
 def showProfileUI(prefsDialog=None):
     global OS
@@ -138,7 +143,7 @@ def showProfileUI(prefsDialog=None):
     newProfile = None
 
     if not OS:
-        OS = OrcaProfileGUI()
+        OS = OrcaProfileGUI(app)
         OS.init()
 
     OS.showGUI(prefsDialog)

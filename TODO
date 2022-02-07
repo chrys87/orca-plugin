@@ -94,7 +94,7 @@ Stage 5 (TODO)
 Known Bugs:
 - (DONE) PluginManager is not translated on first start
 - (TODO) Plugins enable / disable state not stored without manuall add setting to orca.config
-- (TODO) Profile selector does not open at preferences page
+- (DONE) Profile selector does not open at preferences page
 - (DONE) ByeOrca is not announced
 
 

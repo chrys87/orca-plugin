@@ -7,20 +7,15 @@ class DynamicApiManager():
     def __init__(self, app):
         self.app = app
         self.resourceManager = self.app.getResourceManager()
-        self.orcaAPI = {'Orca': self.app}
+        self.api = {'Orca': self.app}
     def registerAPI(self, key, value, application = '', contextName = None):
-        try:
-            d = self.orcaAPI[application][key]
-            return
-        except KeyError:
-            pass
         # add profile
         try:
-            d = self.orcaAPI[application]
+            d = self.api[application]
         except KeyError: 
-            self.orcaAPI[application]= {}
+            self.api[application]= {}
         # add dynamic API
-        self.orcaAPI[application][key] = value
+        self.api[application][key] = value
         resourceContext = self.resourceManager.getResourceContext(contextName)
         if resourceContext:
             resourceEntry = resource_manager.ResourceEntry('api', key, value, value, key)
@@ -29,7 +24,7 @@ class DynamicApiManager():
     def unregisterAPI(self, key,  application = '', contextName = None):
         ok = False
         try:
-            del self.orcaAPI[application][key]
+            del self.api[application][key]
             ok = True
         except:
             print('API Key: "{}/{}" not found,'.format(application, key))
@@ -42,7 +37,7 @@ class DynamicApiManager():
         api = None
         
         try:
-            api = self.orcaAPI[application][key]
+            api = self.api[application][key]
             return api
         except:
             if not fallback:
@@ -54,7 +49,7 @@ class DynamicApiManager():
             return api
 
         try:
-            api = self.orcaAPI[application]['']
+            api = self.api[application]['']
         except:
             print('API Key: "{}/{}" not found,'.format(application, key))
         

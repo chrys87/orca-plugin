@@ -92,6 +92,8 @@ class MouseReview(GObject.Object, Peas.Activatable, plugin.Plugin):
         _eventManager = event_manager.getManager()
         _scriptManager = script_manager.getManager()
         _settingsManager = settings_manager.getManager()
+        mouse_review = MouseReviewer()
+        self.registerAPI('MouseReview', mouse_review)
         self.Initialize(API.app)
         self.connectSignal("setup-inputeventhandlers-completed", self.setupCompatBinding)
         self.connectSignal("load-setting-completed", self.Initialize)
@@ -113,8 +115,7 @@ class MouseReview(GObject.Object, Peas.Activatable, plugin.Plugin):
         inputEventHandlers = API.app.getDynamicApiManager().getAPI('inputEventHandlers')
         inputEventHandlers['toggleMouseReviewHandler'] = API.app.getAPIHelper().createInputEventHandler(mouse_review.toggle, cmdnames.MOUSE_REVIEW_TOGGLE)
     def Initialize(self, app):
-        mouse_review = MouseReviewer()
-        self.registerAPI('MouseReview', mouse_review)
+        mouse_review = app.getDynamicApiManager().getAPI('MouseReview')
         settings_manager = app.getDynamicApiManager().getAPI('SettingsManager')
         _settingsManager = settings_manager.getManager()
         if _settingsManager.getSetting('enableMouseReview'):

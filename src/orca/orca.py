@@ -870,7 +870,7 @@ class Orca(GObject.Object):
     def createCompatAPI(self):
         # add dynamic API
         # for now add compatibility API
-        self.getResourceManager().addResourceContext('')
+        #self.getResourceManager().addResourceContext('')
 
         self.getDynamicApiManager().registerAPI('Logger', _logger)
         self.getDynamicApiManager().registerAPI('SettingsManager', settings_manager)

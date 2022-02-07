@@ -16,12 +16,12 @@ class ClassicPreferences(GObject.Object, Peas.Activatable, plugin.Plugin):
     def do_activate(self):
         API = self.object
         self.connectSignal("setup-inputeventhandlers-completed", self.setupCompatBinding)
+        #self.setupCompatBinding(API.app)
     def setupCompatBinding(self, app):
         cmdnames = app.getDynamicApiManager().getAPI('Cmdnames')
         inputEventHandlers = app.getDynamicApiManager().getAPI('inputEventHandlers')
         inputEventHandlers['preferencesSettingsHandler'] = app.getAPIHelper().createInputEventHandler(self.showPreferencesGUI, cmdnames.SHOW_PREFERENCES_GUI)
         inputEventHandlers['appPreferencesSettingsHandler'] = app.getAPIHelper().createInputEventHandler(self.showAppPreferencesGUI, cmdnames.SHOW_APP_PREFERENCES_GUI)
-        print('drin')
     def do_deactivate(self):
         API = self.object
         inputEventHandlers = API.app.getDynamicApiManager().getAPI('inputEventHandlers')
