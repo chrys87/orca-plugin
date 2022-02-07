@@ -8,48 +8,46 @@ class SignalManager():
         self.app = app
         self.resourceManager = self.app.getResourceManager()
 
-    def registerSignal(self, contextName, signalName, signalFlag = GObject.SignalFlags.RUN_LAST, closure = GObject.TYPE_NONE, accumulator=()):
+    def registerSignal(self, signalName, signalFlag = GObject.SignalFlags.RUN_LAST, closure = GObject.TYPE_NONE, accumulator=(), contextName = None):
         # register signal
         ok = False
         if not self.signalExist(signalName):
             GObject.signal_new(signalName, self.app, signalFlag, closure,accumulator)
             ok = True
-        if contextName:
-            resourceContext = self.resourceManager.getResourceContext(contextName)
-            if resourceContext:
-                resourceEntry = resource_manager.ResourceEntry('signal', signalName, signalName, signalName, signalName)
-                resourceContext.addSignal(signalName, resourceEntry)
+        resourceContext = self.resourceManager.getResourceContext(contextName)
+        if resourceContext:
+            resourceEntry = resource_manager.ResourceEntry('signal', signalName, signalName, signalName, signalName)
+            resourceContext.addSignal(signalName, resourceEntry)
         return ok
 
     def signalExist(self, signalName):
         return GObject.signal_lookup(signalName, self.app) != 0
-    def connectSignal(self, contextName, signalName, function, profile, param = None):
+    def connectSignal(self, signalName, function, profile, param = None, contextName = None):
         signalID = None
-        #try:
-        if self.signalExist(signalName):
-            tryFunction = resource_manager.TryFunction(function)
-            signalID = self.app.connect(signalName, tryFunction.runSignal)
-        if contextName:
-            resourceContext = self.resourceManager.getResourceContext(contextName)
-            if resourceContext:
-                resourceEntry = resource_manager.ResourceEntry('subscription', signalID, function, tryFunction, signalName)
-                resourceContext.addSubscription(signalName, function, resourceEntry)
-        #    else:
-        #        print('signal {} does not exist'.format(signalName))
-        #except Exception as e:
-        #    print(e)
+        try:
+            if self.signalExist(signalName):
+                tryFunction = resource_manager.TryFunction(function)
+                signalID = self.app.connect(signalName, tryFunction.runSignal)
+                resourceContext = self.resourceManager.getResourceContext(contextName)
+                if resourceContext:
+                    resourceEntry = resource_manager.ResourceEntry('subscription', signalID, function, tryFunction, signalName)
+                    resourceContext.addSubscription(signalName, function, resourceEntry)
+            else:
+                print('signal {} does not exist'.format(signalName))
+        except Exception as e:
+            print(e)
+
         return signalID
-    def disconnectSignalByFunction(self, contextName, function):
+    def disconnectSignalByFunction(self, function, contextName = None):
         ok = False
         try:
             self.app.disconnect_by_func(function)
             ok = True
         except:
             pass
-        if contextName:
-            resourceContext = self.resourceManager.getResourceContext(contextName)
-            if resourceContext:
-                resourceContext.removeSubscriptionByFunction(function)
+        resourceContext = self.resourceManager.getResourceContext(contextName)
+        if resourceContext:
+            resourceContext.removeSubscriptionByFunction(function)
         return ok
     def emitSignal(self, signalName):
         # emit an signal

@@ -70,7 +70,6 @@ class PluginSystemManager():
     def plugins(self):
         """Gets the engine's plugin list."""
         return self.engine.get_plugin_list()
-
     @classmethod
     def getPluginType(cls, pluginInfo):
         """Gets the PluginType for the specified Peas.PluginInfo."""
@@ -87,6 +86,8 @@ class PluginSystemManager():
     def rescanPlugins(self):
         self.engine.garbage_collect()
         self.engine.rescan_plugins()
+    def getApp(self):
+        return self.app
     def getPluginInfoByName(self, pluginName, pluginType=PluginType.USER):
         """Gets the plugin info for the specified plugin name.
         Args:
@@ -146,12 +147,14 @@ class PluginSystemManager():
     def getIgnoredPlugins(self):
         return self._ignorePluginModulePath
     def setIgnoredPlugins(self, pluginModulePath, ignored):
+        if pluginModulePath.endswith('/'):
+            pluginModulePath = pluginModulePath[:-1]
         if ignored:
-            if not pluginModulePath  in self.getIgnoredPlugins():
-                self._ignorePluginModulePath.append(pluginModulePath )
+            if not pluginModulePath in self.getIgnoredPlugins():
+                self._ignorePluginModulePath.append(pluginModulePath)
         else:
             if pluginModulePath  in self.getIgnoredPlugins():
-                self._ignorePluginModulePath.remove(pluginModulePath )
+                self._ignorePluginModulePath.remove(pluginModulePath)
 
     def setPluginActive(self, pluginInfo, active):
         if self.isPluginBuildIn(pluginInfo):
@@ -192,7 +195,7 @@ class PluginSystemManager():
             resourceManager.addResourceContext(moduleName)
             self.engine.load_plugin(pluginInfo)
         except Exception as e:
-            print(e)
+            print('loadPlugin:',e)
             return False
         return True
 
@@ -234,12 +237,15 @@ class PluginSystemManager():
                 tar.extractall(path=pluginFolder)
         except Exception as e:
             print(e)
+        
         pluginModulePath = self.getModuleDirByPluginFile(pluginFilePath)
         if pluginModulePath != '':
             pluginModulePath = pluginFolder + pluginModulePath
-            self.setIgnoredPlugins(pluginModulePath, False)
-        print('install', pluginFilePath)
+            self.setIgnoredPlugins(pluginModulePath[:-1], False) # without ending /
+            print('install', pluginFilePath)
+            self.callPackageTriggers(pluginModulePath, 'onPostInstall')
         self.rescanPlugins()
+
         return True
     def getModuleDirByPluginFile(self, pluginFilePath):
         if not isinstance(pluginFilePath, str):
@@ -295,15 +301,41 @@ class PluginSystemManager():
             return False
         if self.isPluginActive(pluginInfo):
             self.setPluginActive(pluginInfo, False)
+
+        self.callPackageTriggers(pluginFolder, 'onPreUninstall')
+        
         try:
             shutil.rmtree(pluginFolder, ignore_errors=True)
         except Exception as e:
             print(e)
             return False
-        pluginModulePath = self.getPluginModuleDir(pluginInfo)
-        self.setIgnoredPlugins(pluginModulePath, True)
+        self.setIgnoredPlugins(pluginFolder, True)
         self.rescanPlugins()
+
         return True
+    def callPackageTriggers(self, pluginPath, trigger):
+        if not os.path.exists(pluginPath):
+            return
+        if not pluginPath.endswith('/'):
+            pluginPath += '/'
+        packageModulePath = pluginPath + 'package.py'
+        if not os.path.isfile(packageModulePath):
+            return
+        if not os.access(packageModulePath, os.R_OK):
+            return
+        package = self.getApp().getAPIHelper().importModule('package', packageModulePath)
+
+        if trigger == 'onPostInstall':
+            try:
+                package.onPostInstall()
+            except Exception as e:
+                print(e)
+        elif trigger == 'onPreUninstall':
+            try:
+                package.onPreUninstall()
+            except Exception as e:
+                print(e)
+
     def _setupExtensionSet(self):
         plugin_iface = API(self.app)
         self.extension_set = Peas.ExtensionSet.new(self.engine,
@@ -374,17 +406,17 @@ class APIHelper():
         EventManager = self.app.getDynamicApiManager().getAPI('EventManager')
         newInputEventHandler = EventManager.input_event.InputEventHandler(function, name, learnModeEnabled)
         return newInputEventHandler
-    def registerGestureByString(self, contextName, function, name, gestureString, profile, application, learnModeEnabled = True):
+    def registerGestureByString(self, function, name, gestureString, profile, application, learnModeEnabled = True, contextName = None):
         gestureList = gestureString.split(',')
         registeredGestures = []
         for gesture in gestureList:
             if gesture.startswith('kb:'):
                 shortcutString = gesture[3:]
-                registuredGesture = self.registerShortcutByString(contextName, function, name, shortcutString, profile, application, learnModeEnabled)
+                registuredGesture = self.registerShortcutByString(function, name, shortcutString, profile, application, learnModeEnabled, contextName=contextName)
                 if registuredGesture:
                     registeredGestures.append(registuredGesture)
         return registeredGestures
-    def registerShortcutByString(self, contextName, function, name, shortcutString, profile, application, learnModeEnabled = True):
+    def registerShortcutByString(self, function, name, shortcutString, profile, application, learnModeEnabled = True, contextName = None):
         keybindings = self.app.getDynamicApiManager().getAPI('Keybindings')
         settings = self.app.getDynamicApiManager().getAPI('Settings')
         resourceManager = self.app.getResourceManager()
@@ -442,7 +474,7 @@ class APIHelper():
 
         return newKeyBinding
 
-    def unregisterShortcut(self, contextName, KeyBindingToRemove):
+    def unregisterShortcut(self, KeyBindingToRemove, contextName = None):
         ok = False
         keybindings = self.app.getDynamicApiManager().getAPI('Keybindings')
         settings = self.app.getDynamicApiManager().getAPI('Settings')

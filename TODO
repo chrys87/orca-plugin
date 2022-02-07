@@ -47,6 +47,9 @@ Stage 2 (WIP)
 - (DONE): Dont trust plugins, hardening core against crashes in callbacks
     -- (DONE): gestures
     -- (DONE): event subscription
+- (DONE): ability to call code while plugin un-/ installation
+    -- (DONE): onPostInstall
+    -- (DONE): onPreUninstall
 
 Stage 3 (TODO)
 - (TODO): Per Plugin settings: Plugins come along with its own settings (structure, defaults). We need an unify API to. The Settings are handled by Gsettings instead of JSON:

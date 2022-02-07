@@ -127,28 +127,28 @@ class Plugin():
     def getWebsite(self):
         return self.website
     def registerGestureByString(self, function, name, gestureString, learnModeEnabled = True):
-        keybinding = self.getApp().getAPIHelper().registerGestureByString(self.getModuleName(), function, name, gestureString, 'default', 'orca', learnModeEnabled)
+        keybinding = self.getApp().getAPIHelper().registerGestureByString(function, name, gestureString, 'default', 'orca', learnModeEnabled, contextName = self.getModuleName())
         return keybinding
     def unregisterShortcut(self, function, name, gestureString, learnModeEnabled = True):
-        ok = self.getApp().getAPIHelper().unregisterShortcut(self.getModuleName(), keybinding)
+        ok = self.getApp().getAPIHelper().unregisterShortcut(keybinding, contextName = self.getModuleName())
         return ok
     def registerSignal(self, signalName, signalFlag = GObject.SignalFlags.RUN_LAST, closure = GObject.TYPE_NONE, accumulator=()):
-        ok = self.signalManager.registerSignal(self.getModuleName(), signalName, signalFlag, closure, accumulator)
+        ok = self.signalManager.registerSignal(signalName, signalFlag, closure, accumulator, contextName = self.getModuleName())
         return ok
     def unregisterSignal(self, signalName):
         # how to unregister?
         pass
 
     def connectSignal(self, signalName, function, param = None):
-        signalID = self.signalManager.connectSignal(self.getModuleName(), signalName, function, param)
+        signalID = self.signalManager.connectSignal(signalName, function, param, contextName = self.getModuleName())
         return signalID
     def disconnectSignalByFunction(self, function):
         # need get mapped function
         mappedFunction = function
-        self.signalManager.disconnectSignalByFunction(self.getName(), mappedFunction)
+        self.signalManager.disconnectSignalByFunction(mappedFunction, contextName = self.getModuleName())
 
     def registerAPI(self, key, value, application = ''):
-        ok = self.dynamicApiManager.registerAPI(key, value, contextName = self.getModuleName(), application = application)
+        ok = self.dynamicApiManager.registerAPI(key, value, application = application, contextName = self.getModuleName())
         return ok
     def unregisterAPI(self, key, application = ''):
-        self.dynamicApiManager.unregisterAPI(self.getModuleName(), key, application = application)
+        self.dynamicApiManager.unregisterAPI(key, application = application, contextName = self.getModuleName())

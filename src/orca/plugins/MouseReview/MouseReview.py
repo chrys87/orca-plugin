@@ -92,9 +92,10 @@ class MouseReview(GObject.Object, Peas.Activatable, plugin.Plugin):
         _eventManager = event_manager.getManager()
         _scriptManager = script_manager.getManager()
         _settingsManager = settings_manager.getManager()
-        self.Initialize()
+        self.Initialize(API.app)
         self.connectSignal("setup-inputeventhandlers-completed", self.setupCompatBinding)
         self.connectSignal("load-setting-completed", self.Initialize)
+
     def do_deactivate(self):
         API = self.object
         global _mouseReviewCapable
@@ -111,12 +112,10 @@ class MouseReview(GObject.Object, Peas.Activatable, plugin.Plugin):
         cmdnames = API.app.getDynamicApiManager().getAPI('Cmdnames')
         inputEventHandlers = API.app.getDynamicApiManager().getAPI('inputEventHandlers')
         inputEventHandlers['toggleMouseReviewHandler'] = API.app.getAPIHelper().createInputEventHandler(mouse_review.toggle, cmdnames.MOUSE_REVIEW_TOGGLE)
-    def Initialize(self):
-        API = self.object
-
+    def Initialize(self, app):
         mouse_review = MouseReviewer()
         self.registerAPI('MouseReview', mouse_review)
-        settings_manager = API.app.getDynamicApiManager().getAPI('SettingsManager')
+        settings_manager = app.getDynamicApiManager().getAPI('SettingsManager')
         _settingsManager = settings_manager.getManager()
         if _settingsManager.getSetting('enableMouseReview'):
             mouse_review.activate()

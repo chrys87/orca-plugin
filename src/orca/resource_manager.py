@@ -117,7 +117,7 @@ class ResourceContext():
         except KeyError:
             self.subscriptions[signalName] = {}
         self.subscriptions[signalName][function] = entry
-        print('add', 'subscription', self.getName(), entry.getResourceText())
+        print('add', 'subscription', self.getName(), entry.getResourceText(), entry.function)
 
     def removeSubscriptionByFunction(self, function):
         for signalName, functionDict in self.getSubscriptions().copy().items():
@@ -154,9 +154,9 @@ class ResourceContext():
     def unregisterAllAPI(self):
         dynamicApiManager = self.app.getDynamicApiManager()
         for application, value in self.getAPIs().copy().items():
-            for key, entry in value.items():
+            for key, entry in value.copy().items():
                 try:
-                    dynamicApiManager.unregisterAPI(self.getName(), key, application)
+                    dynamicApiManager.unregisterAPI(key, application, self.getName())
                 except Exception as e:
                     print(e)
                 print('unregister api ', self.getName(), entry.getEntryType(), entry.getResourceText())
@@ -168,7 +168,7 @@ class ResourceContext():
                 for gesture, entry in applicationValue.copy().items():
                     if entry.getEntryType() == 'keyboard':
                         try:
-                            APIHelper.unregisterShortcut(self.getName(), entry.getResource())
+                            APIHelper.unregisterShortcut(entry.getResource(), self.getName())
                         except Exception as e:
                             print(e)
                         print('unregister gesture', self.getName(), entry.getEntryType(), profile, application, entry.getResourceText())
@@ -182,7 +182,7 @@ class ResourceContext():
         for signalName, entryDict in self.getSubscriptions().copy().items():
             for function, entry in entryDict.copy().items():
                 try:
-                    SignalManager.disconnectSignalByFunction(self.getName(), entry.tryFunction)
+                    SignalManager.disconnectSignalByFunction(entry.tryFunction, self.getName())
                 except Exception as e:
                     print(e)
                 print('unregister subscription', self.getName(), entry.getEntryType(), entry.getResourceText())
