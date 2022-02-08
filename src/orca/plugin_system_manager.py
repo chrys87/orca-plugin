@@ -327,12 +327,12 @@ class PluginSystemManager():
 
         if trigger == 'onPostInstall':
             try:
-                package.onPostInstall()
+                package.onPostInstall(pluginPath, self.getApp())
             except Exception as e:
                 print(e)
         elif trigger == 'onPreUninstall':
             try:
-                package.onPreUninstall()
+                package.onPreUninstall(pluginPath, self.getApp())
             except Exception as e:
                 print(e)
 

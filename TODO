@@ -41,9 +41,9 @@ Stage 2 (WIP)
     -- (DONE): event subscription
     -- (DONE): signals
     -- (DONE): api
-- (TODO):
-    -- (TODO): allow None context (orca core)
-    -- (TODO): improve API
+- (DONE):
+    -- (DONE): allow None context (orca core)
+    -- (DONE): improve API
 - (DONE): Dont trust plugins, hardening core against crashes in callbacks
     -- (DONE): gestures
     -- (DONE): event subscription
