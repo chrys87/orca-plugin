@@ -3,12 +3,12 @@ class TryFunction():
         self.function = function
     def runSignal(self, app):
         try:
-            self.function(app)
+            return self.function(app)
         except Exception as e:
             print('try',e)
     def runInputEvent(self, script, inputEvent):
         try:
-            self.function(script, inputEvent)
+            return self.function(script, inputEvent)
         except Exception as e:
             print('try',e)
     def getFunction(self):

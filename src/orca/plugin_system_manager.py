@@ -272,6 +272,7 @@ class PluginSystemManager():
             return False
         pluginFolder = ''
         pluginFileExists = False
+        packageFileExists = False
         try:
             with tarfile.open(pluginFilePath) as tar:
                 tarMembers = tar.getmembers()
@@ -281,6 +282,8 @@ class PluginSystemManager():
                             pluginFolder = tarMember.name
                     if tarMember.isfile():
                         if tarMember.name.endswith('.plugin'):
+                            pluginFileExists = True
+                        if tarMember.name.endswith('package.py'):
                             pluginFileExists = True
                     if not tarMember.name.startswith(pluginFolder):
                         return False
