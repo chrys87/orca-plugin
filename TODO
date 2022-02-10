@@ -65,6 +65,18 @@ Roadmap for Plugin Based Orca:
 - (TODO): generic preferences
     -- (TODO): List based
     -- (TODO): generic
+        --- (TODO): default
+            ---- (TODO): Radio Buttons
+            ---- (TODO): Menu Buttons
+            ---- (TODO): Booleans
+            ---- (TODO): Integer Min / Max
+            ---- (TODO): slider
+        --- (TODO): custom
+            ---- (TODO): Tables 
+            ---- (TODO): Forms
+            ---- (TODO): any widget
+        --- (TODO): # other
+            ---- (TODO): dependency value for simple enable / disable
     -- (TODO): agnostic to installed plugins
     -- (TODO): searchable
     -- (TODO): set values
@@ -85,11 +97,13 @@ Roadmap for Plugin Based Orca:
 - https://encarsia.github.io/posts/gsettings/
 - http://zderadicka.eu/gsettings-flexible-configuration-system/
 - https://qastack.com.de/ubuntu/251712/how-can-i-install-a-gsettings-schema-without-root-privileges
-
+- https://docs.gtk.org/glib/gvariant-format-strings.html
 
 # Final Stage 4 (TODO)
 - (TODO): Create an clean "orca" class and object based API
 - (TODO): create useful signals
+- (TODO): Remove compatibiltiy layers
+- (TODO): cleanup as much as possible
 - (TODO): move all parts into plugins
     -- (TODO): Move source into Plugins
     -- (TODO): Move Settings into Plugins
