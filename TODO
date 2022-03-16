@@ -98,6 +98,8 @@ Roadmap for Plugin Based Orca:
 - http://zderadicka.eu/gsettings-flexible-configuration-system/
 - https://qastack.com.de/ubuntu/251712/how-can-i-install-a-gsettings-schema-without-root-privileges
 - https://docs.gtk.org/glib/gvariant-format-strings.html
+- https://awebablog.wordpress.com/2017/12/16/session-5-part-1-gtk_with_python/
+- https://valadoc.org/gtk+-3.0/Gtk.ListBox.html
 
 # Final Stage 4 (TODO)
 - (TODO): Create an clean "orca" class and object based API

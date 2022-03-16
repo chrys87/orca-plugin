@@ -3,7 +3,6 @@
 import os, inspect, sys, pyatspi, tarfile, shutil
 
 from enum import IntEnum
-from gettext import gettext as _
 
 version = sys.version[:3] # we only need major.minor version.
 if version in ["3.3","3.4"]:
@@ -186,7 +185,7 @@ class PluginSystemManager():
                 self.loadPlugin(pluginInfo)
 
     def loadPlugin(self, pluginInfo):
-        resourceManager = self.app.getResourceManager()
+        resourceManager = self.getApp().getResourceManager()
         moduleName = pluginInfo.get_module_name()
         try:
             if pluginInfo not in self.plugins:
@@ -206,7 +205,7 @@ class PluginSystemManager():
                 self.unloadPlugin(pluginInfo)
 
     def unloadPlugin(self, pluginInfo):
-        resourceManager = self.app.getResourceManager()
+        resourceManager = self.getApp().getResourceManager()
         moduleName = pluginInfo.get_module_name()
         try:
             if pluginInfo not in self.plugins:
@@ -215,7 +214,7 @@ class PluginSystemManager():
             if self.isPluginBuildIn(pluginInfo):
                 return False
             self.engine.unload_plugin(pluginInfo)
-            self.app.getResourceManager().removeResourceContext(moduleName)
+            self.getApp().getResourceManager().removeResourceContext(moduleName)
             self.engine.garbage_collect()
         except Exception as e:
             print('unloadPlugin:',e)
@@ -340,7 +339,7 @@ class PluginSystemManager():
                 print(e)
 
     def _setupExtensionSet(self):
-        plugin_iface = API(self.app)
+        plugin_iface = API(self.getApp())
         self.extension_set = Peas.ExtensionSet.new(self.engine,
                                                    Peas.Activatable,
                                                    ["object"],
@@ -362,12 +361,12 @@ class PluginSystemManager():
         extension.deactivate()
 
     def __extensionAdded(self, unusedSet, pluginInfo, extension):
-        extension.setApp(self.app)
+        extension.setApp(self.getApp())
         extension.setPluginInfo(pluginInfo)
         extension.activate()
     def __loadedPlugins(self, engine, unusedSet):
         """Handles the changing of the loaded plugin list."""
-        self.app.settings.ActivePlugins = engine.get_property("loaded-plugins")
+        self.getApp().settings.ActivePlugins = engine.get_property("loaded-plugins")
 
 class APIHelper():
     def __init__(self, app):
