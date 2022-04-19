@@ -475,7 +475,20 @@ class Utilities:
 
         describedBy = lambda x: x.getRelationType() == pyatspi.RELATION_DESCRIBED_BY
         relation = filter(describedBy, relations)
-        return [r.getTarget(i) for r in relation for i in range(r.getNTargets())]
+        descriptions = [r.getTarget(i) for r in relation for i in range(r.getNTargets())]
+        if not descriptions:
+            return []
+
+        labelledBy = lambda x: x.getRelationType() == pyatspi.RELATION_LABELLED_BY
+        relation = filter(labelledBy, relations)
+        labels = [r.getTarget(i) for r in relation for i in range(r.getNTargets())]
+
+        if descriptions == labels:
+            msg = "INFO: %s's described-by targets are the same as labelled-by targets" % obj
+            debug.println(debug.LEVEL_INFO, msg, True)
+            return []
+
+        return descriptions
 
     def detailsContentForObject(self, obj):
         details = self.detailsForObject(obj)
@@ -5957,6 +5970,11 @@ class Utilities:
 
     def _getSubtree(self, startObj, endObj):
         if not (startObj and endObj):
+            return []
+
+        if self.isDead(startObj):
+            msg = "INFO: Cannot get subtree: Start object is dead."
+            debug.println(debug.LEVEL_INFO, msg, True)
             return []
 
         _include = lambda x: x
