@@ -4,10 +4,7 @@ m4_define(pygobject_required_version, 3.18)
 m4_define(atspi_required_version, 2.26)
 m4_define(atkbridge_required_version, 2.26)
 
-AC_INIT([orca],
-        [orca_version],
-        [https://gitlab.gnome.org/GNOME/orca/-/issues/],
-        [orca])
+AC_INIT([orca],[orca_version],[https://gitlab.gnome.org/GNOME/orca/-/issues/],[orca])
 
 AC_CONFIG_MACRO_DIR([m4])
 

@@ -3226,7 +3226,7 @@ class StructuralNavigation:
         isMatch = False
         if obj and obj.getRole() == pyatspi.ROLE_LINK:
             state = obj.getState()
-            isMatch = not state.contains(pyatspi.STATE_FOCUSABLE)
+            isMatch = state.contains(pyatspi.STATE_FOCUSABLE)
         return isMatch
 
     def _linkPresentation(self, obj, arg=None):
@@ -3292,12 +3292,7 @@ class StructuralNavigation:
 
         interfaces = ["action"]
         interfaceMatch = collection.MATCH_ANY
-        state = [pyatspi.STATE_FOCUSABLE]
-        stateMatch = collection.MATCH_NONE
-
         return MatchCriteria(collection,
-                             states=state,
-                             matchStates=stateMatch,
                              interfaces=interfaces,
                              matchInterfaces=interfaceMatch,
                              applyPredicate=True)
