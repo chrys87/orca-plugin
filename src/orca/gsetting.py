@@ -4,7 +4,6 @@ from gi.repository import GObject
 class Gsetting():
     def __init__(self, app):
         self.app = app
-        self.api = {'Orca': self.app} 
     def loadSettings():
         pass
     def getSetting(key, application = '', profile = ''):
