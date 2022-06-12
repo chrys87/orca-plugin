@@ -126,3 +126,6 @@ Translation
 xgettext -d orca-plugin -o orca-plugin.pot ../HelloWorld.py
 # compile to mo
 msgfmt -o orca-plugin.mo orca-plugin
+
+gsettings
+$ glib-compile-schemas /path/to/schema/files/

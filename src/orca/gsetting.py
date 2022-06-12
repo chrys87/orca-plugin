@@ -1,5 +1,5 @@
 import gi
-from gi.repository import GObject
+from gi.repository import GObject, Gio
 
 class Gsetting():
     def __init__(self, app):
