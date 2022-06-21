@@ -661,12 +661,15 @@ class Utilities:
         if obj.getRole() == pyatspi.ROLE_FRAME:
             results[0] = obj
 
+        dialog_roles = [pyatspi.ROLE_DIALOG, pyatspi.ROLE_FILE_CHOOSER]
+        if self._treatAlertsAsDialogs():
+            dialog_roles.append(pyatspi.ROLE_ALERT)
+
         parent = obj.parent
         while parent and (parent.parent != parent):
             if parent.getRole() == pyatspi.ROLE_FRAME:
                 results[0] = parent
-            if parent.getRole() in [pyatspi.ROLE_DIALOG,
-                                    pyatspi.ROLE_FILE_CHOOSER]:
+            if parent.getRole() in dialog_roles:
                 results[1] = parent
             parent = parent.parent
 
@@ -1214,8 +1217,17 @@ class Utilities:
     def isBlockquote(self, obj):
         return obj and obj.getRole() == pyatspi.ROLE_BLOCK_QUOTE
 
+    def isDescriptionList(self, obj):
+        return obj and obj.getRole() == pyatspi.ROLE_DESCRIPTION_LIST
+
+    def isDescriptionListTerm(self, obj):
+        return obj and obj.getRole() == pyatspi.ROLE_DESCRIPTION_TERM
+
+    def isDescriptionListDescription(self, obj):
+        return obj and obj.getRole() == pyatspi.ROLE_DESCRIPTION_VALUE
+
     def isDocumentList(self, obj):
-        if not (obj and obj.getRole() == pyatspi.ROLE_LIST):
+        if not (obj and obj.getRole() in [pyatspi.ROLE_LIST, pyatspi.ROLE_DESCRIPTION_LIST]):
             return False
 
         try:
@@ -4497,6 +4509,12 @@ class Utilities:
         row, col = table.getRowAtIndex(index), table.getColumnAtIndex(index)
         return table.getRowExtentAt(row, col), table.getColumnExtentAt(row, col)
 
+    def setSizeUnknown(self, obj):
+        return obj.getState().contains(pyatspi.STATE_INDETERMINATE)
+
+    def rowOrColumnCountUnknown(self, obj):
+        return obj.getState().contains(pyatspi.STATE_INDETERMINATE)
+
     def rowAndColumnCount(self, obj, preferAttribute=True):
         try:
             table = obj.queryTable()
@@ -5178,6 +5196,26 @@ class Utilities:
         position = siblings.index(obj)
         setSize = len(siblings)
         return position, setSize
+
+    def getValueCountForTerm(self, obj):
+        if not self.isDescriptionListTerm(obj):
+            return -1
+
+        try:
+            index = obj.getIndexInParent()
+            total = obj.parent.childCount
+        except:
+            msg = "ERROR: Exception getting index and sibling count for %s" % obj
+            debug.println(debug.LEVEL_INFO, msg, True)
+            return -1
+
+        count = 0
+        for i in range(index + 1, total):
+            if not self.isDescriptionListDescription(obj.parent[i]):
+                break
+            count += 1
+
+        return count
 
     def getRoleDescription(self, obj, isBraille=False):
         return ""

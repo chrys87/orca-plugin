@@ -87,8 +87,7 @@ class SpeechGenerator(speech_generator.SpeechGenerator):
            or obj.getRole() in [pyatspi.ROLE_TOOL_TIP, pyatspi.ROLE_STATUS_BAR]:
             return result
 
-        args['stopAtRoles'] = [pyatspi.ROLE_DOCUMENT_FRAME,
-                               pyatspi.ROLE_DOCUMENT_WEB,
+        args['stopAtRoles'] = [pyatspi.ROLE_DOCUMENT_WEB,
                                pyatspi.ROLE_EMBEDDED,
                                pyatspi.ROLE_INTERNAL_FRAME,
                                pyatspi.ROLE_MATH,
@@ -452,18 +451,24 @@ class SpeechGenerator(speech_generator.SpeechGenerator):
         # other toolkits (e.g. exposing list items to us that are not
         # exposed to sighted users)
         role = args.get('role', obj.getRole())
-        if role not in [pyatspi.ROLE_LIST, pyatspi.ROLE_LIST_BOX]:
+        if role not in [pyatspi.ROLE_LIST, pyatspi.ROLE_LIST_BOX, pyatspi.ROLE_DESCRIPTION_LIST]:
             return super()._generateNumberOfChildren(obj, **args)
 
         setsize = self._script.utilities.getSetSize(obj[0])
         if setsize is None:
-            children = [x for x in obj if x.getRole() == pyatspi.ROLE_LIST_ITEM]
+            if self._script.utilities.isDescriptionList(obj):
+                children = [x for x in obj if self._script.utilities.isDescriptionListTerm(x)]
+            else:
+                children = [x for x in obj if x.getRole() == pyatspi.ROLE_LIST_ITEM]
             setsize = len(children)
 
         if not setsize:
             return []
 
-        result = [messages.listItemCount(setsize)]
+        if self._script.utilities.isDescriptionList(obj):
+            result = [messages.descriptionListTermCount(setsize)]
+        else:
+            result = [messages.listItemCount(setsize)]
         result.extend(self.voice(speech_generator.SYSTEM, obj=obj, **args))
         return result
 
@@ -706,13 +711,19 @@ class SpeechGenerator(speech_generator.SpeechGenerator):
 
         position = int(position)
         total = int(total)
-        if position < 0 or total < 0:
+        if position < 0:
             return []
+
+        stringType = 'groupindex'
+        if total < 0:
+            if not self._script.utilities.setSizeUnknown(obj):
+                return []
+            stringType += 'totalunknown'
 
         result = []
         result.append(self._script.formatting.getString(
             mode='speech',
-            stringType='groupindex') \
+            stringType=stringType) \
             % {"index" : position,
                "total" : total})
         result.extend(self.voice(speech_generator.SYSTEM, obj=obj, **args))

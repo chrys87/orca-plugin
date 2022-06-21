@@ -510,6 +510,9 @@ class Generator:
 
         return self._generateStatusBar(obj, **args)
 
+    def _generateTermValueCount(self, obj, **args):
+        return []
+
     #####################################################################
     #                                                                   #
     # Image information                                                 #
@@ -965,7 +968,8 @@ class Generator:
         rows, cols = self._script.utilities.rowAndColumnCount(obj)
 
         # This suggests broken or missing table interface.
-        if rows < 0 or cols < 0:
+        if (rows < 0 or cols < 0) \
+           and not self._script.utilities.rowOrColumnCountUnknown(obj):
             return []
 
         # This can happen if an author uses ARIA incorrectly, e.g. a grid whose
@@ -1332,6 +1336,12 @@ class Generator:
             return 'ROLE_CONTENT_MARK'
         if self._script.utilities.isContentSuggestion(obj):
             return 'ROLE_CONTENT_SUGGESTION'
+        if self._script.utilities.isDescriptionList(obj):
+            return pyatspi.ROLE_DESCRIPTION_LIST
+        if self._script.utilities.isDescriptionListTerm(obj):
+            return pyatspi.ROLE_DESCRIPTION_TERM
+        if self._script.utilities.isDescriptionListDescription(obj):
+            return pyatspi.ROLE_DESCRIPTION_VALUE
         if self._script.utilities.isLandmark(obj):
             if self._script.utilities.isLandmarkRegion(obj):
                 return 'ROLE_REGION'

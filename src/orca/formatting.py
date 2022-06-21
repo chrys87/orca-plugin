@@ -67,6 +67,7 @@ formatting = {
             'multiselect': object_properties.STATE_MULTISELECT_SPEECH,
             'iconindex': object_properties.ICON_INDEX_SPEECH,
             'groupindex': object_properties.GROUP_INDEX_SPEECH,
+            'groupindextotalunknown':object_properties.GROUP_INDEX_TOTAL_UNKNOWN_SPEECH,
             'clickable': object_properties.STATE_CLICKABLE,
             'haslongdesc': object_properties.STATE_HAS_LONGDESC,
             'hasdetails': object_properties.RELATION_HAS_DETAILS,
@@ -200,11 +201,15 @@ formatting = {
         'ROLE_CONTENT_SUGGESTION': {
             'focused': 'leaving or roleName',
             },
+        pyatspi.ROLE_DESCRIPTION_LIST: {
+            'focused' : 'leaving or (labelOrName + pause + (numberOfChildren or roleName) + pause + nestingLevel)',
+            'unfocused': 'labelOrName + pause + focusedItem + pause + multiselectableState + (numberOfChildren or roleName) + pause'
+            },
         pyatspi.ROLE_DESCRIPTION_TERM: {
-            'unfocused': '(labelOrName or (displayedText + allTextSelection))',
+            'unfocused': '(labelOrName or (displayedText + allTextSelection) + roleName + pause + termValueCount)',
             },
         pyatspi.ROLE_DESCRIPTION_VALUE: {
-            'unfocused': '(labelOrName or (displayedText + allTextSelection))',
+            'unfocused': '(labelOrName or (displayedText + allTextSelection) + roleName)',
             },
         pyatspi.ROLE_DIAL: {
             'focused': 'value',
@@ -625,6 +630,9 @@ formatting = {
         pyatspi.ROLE_COMBO_BOX: {
             'unfocused': '[Component(obj, asString(labelOrName + value + roleName), \
                                      labelOrName and (len(asString(labelOrName)) + 1) or 0)]'
+            },
+        pyatspi.ROLE_DESCRIPTION_TERM: {
+            'unfocused': BRAILLE_TEXT + ' + ([Region(" " + asString(termValueCount))])',
             },
         #pyatspi.ROLE_DESKTOP_ICON: 'default'
         pyatspi.ROLE_DIAL: {

@@ -2398,6 +2398,9 @@ class Utilities(script_utilities.Utilities):
         if not (obj and self.inDocumentContent(obj)):
             return False
 
+        if self.isDescriptionList(obj):
+            return False
+
         try:
             role = obj.getRole()
             childCount = obj.childCount
@@ -2989,12 +2992,37 @@ class Utilities(script_utilities.Utilities):
         if not (obj and obj.getRole() in roles):
             return -1, -1
 
-        if preferAttribute:
-            rowindex, colindex = self._rowAndColumnIndices(obj)
-            if rowindex is not None and colindex is not None:
-                return int(rowindex) - 1, int(colindex) - 1
+        if not preferAttribute:
+            return super().coordinatesForCell(obj, preferAttribute)
 
-        return super().coordinatesForCell(obj, preferAttribute)
+        rvRow = rvCol = None
+        rowindex, colindex = self._rowAndColumnIndices(obj)
+        if rowindex is None or colindex is None:
+            nativeRowindex, nativeColindex = super().coordinatesForCell(obj, False)
+            if rowindex is not None:
+                rvRow = int(rowindex) - 1
+            else:
+                rvRow = nativeRowindex
+            if colindex is not None:
+                rvCol = int(colindex) - 1
+            else:
+                rvCol = nativeColindex
+
+        return rvRow, rvCol
+
+    def setSizeUnknown(self, obj):
+        if super().setSizeUnknown(obj):
+            return True
+
+        attrs = self.objectAttributes(obj)
+        return attrs.get('setsize') == '-1'
+
+    def rowOrColumnCountUnknown(self, obj):
+        if super().rowOrColumnCountUnknown(obj):
+            return True
+
+        attrs = self.objectAttributes(obj)
+        return attrs.get('rowcount') == '-1' or attrs.get('colcount') == '-1'
 
     def rowAndColumnCount(self, obj, preferAttribute=True):
         rows, cols = super().rowAndColumnCount(obj)
@@ -3130,6 +3158,12 @@ class Utilities(script_utilities.Utilities):
 
         if role == pyatspi.ROLE_LIST:
             rv = self.treatAsDiv(obj)
+        elif self.isDescriptionList(obj):
+            rv = False
+        elif self.isDescriptionListTerm(obj):
+            rv = False
+        elif self.isDescriptionListDescription(obj):
+            rv = False
         elif self.isMath(obj):
             rv = False
         elif self.isLandmark(obj):
@@ -3615,6 +3649,24 @@ class Utilities(script_utilities.Utilities):
             return super().isCode(obj)
 
         return self._getTag(obj) == "code" or "code" in self._getXMLRoles(obj)
+
+    def isDescriptionList(self, obj):
+        if super().isDescriptionList(obj):
+            return True
+
+        return self._getTag(obj) == "dl"
+
+    def isDescriptionListTerm(self, obj):
+        if super().isDescriptionListTerm(obj):
+            return True
+
+        return self._getTag(obj) == "dt"
+
+    def isDescriptionListDescription(self, obj):
+        if super().isDescriptionListDescription(obj):
+            return True
+
+        return self._getTag(obj) == "dd"
 
     def getComboBoxValue(self, obj):
         attrs = self.objectAttributes(obj, False)
