@@ -43,6 +43,7 @@ class ResourceContext():
         self.subscriptions = {} # subscription to signals by the context
         self.apis = {}
         self.signals = {}
+
     def getName(self):
         return self.name
     def getGestures(self):
