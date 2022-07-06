@@ -239,7 +239,8 @@ class Generator:
             else:
                 firstTimeCalled = False
 
-            msg = '%s GENERATOR: Starting generation for %s' % (self._mode.upper(), obj)
+            msg = '%s GENERATOR: Starting %s generation for %s (%s)' % \
+                (self._mode.upper(), args.get('formatType'), obj, args.get('role'))
             debug.println(debug.LEVEL_INFO, msg, True)
 
             # Reset 'usedDescriptionFor*' if a previous generator used it.
@@ -1342,6 +1343,10 @@ class Generator:
             return pyatspi.ROLE_DESCRIPTION_TERM
         if self._script.utilities.isDescriptionListDescription(obj):
             return pyatspi.ROLE_DESCRIPTION_VALUE
+        if self._script.utilities.isFeedArticle(obj):
+            return 'ROLE_ARTICLE_IN_FEED'
+        if self._script.utilities.isFeed(obj):
+            return 'ROLE_FEED'
         if self._script.utilities.isLandmark(obj):
             if self._script.utilities.isLandmarkRegion(obj):
                 return 'ROLE_REGION'

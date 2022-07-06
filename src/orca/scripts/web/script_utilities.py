@@ -105,6 +105,8 @@ class Utilities(script_utilities.Utilities):
         self._inferredLabels = {}
         self._labelsForObject = {}
         self._labelTargets = {}
+        self._descriptionListTerms = {}
+        self._valuesForTerm = {}
         self._displayedLabelText = {}
         self._mimeType = {}
         self._preferDescriptionOverName = {}
@@ -200,6 +202,8 @@ class Utilities(script_utilities.Utilities):
         self._inferredLabels = {}
         self._labelsForObject = {}
         self._labelTargets = {}
+        self._descriptionListTerms = {}
+        self._valuesForTerm = {}
         self._displayedLabelText = {}
         self._mimeType = {}
         self._preferDescriptionOverName = {}
@@ -1409,6 +1413,11 @@ class Utilities(script_utilities.Utilities):
     def _getContentsForObj(self, obj, offset, boundary):
         if not obj:
             return []
+
+        if boundary == pyatspi.TEXT_BOUNDARY_SENTENCE_START and self.isTime(obj):
+            text = self.queryNonEmptyText(obj)
+            if text:
+                return [[obj, 0, text.characterCount, text.getText(0, -1)]]
 
         if boundary == pyatspi.TEXT_BOUNDARY_LINE_START:
             if self.isMath(obj):
@@ -2983,14 +2992,18 @@ class Utilities(script_utilities.Utilities):
 
         return ''
 
-    def coordinatesForCell(self, obj, preferAttribute=True):
+    def coordinatesForCell(self, obj, preferAttribute=True, findCellAncestor=False):
         roles = [pyatspi.ROLE_TABLE_CELL,
                  pyatspi.ROLE_TABLE_COLUMN_HEADER,
                  pyatspi.ROLE_TABLE_ROW_HEADER,
                  pyatspi.ROLE_COLUMN_HEADER,
                  pyatspi.ROLE_ROW_HEADER]
         if not (obj and obj.getRole() in roles):
-            return -1, -1
+            if not findCellAncestor:
+                return -1, -1
+
+            cell = pyatspi.findAncestor(obj, lambda x: x and x.getRole() in roles)
+            return self.coordinatesForCell(cell, preferAttribute, False)
 
         if not preferAttribute:
             return super().coordinatesForCell(obj, preferAttribute)
@@ -3110,6 +3123,9 @@ class Utilities(script_utilities.Utilities):
         rv = ancestor and not self.isNonNavigablePopup(ancestor)
         self._isNavigableToolTipDescendant[hash(obj)] = rv
         return rv
+
+    def isTime(self, obj):
+        return 'time' in self._getXMLRoles(obj) or 'time' == self._getTag(obj)
 
     def isToolBarDescendant(self, obj):
         if not obj:
@@ -3668,6 +3684,36 @@ class Utilities(script_utilities.Utilities):
 
         return self._getTag(obj) == "dd"
 
+    def descriptionListTerms(self, obj):
+        if not obj:
+            return []
+
+        rv = self._descriptionListTerms.get(hash(obj))
+        if rv is not None:
+            return rv
+
+        rv = super().descriptionListTerms(obj)
+        if not self.inDocumentContent(obj):
+            return rv
+
+        self._descriptionListTerms[hash(obj)] = rv
+        return rv
+
+    def valuesForTerm(self, obj):
+        if not obj:
+            return []
+
+        rv = self._valuesForTerm.get(hash(obj))
+        if rv is not None:
+            return rv
+
+        rv = super().valuesForTerm(obj)
+        if not self.inDocumentContent(obj):
+            return rv
+
+        self._valuesForTerm[hash(obj)] = rv
+        return rv
+
     def getComboBoxValue(self, obj):
         attrs = self.objectAttributes(obj, False)
         return attrs.get("valuetext", super().getComboBoxValue(obj))
@@ -3932,6 +3978,15 @@ class Utilities(script_utilities.Utilities):
 
     def isFeed(self, obj):
         return 'feed' in self._getXMLRoles(obj)
+
+    def isFeedArticle(self, obj):
+        if not (obj and self.inDocumentContent(obj)):
+            return False
+
+        if obj.getRole() != pyatspi.ROLE_ARTICLE:
+            return False
+
+        return pyatspi.findAncestor(obj, self.isFeed) is not None
 
     def isFigure(self, obj):
         return 'figure' in self._getXMLRoles(obj) or self._getTag(obj) == 'figure'
