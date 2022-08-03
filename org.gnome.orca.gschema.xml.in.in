@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<schemalist>
+  <schema id="org.a11y.orca">
+    <key name="profiles" type="as">
+      <default>['default']</default>
+      <_summary>The list of the available configuration profiles.</_summary>
+    </key>
+    <key name="apps" type="as">
+      <default>[]</default>
+      <_summary>The list of applications where the user desires a different Orca configuration.</_summary>
+    </key>
+    <key name="pronunciations" type="as">
+      <default>[]</default>
+      <_summary>The list of custom pronunciations.</_summary>
+    </key>
+    <key name="active-profile" type="s">
+      <default>'default'</default>
+      <_summary>The currently active configuration profile.</_summary>
+    </key>
+  </schema> 

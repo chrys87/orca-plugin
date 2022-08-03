@@ -29,8 +29,6 @@ PKG_CHECK_MODULES([ATSPI2], [atspi-2 >= atspi_required_version])
 PKG_CHECK_MODULES([ATKBRIDGE], [atk-bridge-2.0 >= atkbridge_required_version])
 PKG_CHECK_MODULES([GSTREAMER], [gstreamer-1.0], [gstreamer="yes"], [gstreamer="no"])
 
-GLIB_GSETTINGS
-
 dnl Needed programs
 AC_PROG_INSTALL
 
