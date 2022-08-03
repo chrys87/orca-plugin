@@ -6,7 +6,9 @@ DISTCHECK_CONFIGURE_FLAGS =     \
 	--disable-scrollkeeper
 
 DISTCLEANFILES =                \
-	orca-autostart.desktop
+	orca-autostart.desktop  \
+	$(gsettings_SCHEMAS)    \
+	gschemas.compiled
 
 README: README.md
 	cp $< $@
@@ -31,8 +33,29 @@ autostart_DATA   = $(autostart_in_files:.desktop.in=.desktop)
 $(autostart_DATA): $(autostart_in_files)
 	$(AM_V_GEN)$(MSGFMT) --desktop --template $< -d $(top_srcdir)/po -o $@
 
+@INTLTOOL_DESKTOP_RULE@
+
+gsettings_SCHEMAS = org.gnome.orca.gschema.xml
+
+@INTLTOOL_XML_NOMERGE_RULE@
+
+@GSETTINGS_RULES@
+
+%.gschema.xml.in: %.gschema.xml.in.in Makefile
+	$(AM_V_GEN) sed -e 's|@GETTEXT_PACKAGE[@]|$(GETTEXT_PACKAGE)|g' \
+	$< > $@ || rm $@
+
+# We need to compile schemas at make time
+# to run from source tree
+gschemas.compiled: $(gsettings_SCHEMAS:.xml=.valid)
+	$(AM_V_GEN) $(GLIB_COMPILE_SCHEMAS) --targetdir=. .
+
+all-local: gschemas.compiled
+
+
 EXTRA_DIST =                \
 	$(autostart_in_files) \
+	org.gnome.orca.gschema.xml.in.in \
 	$(icon_DATA)        \
 	ChangeLog           \
 	MAINTAINERS         \
