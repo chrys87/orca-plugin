@@ -18,7 +18,7 @@ class TryFunction():
 
 class ResourceEntry():
     def __init__(self, entryType, resource, function, tryFunction, resourceText):
-        self.entryType = entryType # 'keyboard' = Keyboard, 'subscription' = Subscription, 'signal' = Signal, 'api'= Dynamic API
+        self.entryType = entryType # 'keyboard' = Keyboard, 'subscription' = Subscription, 'signal' = Signal, 'api'= Dynamic API, 'settings' = gSetttings
         self.resource = resource
         self.function = function
         self.tryFunction = tryFunction
