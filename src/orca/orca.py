@@ -94,7 +94,7 @@ from orca import dynamic_api_manager
 from orca import eventsynthesizer
 from orca import translation_manager
 from orca import resource_manager
-
+from orca import gsettings_manager
 
 _eventManager = event_manager.getManager()
 _scriptManager = script_manager.getManager()
@@ -841,6 +841,7 @@ class Orca(GObject.Object):
         self.signalManager = signal_manager.SignalManager(self)
         self.dynamicApiManager = dynamic_api_manager.DynamicApiManager(self)
         self.translationManager = translation_manager.TranslationManager(self)
+        self.gsettingsManager = gsettings_manager.GsettingsManager(self)
         self.debugManager = debug
         self.createCompatAPI()
     def getAPIHelper(self):
@@ -855,6 +856,8 @@ class Orca(GObject.Object):
         return self.eventManager
     def getSettingsManager(self):
         return self.settingsManager
+    def getGsettingsManager(self):
+        return self.gsettingsManager
     def getScriptManager(self):
         return self.scriptManager
     def getDebugManager(self):
@@ -868,8 +871,9 @@ class Orca(GObject.Object):
     def stop(self):
         pass
     def createCompatAPI(self):
-        # add dynamic API
-        # for now add compatibility API
+        # for now add compatibility layer using Dynamic API
+        # should be removed step by step
+        # use clean objects, getters and setters instead
         #self.getResourceManager().addResourceContext('')
 
         self.getDynamicApiManager().registerAPI('Logger', _logger)

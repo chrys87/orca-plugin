@@ -29,7 +29,6 @@ orca_python_PYTHON = \
 	flat_review.py \
 	formatting.py \
 	generator.py \
-	gsetting.py \
 	gsettings_manager.py \
 	guilabels.py \
 	input_event.py \
