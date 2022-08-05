@@ -31,7 +31,7 @@ autostart_DATA   = $(autostart_in_files:.desktop.in=.desktop)
 $(autostart_DATA): $(autostart_in_files)
 	$(AM_V_GEN)$(MSGFMT) --desktop --template $< -d $(top_srcdir)/po -o $@
 
-gsettings_SCHEMAS = org.a11y.orca.gschema.xml
+gsettings_SCHEMAS = org.a11y.orca.global.gschema.xml org.a11y.orca.profile.gschema.xml org.a11y.orca.application.gschema.xml
 @GSETTINGS_RULES@
 	
 EXTRA_DIST =                \

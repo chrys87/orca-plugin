@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <schemalist>
-  <schema id="org.a11y.orca" path="/org/a11y/orca/">
+  <schema id="org.a11y.orca.global" path="/org/a11y/orca/">
     <key name="available-profiles" type="as">
       <default>['default']</default>
       <summary>The list of the available configuration profiles.</summary>
