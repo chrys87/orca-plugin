@@ -314,9 +314,7 @@ class Utilities:
         except:
             pass
 
-        index = self.cellIndex(obj)
-        row = table.getRowAtIndex(index)
-        col = table.getColumnAtIndex(index)
+        row, col = self.coordinatesForCell(obj)
         nodeLevel = self.nodeLevel(obj)
         done = False
 
@@ -4176,6 +4174,10 @@ class Utilities:
             debug.println(debug.LEVEL_INFO, msg, True)
             return None, None
 
+        msg = "INFO: %s reports %i selected children" % (obj, count)
+        debug.println(debug.LEVEL_INFO, msg, True)
+        if count < 1:
+            return None, None
         return selection.getSelectedChild(0), selection.getSelectedChild(count-1)
 
     def focusedChild(self, obj):
@@ -4225,6 +4227,31 @@ class Utilities:
             return False
 
         return role == pyatspi.ROLE_PUSH_BUTTON and state.contains(pyatspi.STATE_HAS_POPUP)
+
+    def isPopupMenuForCurrentItem(self, obj):
+        if obj == orca_state.locusOfFocus:
+            return False
+
+        if obj.name and obj.name == orca_state.locusOfFocus.name:
+            return obj.getRole() == pyatspi.ROLE_MENU
+
+        return False
+
+    def isMenuWithNoSelectedChild(self, obj):
+        if not obj:
+            return False
+
+        try:
+            role = obj.getRole()
+        except:
+            msg = "ERROR: Exception getting role for %s" % obj
+            debug.println(debug.LEVEL_INFO, msg, True)
+            return False
+
+        if role != pyatspi.ROLE_MENU:
+            return False
+
+        return not self.selectedChildCount(obj)
 
     def isMenuButton(self, obj):
         if not obj:
@@ -4462,8 +4489,7 @@ class Utilities:
         except:
             return []
 
-        index = self.cellIndex(obj)
-        row, col = table.getRowAtIndex(index), table.getColumnAtIndex(index)
+        row, col = self.coordinatesForCell(obj)
         colspan = table.getColumnExtentAt(row, col)
 
         headers = []
@@ -4483,8 +4509,7 @@ class Utilities:
         except:
             return []
 
-        index = self.cellIndex(obj)
-        row, col = table.getRowAtIndex(index), table.getColumnAtIndex(index)
+        row, col = self.coordinatesForCell(obj)
         rowspan = table.getRowExtentAt(row, col)
 
         headers = []
@@ -4504,8 +4529,7 @@ class Utilities:
         except:
             return None
 
-        index = self.cellIndex(obj)
-        columnIndex = table.getColumnAtIndex(index)
+        rowIndex, columnIndex = self.coordinatesForCell(obj)
         return table.getColumnHeader(columnIndex)
 
     def rowHeaderForCell(self, obj):
@@ -4519,8 +4543,7 @@ class Utilities:
         except:
             return None
 
-        index = self.cellIndex(obj)
-        rowIndex = table.getRowAtIndex(index)
+        rowIndex, columnIndex = self.coordinatesForCell(obj)
         return table.getRowHeader(rowIndex)
 
     def coordinatesForCell(self, obj, preferAttribute=True, findCellAncestor=False):
@@ -4535,6 +4558,17 @@ class Utilities:
 
             cell = pyatspi.findAncestor(obj, lambda x: x and x.getRole() in roles)
             return self.coordinatesForCell(cell, preferAttribute, False)
+
+        if 'TableCell' in pyatspi.listInterfaces(obj):
+            tableCell = obj.queryTableCell()
+            try:
+                successful, row, col = tableCell.position
+            except:
+                msg = "INFO: Exception getting table cell position of %s" % obj
+                debug.println(debug.LEVEL_INFO, msg, True)
+            else:
+                if successful:
+                    return row, col
 
         isTable = lambda x: x and 'Table' in pyatspi.listInterfaces(x)
         parent = pyatspi.findAncestor(obj, isTable)
@@ -4557,8 +4591,7 @@ class Utilities:
         except:
             return -1, -1
 
-        index = self.cellIndex(obj)
-        row, col = table.getRowAtIndex(index), table.getColumnAtIndex(index)
+        row, col = self.coordinatesForCell(obj)
         return table.getRowExtentAt(row, col), table.getColumnExtentAt(row, col)
 
     def setSizeUnknown(self, obj):
@@ -5038,8 +5071,7 @@ class Utilities:
         except:
             return False
 
-        index = self.cellIndex(obj)
-        row, col = table.getRowAtIndex(index), table.getColumnAtIndex(index)
+        row, col = self.coordinatesForCell(obj)
         return row + 1 == table.nRows and col + 1 == table.nColumns
 
     def isNonUniformTable(self, obj):

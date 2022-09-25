@@ -2673,6 +2673,8 @@ class Script(script.Script):
         obj = event.source
         role = obj.getRole()
         if role == pyatspi.ROLE_NOTIFICATION:
+            if not event.detail1:
+                return
             speech.speak(self.speechGenerator.generateSpeech(obj))
             visibleOnly = not self.utilities.isStatusBarNotification(obj)
             labels = self.utilities.unrelatedLabels(obj, visibleOnly, 1)
@@ -3808,6 +3810,9 @@ class Script(script.Script):
         except:
             msg = "DEFAULT: Exception getting offset and length for %s" % obj
             debug.println(debug.LEVEL_INFO, msg, True)
+            return ["", 0, 0]
+
+        if characterCount == 0:
             return ["", 0, 0]
 
         targetOffset = startOffset
