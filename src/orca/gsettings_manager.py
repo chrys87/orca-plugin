@@ -1,7 +1,7 @@
 import gi
 from gi.repository import GObject, Gio, GLib
 
-GLOBAL_SCHEMA_ID = "org.a11y.orca"
+GLOBAL_SCHEMA_ID = "org.a11y.orca.global"
 SETTINGS_ROOT_PATH = '/org/a11y/orca/'
 DEFAULT_PROFILE_NAME = 'default'
 

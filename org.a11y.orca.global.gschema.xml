@@ -5,10 +5,6 @@
       <default>['default']</default>
       <summary>The list of the available configuration profiles.</summary>
     </key>
-    <key name="available-applications" type="as">
-      <default>[]</default>
-      <summary>The list of applications where the user desires a different Orca configuration.</summary>
-    </key>
     <key name="active-profile" type="s">
       <default>'default'</default>
       <summary>The currently active configuration profile.</summary>

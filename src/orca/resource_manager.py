@@ -17,9 +17,13 @@ class TryFunction():
         self.function = function
 
 class ResourceEntry():
-    def __init__(self, entryType, resource, function, tryFunction, resourceText):
+    def __init__(self, entryType, resource1 = None, function = None, tryFunction= None, resourceText = '', resource2 = None, resource3 = None, resource4 = None):
+        # function based init
         self.entryType = entryType # 'keyboard' = Keyboard, 'subscription' = Subscription, 'signal' = Signal, 'api'= Dynamic API, 'settings' = gSetttings
-        self.resource = resource
+        self.resource1 = resource1
+        self.resource2 = resource2
+        self.resource3 = resource3
+        self.resource4 = resource4
         self.function = function
         self.tryFunction = tryFunction
         self.resourceText = resourceText
@@ -28,8 +32,14 @@ class ResourceEntry():
         return self.entryType
     def getResourceText(self):
         return self.resourceText
-    def getResource(self):
-        return self.resource
+    def getResource1(self):
+        return self.resource1
+    def getResource2(self):
+        return self.resource2
+    def getResource3(self):
+        return self.resource3
+    def getResource4(self):
+        return self.resource4
     def getFunction(self):
         return self.function
     def getTryFunction(self):
@@ -43,6 +53,7 @@ class ResourceContext():
         self.subscriptions = {} # subscription to signals by the context
         self.apis = {}
         self.signals = {}
+        self.settings {}
 
     def getName(self):
         return self.name
@@ -54,6 +65,51 @@ class ResourceContext():
         return self.signals
     def getAPIs(self):
         return self.apis
+    def getSettings(self):
+        return self.settings
+    def hasSettings(self, profile, application, sub_setting_name):
+                self.settings[profile][application][sub_setting_name]
+        try:
+            d = self.getSettings()[profile][application][sub_setting_name]
+            return True
+        except KeyError:
+            return False
+    def addSetting(self, profile, application, sub_setting_name, entry):
+        # add profile
+        try:
+            d = self.settings[profile]
+        except KeyError: 
+            self.settings[profile]= {}
+        # add application
+        try:
+            d = self.settings[profile][application]
+        except KeyError: 
+            self.settings[profile][application] = {}
+        # add entry
+        self.settings[profile][application][sub_setting_name] = entry
+        
+        print('add', 'settings', self.getName(), profile, application, entry.getResourceText())
+
+    def removeSetting(self, gesture):
+        gestureCopy = self.getGestures().copy()
+        for profile, applicationDict in gestureCopy.items():
+            for application, keyDict in applicationDict.copy().items():
+                try:
+                    del self.getGestures()[profile][application][gesture]
+                    if len(self.getGestures()[profile][application]) == 0:
+                        del self.getGestures()[profile][application]
+                    if len(self.getGestures()[profile]) == 0:
+                        del self.getGestures()[profile]
+                except KeyError:
+                    pass
+
+        print('remove', 'gesture', self.getName(), profile, application, gesture)
+
+
+
+
+
+
     def hasAPI(self, application, api):
         try:
             d = self.getAPIs()[application][api]
@@ -169,7 +225,7 @@ class ResourceContext():
                 for gesture, entry in applicationValue.copy().items():
                     if entry.getEntryType() == 'keyboard':
                         try:
-                            APIHelper.unregisterShortcut(entry.getResource(), self.getName())
+                            APIHelper.unregisterShortcut(entry.getResource1(), self.getName())
                         except Exception as e:
                             print(e)
                         print('unregister gesture', self.getName(), entry.getEntryType(), profile, application, entry.getResourceText())
