@@ -4479,8 +4479,33 @@ class Utilities:
         return pyatspi.findAncestor(obj, isHeader)
 
     def columnHeadersForCell(self, obj):
-        if not (obj and obj.getRole() == pyatspi.ROLE_TABLE_CELL):
+        result = self._columnHeadersForCell(obj)
+        # There either are no headers, or we got all of them.
+        if len(result) != 1:
+            return result
+
+        others = self._columnHeadersForCell(result[0])
+        while len(others) == 1 and others[0] not in result:
+            result.insert(0, others[0])
+            others = self._columnHeadersForCell(result[0])
+
+        return result
+
+    def _columnHeadersForCell(self, obj):
+        if not obj:
+            msg = "INFO: Attempted to get column headers for null cell"
+            debug.println(debug.LEVEL_INFO, msg, True)
             return []
+
+        if 'TableCell' in pyatspi.listInterfaces(obj):
+            tableCell = obj.queryTableCell()
+            try:
+                headers = tableCell.columnHeaderCells
+            except:
+                msg = "INFO: Exception getting column headers for %s" % obj
+                debug.println(debug.LEVEL_INFO, msg, True)
+            else:
+                return headers
 
         isTable = lambda x: x and 'Table' in pyatspi.listInterfaces(x)
         parent = pyatspi.findAncestor(obj, isTable)
@@ -4490,7 +4515,7 @@ class Utilities:
             return []
 
         row, col = self.coordinatesForCell(obj)
-        colspan = table.getColumnExtentAt(row, col)
+        rowspan, colspan = self.rowAndColumnSpan(obj)
 
         headers = []
         for c in range(col, col+colspan):
@@ -4499,8 +4524,33 @@ class Utilities:
         return headers
 
     def rowHeadersForCell(self, obj):
-        if not (obj and obj.getRole() == pyatspi.ROLE_TABLE_CELL):
+        result = self._rowHeadersForCell(obj)
+        # There either are no headers, or we got all of them.
+        if len(result) != 1:
+            return result
+
+        others = self._rowHeadersForCell(result[0])
+        while len(others) == 1 and others[0] not in result:
+            result.insert(0, others[0])
+            others = self._rowHeadersForCell(result[0])
+
+        return result
+
+    def _rowHeadersForCell(self, obj):
+        if not obj:
+            msg = "INFO: Attempted to get row headers for null cell"
+            debug.println(debug.LEVEL_INFO, msg, True)
             return []
+
+        if 'TableCell' in pyatspi.listInterfaces(obj):
+            tableCell = obj.queryTableCell()
+            try:
+                headers = tableCell.rowHeaderCells
+            except:
+                msg = "INFO: Exception getting row headers for %s" % obj
+                debug.println(debug.LEVEL_INFO, msg, True)
+            else:
+                return headers
 
         isTable = lambda x: x and 'Table' in pyatspi.listInterfaces(x)
         parent = pyatspi.findAncestor(obj, isTable)
@@ -4510,7 +4560,7 @@ class Utilities:
             return []
 
         row, col = self.coordinatesForCell(obj)
-        rowspan = table.getRowExtentAt(row, col)
+        rowspan, colspan = self.rowAndColumnSpan(obj)
 
         headers = []
         for r in range(row, row+rowspan):
@@ -4519,32 +4569,21 @@ class Utilities:
         return headers
 
     def columnHeaderForCell(self, obj):
-        if not (obj and obj.getRole() == pyatspi.ROLE_TABLE_CELL):
-            return None
+        headers = self.columnHeadersForCell(obj)
+        if headers:
+            return headers[0]
 
-        isTable = lambda x: x and 'Table' in pyatspi.listInterfaces(x)
-        parent = pyatspi.findAncestor(obj, isTable)
-        try:
-            table = parent.queryTable()
-        except:
-            return None
-
-        rowIndex, columnIndex = self.coordinatesForCell(obj)
-        return table.getColumnHeader(columnIndex)
+        return None
 
     def rowHeaderForCell(self, obj):
-        if not (obj and obj.getRole() == pyatspi.ROLE_TABLE_CELL):
-            return None
+        headers = self.rowHeadersForCell(obj)
+        if headers:
+            return headers[0]
 
-        isTable = lambda x: x and 'Table' in pyatspi.listInterfaces(x)
-        parent = pyatspi.findAncestor(obj, isTable)
-        try:
-            table = parent.queryTable()
-        except:
-            return None
+        return None
 
-        rowIndex, columnIndex = self.coordinatesForCell(obj)
-        return table.getRowHeader(rowIndex)
+    def _shouldUseTableCellInterfaceForCoordinates(self):
+        return True
 
     def coordinatesForCell(self, obj, preferAttribute=True, findCellAncestor=False):
         roles = [pyatspi.ROLE_TABLE_CELL,
@@ -4559,7 +4598,8 @@ class Utilities:
             cell = pyatspi.findAncestor(obj, lambda x: x and x.getRole() in roles)
             return self.coordinatesForCell(cell, preferAttribute, False)
 
-        if 'TableCell' in pyatspi.listInterfaces(obj):
+        if 'TableCell' in pyatspi.listInterfaces(obj) \
+           and self._shouldUseTableCellInterfaceForCoordinates():
             tableCell = obj.queryTableCell()
             try:
                 successful, row, col = tableCell.position
@@ -4568,21 +4608,55 @@ class Utilities:
                 debug.println(debug.LEVEL_INFO, msg, True)
             else:
                 if successful:
+                    msg = "INFO: table cell position of %s is row: %i, col: %i" % (obj, row, col)
+                    debug.println(debug.LEVEL_INFO, msg, True)
                     return row, col
+                msg = "INFO: Failed to get table cell position of %s via table cell" % obj
+                debug.println(debug.LEVEL_INFO, msg, True)
 
         isTable = lambda x: x and 'Table' in pyatspi.listInterfaces(x)
         parent = pyatspi.findAncestor(obj, isTable)
+        if not parent:
+            msg = "INFO: Couldn't find table-implementing ancestor for %s" % obj
+            debug.println(debug.LEVEL_INFO, msg, True)
+            return -1, -1
+
         try:
             table = parent.queryTable()
         except:
+            msg = "INFO: Exception querying table interface %s" % parent
+            debug.println(debug.LEVEL_INFO, msg, True)
             return -1, -1
 
         index = self.cellIndex(obj)
-        return table.getRowAtIndex(index), table.getColumnAtIndex(index)
+        try:
+            row = table.getRowAtIndex(index)
+            col = table.getColumnAtIndex(index)
+        except:
+            msg = "INFO: Exception getting row and column at index from %s" % parent
+            debug.println(debug.LEVEL_INFO, msg, True)
+            return -1, -1
+
+        return row, col
 
     def rowAndColumnSpan(self, obj):
-        if not (obj and obj.getRole() == pyatspi.ROLE_TABLE_CELL):
+        roles = [pyatspi.ROLE_TABLE_CELL,
+                 pyatspi.ROLE_TABLE_COLUMN_HEADER,
+                 pyatspi.ROLE_TABLE_ROW_HEADER,
+                 pyatspi.ROLE_COLUMN_HEADER,
+                 pyatspi.ROLE_ROW_HEADER]
+        if not (obj and obj.getRole() in roles):
             return -1, -1
+
+        if 'TableCell' in pyatspi.listInterfaces(obj):
+            tableCell = obj.queryTableCell()
+            try:
+                rowSpan, colSpan = tableCell.rowSpan, tableCell.columnSpan
+            except:
+                msg = "INFO: Exception getting table row and col span of %s via table cell" % obj
+                debug.println(debug.LEVEL_INFO, msg, True)
+            else:
+                return rowSpan, colSpan
 
         isTable = lambda x: x and 'Table' in pyatspi.listInterfaces(x)
         parent = pyatspi.findAncestor(obj, isTable)
@@ -4592,6 +4666,9 @@ class Utilities:
             return -1, -1
 
         row, col = self.coordinatesForCell(obj)
+        if (row < 0 or col < 0):
+            return -1, -1
+
         return table.getRowExtentAt(row, col), table.getColumnExtentAt(row, col)
 
     def setSizeUnknown(self, obj):

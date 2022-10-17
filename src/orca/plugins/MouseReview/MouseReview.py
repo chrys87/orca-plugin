@@ -348,6 +348,19 @@ class _ItemContext:
 
         return self._time
 
+    def _isInlineChild(self, prior):
+        if not self._obj or not prior._obj:
+            return False
+
+        if prior._obj.parent != self._obj:
+            return False
+
+        if self._treatAsSingleObject():
+            return False
+
+        role = prior._obj.getRole()
+        return role == pyatspi.ROLE_LINK
+
     def present(self, prior):
         """Presents this context to the user."""
 
@@ -370,7 +383,7 @@ class _ItemContext:
             debug.println(debug.LEVEL_INFO, msg, True)
             return False
 
-        if self._obj and self._obj != prior._obj:
+        if self._obj and self._obj != prior._obj and not self._isInlineChild(prior):
             priorObj = prior._obj or self._getContainer()
             # TODO
             #orca.emitRegionChanged(self._obj, mode=orca.MOUSE_REVIEW)
