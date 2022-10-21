@@ -53,7 +53,7 @@ class ResourceContext():
         self.subscriptions = {} # subscription to signals by the context
         self.apis = {}
         self.signals = {}
-        self.settings {}
+        self.settings = {}
 
     def getName(self):
         return self.name
@@ -68,7 +68,6 @@ class ResourceContext():
     def getSettings(self):
         return self.settings
     def hasSettings(self, profile, application, sub_setting_name):
-                self.settings[profile][application][sub_setting_name]
         try:
             d = self.getSettings()[profile][application][sub_setting_name]
             return True
@@ -89,25 +88,6 @@ class ResourceContext():
         self.settings[profile][application][sub_setting_name] = entry
         
         print('add', 'settings', self.getName(), profile, application, entry.getResourceText())
-
-    def removeSetting(self, gesture):
-        gestureCopy = self.getGestures().copy()
-        for profile, applicationDict in gestureCopy.items():
-            for application, keyDict in applicationDict.copy().items():
-                try:
-                    del self.getGestures()[profile][application][gesture]
-                    if len(self.getGestures()[profile][application]) == 0:
-                        del self.getGestures()[profile][application]
-                    if len(self.getGestures()[profile]) == 0:
-                        del self.getGestures()[profile]
-                except KeyError:
-                    pass
-
-        print('remove', 'gesture', self.getName(), profile, application, gesture)
-
-
-
-
 
 
     def hasAPI(self, application, api):
