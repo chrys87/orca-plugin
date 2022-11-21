@@ -3667,7 +3667,7 @@ class Script(script.Script):
             query = find.getLastQuery()
         if query:
             context = self.getFlatReviewContext()
-            location = query.findQuery(context, self.justEnteredFlatReviewMode)
+            location = query.findQuery(context)
             if not location:
                 self.presentMessage(messages.STRING_NOT_FOUND)
             else:

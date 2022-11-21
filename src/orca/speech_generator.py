@@ -1546,9 +1546,6 @@ class SpeechGenerator(generator.Generator):
         if not (result and result[0]):
             return []
 
-        if not obj.getState().contains(pyatspi.STATE_EDITABLE):
-            result[0] = result[0].strip()
-
         result.extend(self.voice(DEFAULT, obj=obj, **args))
         if result[0] in ['\n', ''] and _settingsManager.getSetting('speakBlankLines') \
            and not self._script.inSayAll() and args.get('total', 1) == 1 \
@@ -2087,6 +2084,9 @@ class SpeechGenerator(generator.Generator):
             return []
 
         if self._script.utilities.isTypeahead(priorObj):
+            return []
+
+        if obj and obj.getRole() == pyatspi.ROLE_PAGE_TAB:
             return []
 
         commonAncestor = self._script.utilities.commonAncestor(priorObj, obj)

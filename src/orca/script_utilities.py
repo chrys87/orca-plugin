@@ -3543,7 +3543,7 @@ class Utilities:
             words = self.WORDS_RE.split(line)
             line = ''.join(map(self._convertWordToDigits, words))
 
-        if len(line) == 1:
+        if len(line) == 1 and not self._script.inSayAll():
             charname = chnames.getCharacterName(line)
             if charname != line:
                 return charname
@@ -5691,7 +5691,7 @@ class Utilities:
 
     def lastInputEventWasDelete(self):
         keyString, mods = self.lastKeyAndModifiers()
-        if keyString == "Delete":
+        if keyString in ["Delete", "KP_Delete"]:
             return True
 
         keycode, mods = self._lastKeyCodeAndModifiers()
