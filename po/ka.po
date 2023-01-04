@@ -1,26 +1,26 @@
-# SOME DESCRIPTIVE TITLE.
-# Copyright (C) YEAR THE PACKAGE'S COPYRIGHT HOLDER
-# This file is distributed under the same license as the PACKAGE package.
-# FIRST AUTHOR <EMAIL@ADDRESS>, YEAR.
+# Georgian translation for orca.
+# Copyright (C) 2022 orca authors
+# This file is distributed under the same license as the orca package.
+# Ekaterine Papava <papava.e@gtu.ge>, 2022.
 #
 msgid ""
 msgstr ""
 "Project-Id-Version: orca\n"
 "Report-Msgid-Bugs-To: https://gitlab.gnome.org/GNOME/orca/issues\n"
-"POT-Creation-Date: 2022-06-21 20:54+0000\n"
-"PO-Revision-Date: 2022-06-22 07:33+0200\n"
-"Last-Translator: Temuri Doghonadze <temuri.doghonadze@gmail.com>\n"
+"POT-Creation-Date: 2022-09-17 08:43+0000\n"
+"PO-Revision-Date: 2022-12-28 00:03+0100\n"
+"Last-Translator: Ekaterine Papava <papava.e@gtu.ge>\n"
 "Language-Team: Georgian <(nothing)>\n"
 "Language: ka\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=1; plural=0;\n"
-"X-Generator: Poedit 3.1\n"
+"X-Generator: Poedit 3.2.2\n"
 
 #: orca-autostart.desktop.in:4
 msgid "Orca Screen Reader"
-msgstr ""
+msgstr "Orca - ეკრანის მკითხველი"
 
 #. Translators: short braille for the rolename of an invalid GUI object.
 #. We strive to keep it under three characters to preserve real estate.
@@ -55,7 +55,7 @@ msgstr "კალ"
 #. Translators: short braille for the rolename of a canvas widget.
 #: src/orca/braille_rolenames.py:55
 msgid "cnv"
-msgstr ""
+msgstr "ტილო"
 
 #. Translators: short braille for the rolename of a caption (e.g.,
 #. table caption).
@@ -78,29 +78,29 @@ msgstr "ფრამრ"
 #. Translators: short braille for the rolename of a table column header.
 #: src/orca/braille_rolenames.py:71 src/orca/braille_rolenames.py:230
 msgid "colhdr"
-msgstr ""
+msgstr "სვტთვსრთ"
 
 #. Translators: short braille for the rolename of a combo box.
 #: src/orca/braille_rolenames.py:74
 msgid "cbo"
-msgstr ""
+msgstr "კბო"
 
 #. Translators: short braille for the rolename of a date editor.
 #: src/orca/braille_rolenames.py:77
 msgid "dat"
-msgstr ""
+msgstr "თრღ"
 
 #. Translators: short braille for the rolename of a desktop icon.
 #. Translators: short braille for the rolename of a icon.
 #: src/orca/braille_rolenames.py:80 src/orca/braille_rolenames.py:131
 msgid "icn"
-msgstr ""
+msgstr "ხტლ"
 
 #. Translators: short braille for the rolename of a desktop frame.
 #. Translators: short braille for the rolename of a frame.
 #: src/orca/braille_rolenames.py:83 src/orca/braille_rolenames.py:119
 msgid "frm"
-msgstr ""
+msgstr "კდრ"
 
 #. Translators: short braille for the rolename of a dial.
 #. You should attempt to treat it as an abbreviation of
@@ -119,33 +119,33 @@ msgstr "dlg"
 #. Translators: short braille for the rolename of a directory pane.
 #: src/orca/braille_rolenames.py:95
 msgid "dip"
-msgstr ""
+msgstr "ფნჯრ"
 
 #. Translators: short braille for the rolename of an HTML document frame.
 #. Translators: short braille for the rolename of an html container.
 #: src/orca/braille_rolenames.py:98 src/orca/braille_rolenames.py:128
 msgid "html"
-msgstr ""
+msgstr "ჰტმლ"
 
 #. Translators: short braille for the rolename of a drawing area.
 #: src/orca/braille_rolenames.py:101
 msgid "draw"
-msgstr ""
+msgstr "ხატვა"
 
 #. Translators: short braille for the rolename of a file chooser.
 #: src/orca/braille_rolenames.py:104
 msgid "fchsr"
-msgstr ""
+msgstr "ფლარჩ"
 
 #. Translators: short braille for the rolename of a filler.
 #: src/orca/braille_rolenames.py:107
 msgid "flr"
-msgstr ""
+msgstr "შმვსბ"
 
 #. Translators: short braille for the rolename of a font chooser.
 #: src/orca/braille_rolenames.py:110
 msgid "fnt"
-msgstr ""
+msgstr "ფნტ"
 
 #. Translators: short braille for the rolename of a form.
 #. You should attempt to treat it as an abbreviation of
@@ -159,102 +159,102 @@ msgstr "ფორმა"
 #. Translators: short braille for the rolename of a glass pane.
 #: src/orca/braille_rolenames.py:122
 msgid "gpn"
-msgstr ""
+msgstr "მინა"
 
 #. Translators: short braille for the rolename of a heading.
 #: src/orca/braille_rolenames.py:125
 msgid "hdng"
-msgstr ""
+msgstr "თვი"
 
 #. Translators: short braille for the rolename of a image.
 #: src/orca/braille_rolenames.py:134
 msgid "img"
-msgstr ""
+msgstr "სრთ"
 
 #. Translators: short braille for the rolename of an internal frame.
 #: src/orca/braille_rolenames.py:137
 msgid "ifrm"
-msgstr ""
+msgstr "შდკდრ"
 
 #. Translators: short braille for the rolename of a label.
 #: src/orca/braille_rolenames.py:140
 msgid "lbl"
-msgstr ""
+msgstr "ჭდე"
 
 #. Translators: short braille for the rolename of a layered pane.
 #: src/orca/braille_rolenames.py:143
 msgid "lyrdpn"
-msgstr ""
+msgstr "შრპან"
 
 #. Translators: short braille for the rolename of a link.
 #: src/orca/braille_rolenames.py:146
 msgid "lnk"
-msgstr ""
+msgstr "ბმული"
 
 #. Translators: short braille for the rolename of a list.
 #: src/orca/braille_rolenames.py:149
 msgid "lst"
-msgstr ""
+msgstr "სია"
 
 #. Translators: short braille for the rolename of a list item.
 #: src/orca/braille_rolenames.py:152
 msgid "lstitm"
-msgstr ""
+msgstr "სისელ"
 
 #. Translators: short braille for the rolename of a menu.
 #: src/orca/braille_rolenames.py:155
 msgid "mnu"
-msgstr ""
+msgstr "მნუ"
 
 #. Translators: short braille for the rolename of a menu bar.
 #: src/orca/braille_rolenames.py:158
 msgid "mnubr"
-msgstr ""
+msgstr "მნუზლ"
 
 #. Translators: short braille for the rolename of a menu item.
 #: src/orca/braille_rolenames.py:161
 msgid "mnuitm"
-msgstr ""
+msgstr "მნუპნქ"
 
 #. Translators: short braille for the rolename of an option pane.
 #: src/orca/braille_rolenames.py:164
 msgid "optnpn"
-msgstr ""
+msgstr "პრმპნ"
 
 #. Translators: short braille for the rolename of a page tab.
 #: src/orca/braille_rolenames.py:167
 msgid "pgt"
-msgstr ""
+msgstr "გვჩნ"
 
 #. Translators: short braille for the rolename of a page tab list.
 #: src/orca/braille_rolenames.py:170
 msgid "tblst"
-msgstr ""
+msgstr "გვჩნსია"
 
 #. Translators: short braille for the rolename of a panel.
 #: src/orca/braille_rolenames.py:173
 msgid "pnl"
-msgstr ""
+msgstr "პნლ"
 
 #. Translators: short braille for the rolename of a password field.
 #: src/orca/braille_rolenames.py:176
 msgid "pwd"
-msgstr ""
+msgstr "პრლ"
 
 #. Translators: short braille for the rolename of a popup menu.
 #: src/orca/braille_rolenames.py:179
 msgid "popmnu"
-msgstr ""
+msgstr "მხტმნუ"
 
 #. Translators: short braille for the rolename of a progress bar.
 #: src/orca/braille_rolenames.py:182
 msgid "pgbar"
-msgstr ""
+msgstr "პგზლ"
 
 #. Translators: short braille for the rolename of a push button.
 #: src/orca/braille_rolenames.py:185
 msgid "btn"
-msgstr ""
+msgstr "ღლკ"
 
 #. Translators: short braille for the rolename of a radio button.
 #: src/orca/braille_rolenames.py:188
@@ -264,138 +264,138 @@ msgstr "რადიო"
 #. Translators: short braille for the rolename of a radio menu item.
 #: src/orca/braille_rolenames.py:191
 msgid "rdmnuitm"
-msgstr ""
+msgstr "რდმნუპნქტ"
 
 #. Translators: short braille for the rolename of a root pane.
 #: src/orca/braille_rolenames.py:194
 msgid "rtpn"
-msgstr ""
+msgstr "სწყპნ"
 
 #. Translators: short braille for the rolename of a row header.
 #. Translators: short braille for the rolename of a table row header.
 #: src/orca/braille_rolenames.py:197 src/orca/braille_rolenames.py:233
 msgid "rwhdr"
-msgstr ""
+msgstr "მწკრვს"
 
 #. Translators: short braille for the rolename of a scroll bar.
 #: src/orca/braille_rolenames.py:200
 msgid "scbr"
-msgstr ""
+msgstr "ჩოჩია"
 
 #. Translators: short braille for the rolename of a scroll pane.
 #: src/orca/braille_rolenames.py:203
 msgid "scpn"
-msgstr ""
+msgstr "ჩჩზლ"
 
 #. Translators: short braille for the rolename of a section (e.g., in html).
 #: src/orca/braille_rolenames.py:206
 msgid "sctn"
-msgstr ""
+msgstr "სქც"
 
 #. Translators: short braille for the rolename of a separator.
 #: src/orca/braille_rolenames.py:209
 msgid "seprtr"
-msgstr ""
+msgstr "გმყფ"
 
 #. Translators: short braille for the rolename of a slider.
 #: src/orca/braille_rolenames.py:212
 msgid "sldr"
-msgstr ""
+msgstr "ჩოჩია"
 
 #. Translators: short braille for the rolename of a split pane.
 #: src/orca/braille_rolenames.py:215
 msgid "spltpn"
-msgstr ""
+msgstr "გყფპნლ"
 
 #. Translators: short braille for the rolename of a spin button.
 #: src/orca/braille_rolenames.py:218
 msgid "spin"
-msgstr ""
+msgstr "ტრლღლ"
 
 #. Translators: short braille for the rolename of a statusbar.
 #: src/orca/braille_rolenames.py:221
 msgid "statbr"
-msgstr ""
+msgstr "სტზლ"
 
 #. Translators: short braille for the rolename of a table.
 #: src/orca/braille_rolenames.py:224
 msgid "tbl"
-msgstr ""
+msgstr "ცხრლ"
 
 #. Translators: short braille for the rolename of a table cell.
 #: src/orca/braille_rolenames.py:227
 msgid "cll"
-msgstr ""
+msgstr "უჯრდ"
 
 #. Translators: short braille for the rolename of a tear off menu item.
 #: src/orca/braille_rolenames.py:236
 msgid "tomnuitm"
-msgstr ""
+msgstr "გმმპნქტ"
 
 #. Translators: short braille for the rolename of a terminal.
 #: src/orca/braille_rolenames.py:239
 msgid "term"
-msgstr ""
+msgstr "პირობები"
 
 #. Translators: short braille for the rolename of a text entry field.
 #: src/orca/braille_rolenames.py:242
 msgid "txt"
-msgstr ""
+msgstr "ტქსტ"
 
 #. Translators: short braille for the rolename of a toggle button.
 #: src/orca/braille_rolenames.py:245
 msgid "tglbtn"
-msgstr ""
+msgstr "გდსრთვ"
 
 #. Translators: short braille for the rolename of a toolbar.
 #: src/orca/braille_rolenames.py:248
 msgid "tbar"
-msgstr ""
+msgstr "ხლსწზლ"
 
 #. Translators: short braille for the rolename of a tooltip.
 #: src/orca/braille_rolenames.py:251
 msgid "tip"
-msgstr ""
+msgstr "მნშნ"
 
 #. Translators: short braille for the rolename of a tree.
 #: src/orca/braille_rolenames.py:254
 msgid "tre"
-msgstr ""
+msgstr "ხე"
 
 #. Translators: short braille for the rolename of a tree table.
 #: src/orca/braille_rolenames.py:257
 msgid "trtbl"
-msgstr ""
+msgstr "ხისცხრლ"
 
 #. Translators: short braille for when the rolename of an object is unknown.
 #: src/orca/braille_rolenames.py:260
 msgid "unk"
-msgstr ""
+msgstr "უცნ"
 
 #. Translators: short braille for the rolename of a viewport.
 #: src/orca/braille_rolenames.py:263
 msgid "vwprt"
-msgstr ""
+msgstr "ხედი"
 
 #. Translators: short braille for the rolename of a window.
 #: src/orca/braille_rolenames.py:266
 msgid "wnd"
-msgstr ""
+msgstr "ფნჯრ"
 
 #. Translators: short braille for the rolename of a header.
 #: src/orca/braille_rolenames.py:269
 msgid "hdr"
-msgstr ""
+msgstr "თვსრთ"
 
 #. Translators: short braille for the rolename of a footer.
 #: src/orca/braille_rolenames.py:272
 msgid "ftr"
-msgstr ""
+msgstr "ბლსრთ"
 
 #. Translators: short braille for the rolename of a paragraph.
 #: src/orca/braille_rolenames.py:275
 msgid "para"
-msgstr ""
+msgstr "პარა"
 
 #. Translators: short braille for the rolename of a application.
 #: src/orca/braille_rolenames.py:278
@@ -405,209 +405,209 @@ msgstr "აპი"
 #. Translators: short braille for the rolename of a autocomplete.
 #: src/orca/braille_rolenames.py:281
 msgid "auto"
-msgstr ""
+msgstr "ავტომატური"
 
 #. Translators: short braille for the rolename of an editbar.
 #: src/orca/braille_rolenames.py:284
 msgid "edtbr"
-msgstr ""
+msgstr "რდქზლ"
 
 #. Translators: short braille for the rolename of an embedded component.
 #: src/orca/braille_rolenames.py:287
 msgid "emb"
-msgstr ""
+msgstr "ჩშნბლ"
 
 #. Translators: This is the name of a braille translation table. To learn more
 #. about braille translation tables, see http://en.wikipedia.org/wiki/Braille.
 #: src/orca/brltablenames.py:36
 msgid "Czech Grade 1"
-msgstr ""
+msgstr "ჩეხური დონე 1"
 
 #. Translators: This is the name of a braille translation table. To learn more
 #. about braille translation tables, see http://en.wikipedia.org/wiki/Braille.
 #: src/orca/brltablenames.py:40
 msgid "Spanish Grade 1"
-msgstr ""
+msgstr "ესპანური დონე 1"
 
 #. Translators: This is the name of a braille translation table. To learn more
 #. about braille translation tables, see http://en.wikipedia.org/wiki/Braille.
 #: src/orca/brltablenames.py:44
 msgid "Canada French Grade 2"
-msgstr ""
+msgstr "კანადური ფრანგული დონე 2"
 
 #. Translators: This is the name of a braille translation table. To learn more
 #. about braille translation tables, see http://en.wikipedia.org/wiki/Braille.
 #: src/orca/brltablenames.py:48
 msgid "France French Grade 2"
-msgstr ""
+msgstr "ფრანგული ფრანგული დონე 2"
 
 #. Translators: This is the name of a braille translation table. To learn more
 #. about braille translation tables, see http://en.wikipedia.org/wiki/Braille.
 #: src/orca/brltablenames.py:52
 msgid "Latvian Grade 1"
-msgstr ""
+msgstr "ლატვიური დონე 1"
 
 #. Translators: This is the name of a braille translation table. To learn more
 #. about braille translation tables, see http://en.wikipedia.org/wiki/Braille.
 #: src/orca/brltablenames.py:56
 msgid "Netherlands Dutch Grade 1"
-msgstr ""
+msgstr "ნიდერლანდების დანიური დონე 1"
 
 #. Translators: This is the name of a braille translation table. To learn more
 #. about braille translation tables, see http://en.wikipedia.org/wiki/Braille.
 #: src/orca/brltablenames.py:60
 msgid "Norwegian Grade 0"
-msgstr ""
+msgstr "ნორვეგიული დონე 0"
 
 #. Translators: This is the name of a braille translation table. To learn more
 #. about braille translation tables, see http://en.wikipedia.org/wiki/Braille.
 #: src/orca/brltablenames.py:64
 msgid "Norwegian Grade 1"
-msgstr ""
+msgstr "ნორვეგიული დონე 1"
 
 #. Translators: This is the name of a braille translation table. To learn more
 #. about braille translation tables, see http://en.wikipedia.org/wiki/Braille.
 #: src/orca/brltablenames.py:68
 msgid "Norwegian Grade 2"
-msgstr ""
+msgstr "ნორვეგიული დონე 2"
 
 #. Translators: This is the name of a braille translation table. To learn more
 #. about braille translation tables, see http://en.wikipedia.org/wiki/Braille.
 #: src/orca/brltablenames.py:72
 msgid "Norwegian Grade 3"
-msgstr ""
+msgstr "ნორვეგიული დონე 3"
 
 #. Translators: This is the name of a braille translation table. To learn more
 #. about braille translation tables, see http://en.wikipedia.org/wiki/Braille.
 #: src/orca/brltablenames.py:76
 msgid "Polish Grade 1"
-msgstr ""
+msgstr "პოლონური დონე 1"
 
 #. Translators: This is the name of a braille translation table. To learn more
 #. about braille translation tables, see http://en.wikipedia.org/wiki/Braille.
 #: src/orca/brltablenames.py:80
 msgid "Portuguese Grade 1"
-msgstr ""
+msgstr "პორტუგალიური დონე 1"
 
 #. Translators: This is the name of a braille translation table. To learn more
 #. about braille translation tables, see http://en.wikipedia.org/wiki/Braille.
 #: src/orca/brltablenames.py:84
 msgid "Swedish Grade 1"
-msgstr ""
+msgstr "შვედური დონე 1"
 
 #. Translators: This is the name of a braille translation table. To learn more
 #. about braille translation tables, see http://en.wikipedia.org/wiki/Braille.
 #: src/orca/brltablenames.py:88
 msgid "Arabic Grade 1"
-msgstr ""
+msgstr "არაბული დონე 1"
 
 #. Translators: This is the name of a braille translation table. To learn more
 #. about braille translation tables, see http://en.wikipedia.org/wiki/Braille.
 #: src/orca/brltablenames.py:92
 msgid "Welsh Grade 1"
-msgstr ""
+msgstr "ვალიური დონე 1"
 
 #. Translators: This is the name of a braille translation table. To learn more
 #. about braille translation tables, see http://en.wikipedia.org/wiki/Braille.
 #: src/orca/brltablenames.py:96
 msgid "Welsh Grade 2"
-msgstr ""
+msgstr "ვალიური დონე 2"
 
 #. Translators: This is the name of a braille translation table. To learn more
 #. about braille translation tables, see http://en.wikipedia.org/wiki/Braille.
 #: src/orca/brltablenames.py:100
 msgid "German Grade 0"
-msgstr ""
+msgstr "გერმანული დონე 0"
 
 #. Translators: This is the name of a braille translation table. To learn more
 #. about braille translation tables, see http://en.wikipedia.org/wiki/Braille.
 #: src/orca/brltablenames.py:104
 msgid "German Grade 1"
-msgstr ""
+msgstr "გერმანული დონე 1"
 
 #. Translators: This is the name of a braille translation table. To learn more
 #. about braille translation tables, see http://en.wikipedia.org/wiki/Braille.
 #: src/orca/brltablenames.py:108
 msgid "German Grade 2"
-msgstr ""
+msgstr "გერმანული დონე 2"
 
 #. Translators: This is the name of a braille translation table. To learn more
 #. about braille translation tables, see http://en.wikipedia.org/wiki/Braille.
 #: src/orca/brltablenames.py:112
 msgid "U.K. English Grade 2"
-msgstr ""
+msgstr "U.K. ინგლისური დონე 2"
 
 #. Translators: This is the name of a braille translation table. To learn more
 #. about braille translation tables, see http://en.wikipedia.org/wiki/Braille.
 #: src/orca/brltablenames.py:116
 msgid "U.K. English Grade 1"
-msgstr ""
+msgstr "U.K. ინგლისური დონე 1"
 
 #. Translators: This is the name of a braille translation table. To learn more
 #. about braille translation tables, see http://en.wikipedia.org/wiki/Braille.
 #: src/orca/brltablenames.py:120
 msgid "U.S. English Grade 1"
-msgstr ""
+msgstr "U.K. ინგლისური დონე 1"
 
 #. Translators: This is the name of a braille translation table. To learn more
 #. about braille translation tables, see http://en.wikipedia.org/wiki/Braille.
 #: src/orca/brltablenames.py:124
 msgid "U.S. English Grade 2"
-msgstr ""
+msgstr "U.K. ინგლისური დონე 2"
 
 #. Translators: This is the name of a braille translation table. To learn more
 #. about braille translation tables, see http://en.wikipedia.org/wiki/Braille.
 #: src/orca/brltablenames.py:128
 msgid "Canada French Grade 1"
-msgstr ""
+msgstr "კანადური ფრანგული დონე 1"
 
 #. Translators: This is the name of a braille translation table. To learn more
 #. about braille translation tables, see http://en.wikipedia.org/wiki/Braille.
 #: src/orca/brltablenames.py:132
 msgid "France French Grade 1"
-msgstr ""
+msgstr "ფრანგული ფრანგული დონე 1"
 
 #. Translators: This is the name of a braille translation table. To learn more
 #. about braille translation tables, see http://en.wikipedia.org/wiki/Braille.
 #: src/orca/brltablenames.py:136
 msgid "Greek Grade 1"
-msgstr ""
+msgstr "ბერძნული დონე 1"
 
 #. Translators: This is the name of a braille translation table. To learn more
 #. about braille translation tables, see http://en.wikipedia.org/wiki/Braille.
 #: src/orca/brltablenames.py:140
 msgid "Hindi Grade 1"
-msgstr ""
+msgstr "ჰინდი დონე 1"
 
 #. Translators: This is the name of a braille translation table. To learn more
 #. about braille translation tables, see http://en.wikipedia.org/wiki/Braille.
 #: src/orca/brltablenames.py:144
 msgid "Hungarian 8 dot computer"
-msgstr ""
+msgstr "უნგრული 8 წერტილიანი კომპიუტერი"
 
 #. Translators: This is the name of a braille translation table. To learn more
 #. about braille translation tables, see http://en.wikipedia.org/wiki/Braille.
 #: src/orca/brltablenames.py:148
 msgid "Hungarian Grade 1"
-msgstr ""
+msgstr "უნგრული დონე 1"
 
 #. Translators: This is the name of a braille translation table. To learn more
 #. about braille translation tables, see http://en.wikipedia.org/wiki/Braille.
 #: src/orca/brltablenames.py:152
 msgid "Hungarian Grade 2"
-msgstr ""
+msgstr "უნგრული დონე 2"
 
 #. Translators: This is the name of a braille translation table. To learn more
 #. about braille translation tables, see http://en.wikipedia.org/wiki/Braille.
 #: src/orca/brltablenames.py:156
 msgid "Italian Grade 1"
-msgstr ""
+msgstr "იტალიური დონე 1"
 
 #. Translators: This is the name of a braille translation table. To learn more
 #. about braille translation tables, see http://en.wikipedia.org/wiki/Braille.
 #: src/orca/brltablenames.py:160
 msgid "Belgium Dutch Grade 1"
-msgstr ""
+msgstr "ბელგიური დანიური დონე 1"
 
 #. Translators: this is the spoken word for the space character
 #.
@@ -619,7 +619,7 @@ msgstr "ადგილი"
 #.
 #: src/orca/chnames.py:45
 msgid "newline"
-msgstr ""
+msgstr "ახალი ხაზი"
 
 #. Translators: this is the spoken word for the tab character
 #.
@@ -633,13 +633,13 @@ msgstr "ჩანართი"
 #.
 #: src/orca/chnames.py:53
 msgid "exclaim"
-msgstr ""
+msgstr "ძახილის ნიშანი"
 
 #. Translators: this is the spoken word for the character '"' (U+0022)
 #.
 #: src/orca/chnames.py:57
 msgid "quote"
-msgstr ""
+msgstr "ბრჭყალი"
 
 #. Translators: this is the spoken word for the character '#' (U+0023)
 #.
@@ -651,7 +651,7 @@ msgstr "ნომერი"
 #.
 #: src/orca/chnames.py:65
 msgid "dollar"
-msgstr ""
+msgstr "დოლარი"
 
 #. Translators: this is the spoken word for the character '%' (U+0025)
 #.
@@ -663,25 +663,25 @@ msgstr "პროცენტი"
 #.
 #: src/orca/chnames.py:73
 msgid "and"
-msgstr ""
+msgstr "და"
 
 #. Translators: this is the spoken word for the character ''' (U+0027)
 #.
 #: src/orca/chnames.py:77
 msgid "apostrophe"
-msgstr ""
+msgstr "აპოსტროფი"
 
 #. Translators: this is the spoken word for the character '(' (U+0028)
 #.
 #: src/orca/chnames.py:81
 msgid "left paren"
-msgstr ""
+msgstr "გამხსნელი ფრჩხილი"
 
 #. Translators: this is the spoken word for the character ')' (U+0029)
 #.
 #: src/orca/chnames.py:85
 msgid "right paren"
-msgstr ""
+msgstr "დამხურავი ფრჩხლი"
 
 #. Translators: this is the spoken word for the character '*' (U+002a)
 #.
@@ -695,19 +695,19 @@ msgstr "ვარსკვლავი"
 #.
 #: src/orca/chnames.py:93 src/orca/keynames.py:303
 msgid "plus"
-msgstr ""
+msgstr "პლუსი"
 
 #. Translators: this is the spoken word for the character ',' (U+002c)
 #.
 #: src/orca/chnames.py:97
 msgid "comma"
-msgstr ""
+msgstr "მძიმე"
 
 #. Translators: this is the spoken word for the character '-' (U+002d)
 #.
 #: src/orca/chnames.py:101
 msgid "dash"
-msgstr ""
+msgstr "ტირე"
 
 #. Translators: this is the spoken word for the character '.' (U+002e)
 #.
@@ -719,37 +719,37 @@ msgstr "წერტილი"
 #.
 #: src/orca/chnames.py:109
 msgid "slash"
-msgstr ""
+msgstr "დახრილი ხაზი"
 
 #. Translators: this is the spoken word for the character ':' (U+003a)
 #.
 #: src/orca/chnames.py:113
 msgid "colon"
-msgstr ""
+msgstr "ორი წერტილი"
 
 #. Translators: this is the spoken word for the character ';' (U+003b)
 #.
 #: src/orca/chnames.py:117
 msgid "semicolon"
-msgstr ""
+msgstr "წერტილმძიმე"
 
 #. Translators: this is the spoken word for the character '< ' (U+003c)
 #.
 #: src/orca/chnames.py:121
 msgid "less"
-msgstr ""
+msgstr "ნაკლები"
 
 #. Translators: this is the spoken word for the character '=' (U+003d)
 #.
 #: src/orca/chnames.py:125
 msgid "equals"
-msgstr ""
+msgstr "უდრის"
 
 #. Translators: this is the spoken word for the character '> ' (U+003e)
 #.
 #: src/orca/chnames.py:129
 msgid "greater"
-msgstr ""
+msgstr "მეტი"
 
 #. Translators: this is the spoken word for the character '?' (U+003f)
 #.
@@ -761,37 +761,37 @@ msgstr "კითხვა"
 #.
 #: src/orca/chnames.py:137
 msgid "at"
-msgstr ""
+msgstr "დრო"
 
 #. Translators: this is the spoken word for the character '[' (U+005b)
 #.
 #: src/orca/chnames.py:141
 msgid "left bracket"
-msgstr ""
+msgstr "გამხსნელი კვადრატული ფრჩხილი"
 
 #. Translators: this is the spoken word for the character '\' (U+005c)
 #.
 #: src/orca/chnames.py:145
 msgid "backslash"
-msgstr ""
+msgstr "უკანა დახრილი ხაზი"
 
 #. Translators: this is the spoken word for the character ']' (U+005d)
 #.
 #: src/orca/chnames.py:149
 msgid "right bracket"
-msgstr ""
+msgstr "დამხურავი კვადრატული ფრჩხილი"
 
 #. Translators: this is the spoken word for the character '^' (U+005e)
 #.
 #: src/orca/chnames.py:153
 msgid "caret"
-msgstr ""
+msgstr "კარეტა"
 
 #. Translators: this is the spoken word for the character '_' (U+005f)
 #.
 #: src/orca/chnames.py:157
 msgid "underline"
-msgstr ""
+msgstr "ხაზგასმული"
 
 #. Translators: this is the spoken word for the character '`' (U+0060)
 #.
@@ -800,25 +800,25 @@ msgstr ""
 #.
 #: src/orca/chnames.py:161 src/orca/keynames.py:260
 msgid "grave"
-msgstr ""
+msgstr "უკუღმა ძახილის ნიშანი"
 
 #. Translators: this is the spoken word for the character '{' (U+007b)
 #.
 #: src/orca/chnames.py:165
 msgid "left brace"
-msgstr ""
+msgstr "მარცხენა ფიგურული ფრჩხილი"
 
 #. Translators: this is the spoken word for the character '|' (U+007c)
 #.
 #: src/orca/chnames.py:169
 msgid "vertical bar"
-msgstr ""
+msgstr "ვერტიკალური ხაზი"
 
 #. Translators: this is the spoken word for the character '}' (U+007d)
 #.
 #: src/orca/chnames.py:173
 msgid "right brace"
-msgstr ""
+msgstr "მარჯვენა ფიგურული ფრჩხილი"
 
 #. Translators: this is the spoken word for the character '~' (U+007e)
 #.
@@ -827,26 +827,26 @@ msgstr ""
 #.
 #: src/orca/chnames.py:177 src/orca/keynames.py:275
 msgid "tilde"
-msgstr ""
+msgstr "ტილდა"
 
 #. Translators: this is the spoken character for the no break space
 #. character (e.g., "&nbsp;" in HTML -- U+00a0)
 #.
 #: src/orca/chnames.py:182
 msgid "no break space"
-msgstr ""
+msgstr "არაგადატანადი გამოტოვება"
 
 #. Translators: this is the spoken word for the character '¡' (U+00a1)
 #.
 #: src/orca/chnames.py:186
 msgid "inverted exclamation point"
-msgstr ""
+msgstr "ამოყირავებული ძახილის ნიშანი"
 
 #. Translators: this is the spoken word for the character '¢' (U+00a2)
 #.
 #: src/orca/chnames.py:190
 msgid "cents"
-msgstr ""
+msgstr "ცენტი"
 
 #. Translators: this is the spoken word for the character '£' (U+00a3)
 #.
@@ -858,19 +858,19 @@ msgstr "ფუნტი"
 #.
 #: src/orca/chnames.py:198
 msgid "currency sign"
-msgstr ""
+msgstr "ვალუტა"
 
 #. Translators: this is the spoken word for the character '¥' (U+00a5)
 #.
 #: src/orca/chnames.py:202
 msgid "yen"
-msgstr ""
+msgstr "იენი"
 
 #. Translators: this is the spoken word for the character '¦' (U+00a6)
 #.
 #: src/orca/chnames.py:206
 msgid "broken bar"
-msgstr ""
+msgstr "გაფუჭებული ზოლი"
 
 #. Translators: this is the spoken word for the character '§' (U+00a7)
 #.
@@ -885,7 +885,7 @@ msgstr "სექცია"
 #.
 #: src/orca/chnames.py:214 src/orca/keynames.py:280
 msgid "diaeresis"
-msgstr ""
+msgstr "ტრემა"
 
 #. Translators: this is the spoken word for the character '©' (U+00a9)
 #.
@@ -897,37 +897,37 @@ msgstr "უფლებები"
 #.
 #: src/orca/chnames.py:222
 msgid "superscript a"
-msgstr ""
+msgstr "ზედა a"
 
 #. Translators: this is the spoken word for the character '«' (U+00ab)
 #.
 #: src/orca/chnames.py:226
 msgid "left double angle bracket"
-msgstr ""
+msgstr "მარცხენა ორმაგი კუთხოვანი ფრჩხილი"
 
 #. Translators: this is the spoken word for the character '¬' (U+00ac)
 #.
 #: src/orca/chnames.py:230
 msgid "logical not"
-msgstr ""
+msgstr "ლოგიკური არა"
 
 #. Translators: this is the spoken word for the character '­' (U+00ad)
 #.
 #: src/orca/chnames.py:234
 msgid "soft hyphen"
-msgstr ""
+msgstr "ტირე"
 
 #. Translators: this is the spoken word for the character '®' (U+00ae)
 #.
 #: src/orca/chnames.py:238
 msgid "registered"
-msgstr ""
+msgstr "რეგისტრირებულია"
 
 #. Translators: this is the spoken word for the character '¯' (U+00af)
 #.
 #: src/orca/chnames.py:242
 msgid "macron"
-msgstr ""
+msgstr "ზედა ხაზი"
 
 #. Translators: this is the spoken word for the character '°' (U+00b0)
 #.
@@ -939,19 +939,19 @@ msgstr "გრადუსი"
 #.
 #: src/orca/chnames.py:250
 msgid "plus or minus"
-msgstr ""
+msgstr "პლუს-მინუსი"
 
 #. Translators: this is the spoken word for the character '²' (U+00b2)
 #.
 #: src/orca/chnames.py:254
 msgid "superscript 2"
-msgstr ""
+msgstr "ზედა 2"
 
 #. Translators: this is the spoken word for the character '³' (U+00b3)
 #.
 #: src/orca/chnames.py:258
 msgid "superscript 3"
-msgstr ""
+msgstr "ზედა 3"
 
 #. Translators: this is the spoken word for the character '´' (U+00b4)
 #.
@@ -960,7 +960,7 @@ msgstr ""
 #.
 #: src/orca/chnames.py:262 src/orca/keynames.py:265
 msgid "acute"
-msgstr ""
+msgstr "მაგარი"
 
 #. Translators: this is the spoken word for the character 'µ' (U+00b5)
 #.
@@ -972,13 +972,13 @@ msgstr "მიუ"
 #.
 #: src/orca/chnames.py:270
 msgid "paragraph marker"
-msgstr ""
+msgstr "პარაგრაფის ნიშანი"
 
 #. Translators: this is the spoken word for the character '·' (U+00b7)
 #.
 #: src/orca/chnames.py:274
 msgid "middle dot"
-msgstr ""
+msgstr "შუა წერტილი"
 
 #. Translators: this is the spoken word for the character '¸' (U+00b8)
 #.
@@ -987,569 +987,569 @@ msgstr ""
 #.
 #: src/orca/chnames.py:278 src/orca/keynames.py:290
 msgid "cedilla"
-msgstr ""
+msgstr "სედილა"
 
 #. Translators: this is the spoken word for the character '¹' (U+00b9)
 #.
 #: src/orca/chnames.py:282
 msgid "superscript 1"
-msgstr ""
+msgstr "ზედა 1"
 
 #. Translators: this is the spoken word for the character 'º' (U+00ba)
 #.
 #: src/orca/chnames.py:286
 msgid "ordinal"
-msgstr ""
+msgstr "ორდინალი"
 
 #. Translators: this is the spoken word for the character '»' (U+00bb)
 #.
 #: src/orca/chnames.py:290
 msgid "right double angle bracket"
-msgstr ""
+msgstr "მარჯვენა ორმაგი კუთხოვანი ფრჩხილი"
 
 #. Translators: this is the spoken word for the character '¼' (U+00bc)
 #.
 #: src/orca/chnames.py:294
 msgid "one fourth"
-msgstr ""
+msgstr "ერთი მეოთხედი"
 
 #. Translators: this is the spoken word for the character '½' (U+00bd)
 #.
 #: src/orca/chnames.py:298
 msgid "one half"
-msgstr ""
+msgstr "ნახევარი"
 
 #. Translators: this is the spoken word for the character '¾' (U+00be)
 #.
 #: src/orca/chnames.py:302
 msgid "three fourths"
-msgstr ""
+msgstr "სამი მეოთხედი"
 
 #. Translators: this is the spoken word for the character '¿' (U+00bf)
 #.
 #: src/orca/chnames.py:306
 msgid "inverted question mark"
-msgstr ""
+msgstr "ამობრუნებული კითხვის ნიშანი"
 
 #. Translators: this is the spoken word for the character 'á' (U+00e1)
 #.
 #: src/orca/chnames.py:310
 msgid "a acute"
-msgstr ""
+msgstr "მაგარი ა"
 
 #. Translators: this is the spoken word for the character 'À' (U+00c0)
 #.
 #: src/orca/chnames.py:314
 msgid "A GRAVE"
-msgstr ""
+msgstr "მაგარი დიდი ა"
 
 #. Translators: this is the spoken word for the character 'Á' (U+00c1)
 #.
 #: src/orca/chnames.py:318
 msgid "A ACUTE"
-msgstr ""
+msgstr "ა ძახილის ნიშნით"
 
 #. Translators: this is the spoken word for the character 'Â' (U+00c2)
 #.
 #: src/orca/chnames.py:322
 msgid "A CIRCUMFLEX"
-msgstr ""
+msgstr "ა თავსახურით"
 
 #. Translators: this is the spoken word for the character 'Ã' (U+00c3)
 #.
 #: src/orca/chnames.py:326
 msgid "A TILDE"
-msgstr ""
+msgstr "დიდი ა ტილდით"
 
 #. Translators: this is the spoken word for the character 'Ä' (U+00c4)
 #.
 #: src/orca/chnames.py:330
 msgid "A UMLAUT"
-msgstr ""
+msgstr "დიდი ა უმლაუტით"
 
 #. Translators: this is the spoken word for the character 'Å' (U+00c5)
 #.
 #: src/orca/chnames.py:334
 msgid "A RING"
-msgstr ""
+msgstr "დიდი ა რგოლით"
 
 #. Translators: this is the spoken word for the character 'Æ' (U+00c6)
 #.
 #: src/orca/chnames.py:338
 msgid "A E"
-msgstr ""
+msgstr "აე"
 
 #. Translators: this is the spoken word for the character 'Ç' (U+00c7)
 #.
 #: src/orca/chnames.py:342
 msgid "C CEDILLA"
-msgstr ""
+msgstr "ცე სედილით"
 
 #. Translators: this is the spoken word for the character 'È' (U+00c8)
 #.
 #: src/orca/chnames.py:346
 msgid "E GRAVE"
-msgstr ""
+msgstr "მაგარი დიდი ე"
 
 #. Translators: this is the spoken word for the character 'É' (U+00c9)
 #.
 #: src/orca/chnames.py:350
 msgid "E ACUTE"
-msgstr ""
+msgstr "მაგარი ე"
 
 #. Translators: this is the spoken word for the character 'Ê' (U+00ca)
 #.
 #: src/orca/chnames.py:354
 msgid "E CIRCUMFLEX"
-msgstr ""
+msgstr "ე თავსახურით"
 
 #. Translators: this is the spoken word for the character 'Ë' (U+00cb)
 #.
 #: src/orca/chnames.py:358
 msgid "E UMLAUT"
-msgstr ""
+msgstr "დიდი ე უმლაუტით"
 
 #. Translators: this is the spoken word for the character 'Ì' (U+00cc)
 #.
 #: src/orca/chnames.py:362
 msgid "I GRAVE"
-msgstr ""
+msgstr "მაგარი დიდი ი"
 
 #. Translators: this is the spoken word for the character 'Í' (U+00cd)
 #.
 #: src/orca/chnames.py:366
 msgid "I ACUTE"
-msgstr ""
+msgstr "ი ძახილის ნიშნით"
 
 #. Translators: this is the spoken word for the character 'Î' (U+00ce)
 #.
 #: src/orca/chnames.py:370
 msgid "I CIRCUMFLEX"
-msgstr ""
+msgstr "ი თავსახურით"
 
 #. Translators: this is the spoken word for the character 'Ï' (U+00cf)
 #.
 #: src/orca/chnames.py:374
 msgid "I UMLAUT"
-msgstr ""
+msgstr "დიდი ი უმლაუტით"
 
 #. Translators: this is the spoken word for the character 'Ð' (U+00d0)
 #.
 #: src/orca/chnames.py:378
 msgid "ETH"
-msgstr ""
+msgstr "ზე"
 
 #. Translators: this is the spoken word for the character 'Ñ' (U+00d1)
 #.
 #: src/orca/chnames.py:382
 msgid "N TILDE"
-msgstr ""
+msgstr "დიდი ნ ტილდით"
 
 #. Translators: this is the spoken word for the character 'Ò' (U+00d2)
 #.
 #: src/orca/chnames.py:386
 msgid "O GRAVE"
-msgstr ""
+msgstr "მაგარი დიდი ო"
 
 #. Translators: this is the spoken word for the character 'Ó' (U+00d3)
 #.
 #: src/orca/chnames.py:390
 msgid "O ACUTE"
-msgstr ""
+msgstr "ო ძახილის ნიშნით"
 
 #. Translators: this is the spoken word for the character 'Ô' (U+00d4)
 #.
 #: src/orca/chnames.py:394
 msgid "O CIRCUMFLEX"
-msgstr ""
+msgstr "ო თავსახურით"
 
 #. Translators: this is the spoken word for the character 'Õ' (U+00d5)
 #.
 #: src/orca/chnames.py:398
 msgid "O TILDE"
-msgstr ""
+msgstr "ო ტილდით"
 
 #. Translators: this is the spoken word for the character 'Ö' (U+00d6)
 #.
 #: src/orca/chnames.py:402
 msgid "O UMLAUT"
-msgstr ""
+msgstr "ო უმლაუტით"
 
 #. Translators: this is the spoken word for the character '×' (U+00d7)
 #.
 #: src/orca/chnames.py:406
 msgid "times"
-msgstr ""
+msgstr "რამდენჯერ"
 
 #. Translators: this is the spoken word for the character 'Ø' (U+00d8)
 #.
 #: src/orca/chnames.py:410
 msgid "O STROKE"
-msgstr ""
+msgstr "გადახაზული დიდი ო"
 
 #. Translators: this is the spoken word for the character 'Ù' (U+00d9)
 #.
 #: src/orca/chnames.py:414
 msgid "U GRAVE"
-msgstr ""
+msgstr "მაგარი დიდი ა"
 
 #. Translators: this is the spoken word for the character 'Ú' (U+00da)
 #.
 #: src/orca/chnames.py:418
 msgid "U ACUTE"
-msgstr ""
+msgstr "უ ძახილის ნიშნით"
 
 #. Translators: this is the spoken word for the character 'Û' (U+00db)
 #.
 #: src/orca/chnames.py:422
 msgid "U CIRCUMFLEX"
-msgstr ""
+msgstr "უ თავსახურით"
 
 #. Translators: this is the spoken word for the character 'Ü' (U+00dc)
 #.
 #: src/orca/chnames.py:426
 msgid "U UMLAUT"
-msgstr ""
+msgstr "დიდი უ უმლაუტით"
 
 #. Translators: this is the spoken word for the character 'Ý' (U+00dd)
 #.
 #: src/orca/chnames.py:430
 msgid "Y ACUTE"
-msgstr ""
+msgstr "იგრეკი ძახილის ნიშნით"
 
 #. Translators: this is the spoken word for the character 'Þ' (U+00de)
 #.
 #: src/orca/chnames.py:434
 msgid "THORN"
-msgstr ""
+msgstr "თორნი"
 
 #. Translators: this is the spoken word for the character 'ß' (U+00df)
 #.
 #: src/orca/chnames.py:438
 msgid "s sharp"
-msgstr ""
+msgstr "გერმანული ს"
 
 #. Translators: this is the spoken word for the character 'à' (U+00e0)
 #.
 #: src/orca/chnames.py:442
 msgid "a grave"
-msgstr ""
+msgstr "მაგარი პატარა ა"
 
 #. Translators: this is the spoken word for the character 'â' (U+00e2)
 #.
 #: src/orca/chnames.py:446
 msgid "a circumflex"
-msgstr ""
+msgstr "პატარა ა თავსახურით"
 
 #. Translators: this is the spoken word for the character 'ã' (U+00e3)
 #.
 #: src/orca/chnames.py:450
 msgid "a tilde"
-msgstr ""
+msgstr "პატარა ა ტილდით"
 
 #. Translators: this is the spoken word for the character 'ä' (U+00e4)
 #.
 #: src/orca/chnames.py:454
 msgid "a umlaut"
-msgstr ""
+msgstr "პატარა ა უმლაუტით"
 
 #. Translators: this is the spoken word for the character 'å' (U+00e5)
 #.
 #: src/orca/chnames.py:458
 msgid "a ring"
-msgstr ""
+msgstr "პატარა ა რგოლით"
 
 #. Translators: this is the spoken word for the character 'æ' (U+00e6)
 #.
 #: src/orca/chnames.py:462
 msgid "a e"
-msgstr ""
+msgstr "აე პატარა"
 
 #. Translators: this is the spoken word for the character 'ç' (U+00e7)
 #.
 #: src/orca/chnames.py:466
 msgid "c cedilla"
-msgstr ""
+msgstr "პატარა ცე სედილით"
 
 #. Translators: this is the spoken word for the character 'è' (U+00e8)
 #.
 #: src/orca/chnames.py:470
 msgid "e grave"
-msgstr ""
+msgstr "მაგარი პატარა ე"
 
 #. Translators: this is the spoken word for the character 'é' (U+00e9)
 #.
 #: src/orca/chnames.py:474
 msgid "e acute"
-msgstr ""
+msgstr "მაგარი პატარა ე"
 
 #. Translators: this is the spoken word for the character 'ê' (U+00ea)
 #.
 #: src/orca/chnames.py:478
 msgid "e circumflex"
-msgstr ""
+msgstr "პატარა ე თავსახურით"
 
 #. Translators: this is the spoken word for the character 'ë' (U+00eb)
 #.
 #: src/orca/chnames.py:482
 msgid "e umlaut"
-msgstr ""
+msgstr "პატარა ე უმლაუტით"
 
 #. Translators: this is the spoken word for the character 'ì' (U+00ec)
 #.
 #: src/orca/chnames.py:486
 msgid "i grave"
-msgstr ""
+msgstr "მაგარი პატარა ი"
 
 #. Translators: this is the spoken word for the character 'í' (U+00ed)
 #.
 #: src/orca/chnames.py:490
 msgid "i acute"
-msgstr ""
+msgstr "პატარა ი ძახილის ნიშნით"
 
 #. Translators: this is the spoken word for the character 'î' (U+00ee)
 #.
 #: src/orca/chnames.py:494
 msgid "i circumflex"
-msgstr ""
+msgstr "პატარა ი თავსახურით"
 
 #. Translators: this is the spoken word for the character 'ï' (U+00ef)
 #.
 #: src/orca/chnames.py:498
 msgid "i umlaut"
-msgstr ""
+msgstr "პატარა ი უმლაუტით"
 
 #. Translators: this is the spoken word for the character 'ð' (U+00f0)
 #.
 #: src/orca/chnames.py:502
 msgid "eth"
-msgstr ""
+msgstr "პატარა ზე"
 
 #. Translators: this is the spoken word for the character 'ñ' (U+00f1)
 #.
 #: src/orca/chnames.py:506
 msgid "n tilde"
-msgstr ""
+msgstr "პატარა ნ ტილდით"
 
 #. Translators: this is the spoken word for the character 'ò' (U+00f2)
 #.
 #: src/orca/chnames.py:510
 msgid "o grave"
-msgstr ""
+msgstr "მაგარი პატარა ო"
 
 #. Translators: this is the spoken word for the character 'ó' (U+00f3)
 #.
 #: src/orca/chnames.py:514
 msgid "o acute"
-msgstr ""
+msgstr "პატარა ო ძახილის ნიშნით"
 
 #. Translators: this is the spoken word for the character 'ô' (U+00f4)
 #.
 #: src/orca/chnames.py:518
 msgid "o circumflex"
-msgstr ""
+msgstr "პატარა ო თავსახურით"
 
 #. Translators: this is the spoken word for the character 'õ' (U+00f5)
 #.
 #: src/orca/chnames.py:522
 msgid "o tilde"
-msgstr ""
+msgstr "პატარა ო ტილდით"
 
 #. Translators: this is the spoken word for the character 'ö' (U+00f6)
 #.
 #: src/orca/chnames.py:526
 msgid "o umlaut"
-msgstr ""
+msgstr "პატარა ო უმლაუტით"
 
 #. Translators: this is the spoken word for the character '÷' (U+00f7)
 #.
 #: src/orca/chnames.py:530
 msgid "divided by"
-msgstr ""
+msgstr "გაყოფილი"
 
 #. Translators: this is the spoken word for the character 'ø' (U+00f8)
 #.
 #: src/orca/chnames.py:534
 msgid "o stroke"
-msgstr ""
+msgstr "პატარა გადახაზული ო"
 
 #. Translators: this is the spoken word for the character 'þ' (U+00fe)
 #.
 #: src/orca/chnames.py:538
 msgid "thorn"
-msgstr ""
+msgstr "პატარა თორნი"
 
 #. Translators: this is the spoken word for the character 'ú' (U+00fa)
 #.
 #: src/orca/chnames.py:542
 msgid "u acute"
-msgstr ""
+msgstr "პატარა უ ძახილის ნიშნით"
 
 #. Translators: this is the spoken word for the character 'ù' (U+00f9)
 #.
 #: src/orca/chnames.py:546
 msgid "u grave"
-msgstr ""
+msgstr "მაგარი პატარა უ"
 
 #. Translators: this is the spoken word for the character 'û' (U+00fb)
 #.
 #: src/orca/chnames.py:550
 msgid "u circumflex"
-msgstr ""
+msgstr "პატარა უ თავსახურით"
 
 #. Translators: this is the spoken word for the character 'ü' (U+00fc)
 #.
 #: src/orca/chnames.py:554
 msgid "u umlaut"
-msgstr ""
+msgstr "პატარა უ უმლაუტით"
 
 #. Translators: this is the spoken word for the character 'ý' (U+00fd)
 #.
 #: src/orca/chnames.py:558
 msgid "y acute"
-msgstr ""
+msgstr "პატარა იგრეკი ძახილის ნიშნით"
 
 #. Translators: this is the spoken word for the character 'ÿ' (U+00ff)
 #.
 #: src/orca/chnames.py:562
 msgid "y umlaut"
-msgstr ""
+msgstr "პატარა იგრეკი უმლაუტით"
 
 #. Translators: this is the spoken word for the character 'Ÿ' (U+0178)
 #.
 #: src/orca/chnames.py:566
 msgid "Y UMLAUT"
-msgstr ""
+msgstr "დიდი იგრეკი უმლაუტით"
 
 #. Translators: this is the spoken word for the character 'ƒ' (U+0192)
 #.
 #: src/orca/chnames.py:570
 msgid "florin"
-msgstr ""
+msgstr "ფლორინი"
 
 #. Translators: this is the spoken word for the character '–' (U+2013)
 #.
 #: src/orca/chnames.py:574
 msgid "en dash"
-msgstr ""
+msgstr "დიდი ტირე"
 
 #. Translators: this is the spoken word for the left single quote: ‘
 #. (U+2018)
 #.
 #: src/orca/chnames.py:579
 msgid "left single quote"
-msgstr ""
+msgstr "მარცხნენა ერთმაგი ბრჭყალი"
 
 #. Translators: this is the spoken word for the right single quote: ’
 #. (U+2019)
 #.
 #: src/orca/chnames.py:584
 msgid "right single quote"
-msgstr ""
+msgstr "მარჯვენა ერთმაგი ბრჭყალი"
 
 #. Translators: this is the spoken word for the character '‚' (U+201a)
 #.
 #: src/orca/chnames.py:588
 msgid "single low quote"
-msgstr ""
+msgstr "ერთი დაბალი ბრჭყალი"
 
 #. Translators: this is the spoken word for the character '“' (U+201c)
 #.
 #: src/orca/chnames.py:592
 msgid "left double quote"
-msgstr ""
+msgstr "მარცხენა ორმაგი ბრჭყალი"
 
 #. Translators: this is the spoken word for the character '”' (U+201d)
 #.
 #: src/orca/chnames.py:596
 msgid "right double quote"
-msgstr ""
+msgstr "მარჯვენა ორმაგი ბრჭყალი"
 
 #. Translators: this is the spoken word for the character '„' (U+201e)
 #.
 #: src/orca/chnames.py:600
 msgid "double low quote"
-msgstr ""
+msgstr "ორმაგი ქვედა ბრჭყალი"
 
 #. Translators: this is the spoken word for the character '†' (U+2020)
 #.
 #: src/orca/chnames.py:604
 msgid "dagger"
-msgstr ""
+msgstr "ხანჯალი"
 
 #. Translators: this is the spoken word for the character '‡' (U+2021)
 #.
 #: src/orca/chnames.py:608
 msgid "double dagger"
-msgstr ""
+msgstr "ორმაგი ხანჯალი"
 
 #. Translators: this is the spoken word for the character '•' (U+2022)
 #.
 #: src/orca/chnames.py:612
 msgid "bullet"
-msgstr ""
+msgstr "ტყვია"
 
 #. Translators: this is the spoken word for the character '‣' (U+2023)
 #.
 #: src/orca/chnames.py:616
 msgid "triangular bullet"
-msgstr ""
+msgstr "სამკუთხედი ტყვია"
 
 #. Translators: this is the spoken word for the character '‰' (U+2030)
 #.
 #: src/orca/chnames.py:620
 msgid "per mille"
-msgstr ""
+msgstr "პრომილი"
 
 #. Translators: this is the spoken word for the character '′' (U+2032)
 #.
 #: src/orca/chnames.py:624
 msgid "prime"
-msgstr ""
+msgstr "პრიმა"
 
 #. Translators: this is the spoken word for the character '″' (U+2033)
 #.
 #: src/orca/chnames.py:628
 msgid "double prime"
-msgstr ""
+msgstr "ორმაგი პრიმა"
 
 #. Translators: this is the spoken word for the character '‴' (U+2034)
 #.
 #: src/orca/chnames.py:632
 msgid "triple prime"
-msgstr ""
+msgstr "სამმაგი პრიმა"
 
 #. Translators: this is the spoken word for the character '⁃' (U+2043)
 #.
 #: src/orca/chnames.py:636
 msgid "hyphen bullet"
-msgstr ""
+msgstr "გამოტოვება-ტირე"
 
 #. Translators: this is the spoken word for the character '€' (U+20ac)
 #.
 #: src/orca/chnames.py:640
 msgid "euro"
-msgstr ""
+msgstr "ევრო"
 
 #. Translators: this is the spoken word for the character '™' (U+2122)
 #.
 #: src/orca/chnames.py:644
 msgid "trademark"
-msgstr ""
+msgstr "სავაჭრო ნიშანი"
 
 #. Translators: this is the spoken word for the character '✓' (U+2713)
 #. It can be used as a bullet in a list.
 #.
 #: src/orca/chnames.py:649
 msgid "check mark"
-msgstr ""
+msgstr "თოლია"
 
 #. Translators: this is the spoken word for the character '✔' (U+2714)
 #. It can be used as a bullet in a list.
 #.
 #: src/orca/chnames.py:654
 msgid "heavy check mark"
-msgstr ""
+msgstr "დიდი თოლიის ნიშანი"
 
 #. Translators: this is the spoken word for the character 'x' (U+2717)
 #. This symbol is included here because it can be used as a bullet in
@@ -1560,175 +1560,175 @@ msgstr ""
 #.
 #: src/orca/chnames.py:663
 msgid "x-shaped bullet"
-msgstr ""
+msgstr "x-ის ფორმის ტყვია"
 
 #. Translators: this is the spoken word for the character '⁰' (U+2070)
 #.
 #: src/orca/chnames.py:667
 msgid "superscript 0"
-msgstr ""
+msgstr "ზედა 0"
 
 #. Translators: this is the spoken word for the character '⁴' (U+2074)
 #.
 #: src/orca/chnames.py:671
 msgid "superscript 4"
-msgstr ""
+msgstr "ზედა 4"
 
 #. Translators: this is the spoken word for the character '⁵' (U+2075)
 #.
 #: src/orca/chnames.py:675
 msgid "superscript 5"
-msgstr ""
+msgstr "ზედა 5"
 
 #. Translators: this is the spoken word for the character '⁶' (U+2076)
 #.
 #: src/orca/chnames.py:679
 msgid "superscript 6"
-msgstr ""
+msgstr "ზედა 6"
 
 #. Translators: this is the spoken word for the character '⁷' (U+2077)
 #.
 #: src/orca/chnames.py:683
 msgid "superscript 7"
-msgstr ""
+msgstr "ზედა 7"
 
 #. Translators: this is the spoken word for the character '⁸' (U+2078)
 #.
 #: src/orca/chnames.py:687
 msgid "superscript 8"
-msgstr ""
+msgstr "ზედა 8"
 
 #. Translators: this is the spoken word for the character '⁹' (U+2079)
 #.
 #: src/orca/chnames.py:691
 msgid "superscript 9"
-msgstr ""
+msgstr "ზედა 9"
 
 #. Translators: this is the spoken word for the character '⁺' (U+207a)
 #.
 #: src/orca/chnames.py:695
 msgid "superscript plus"
-msgstr ""
+msgstr "ზედა პლუსი"
 
 #. Translators: this is the spoken word for the character '⁻' (U+207b)
 #.
 #: src/orca/chnames.py:699
 msgid "superscript minus"
-msgstr ""
+msgstr "ზედა მინუსი"
 
 #. Translators: this is the spoken word for the character '⁼' (U+207c)
 #.
 #: src/orca/chnames.py:703
 msgid "superscript equals"
-msgstr ""
+msgstr "ზედა უდრისი"
 
 #. Translators: this is the spoken word for the character '⁽' (U+207d)
 #.
 #: src/orca/chnames.py:707
 msgid "superscript left paren"
-msgstr ""
+msgstr "ზედა მარცხენა ფრჩხილი"
 
 #. Translators: this is the spoken word for the character '⁾' (U+207e)
 #.
 #: src/orca/chnames.py:711
 msgid "superscript right paren"
-msgstr ""
+msgstr "ზედა მარჯვენა ფრჩხილი"
 
 #. Translators: this is the spoken word for the character 'ⁿ' (U+207f)
 #.
 #: src/orca/chnames.py:715
 msgid "superscript n"
-msgstr ""
+msgstr "ზედა პატარა ნ"
 
 #. Translators: this is the spoken word for the character '₀' (U+2080)
 #.
 #: src/orca/chnames.py:719
 msgid "subscript 0"
-msgstr ""
+msgstr "ქვედა 0"
 
 #. Translators: this is the spoken word for the character '₁' (U+2081)
 #.
 #: src/orca/chnames.py:723
 msgid "subscript 1"
-msgstr ""
+msgstr "ქვედა 1"
 
 #. Translators: this is the spoken word for the character '₂' (U+2082)
 #.
 #: src/orca/chnames.py:727
 msgid "subscript 2"
-msgstr ""
+msgstr "ქვედა 2"
 
 #. Translators: this is the spoken word for the character '₃' (U+2083)
 #.
 #: src/orca/chnames.py:731
 msgid "subscript 3"
-msgstr ""
+msgstr "ქვედა 3"
 
 #. Translators: this is the spoken word for the character '₄' (U+2084)
 #.
 #: src/orca/chnames.py:735
 msgid "subscript 4"
-msgstr ""
+msgstr "ქვედა 4"
 
 #. Translators: this is the spoken word for the character '₅' (U+2085)
 #.
 #: src/orca/chnames.py:739
 msgid "subscript 5"
-msgstr ""
+msgstr "ქვედა 5"
 
 #. Translators: this is the spoken word for the character '₆' (U+2086)
 #.
 #: src/orca/chnames.py:743
 msgid "subscript 6"
-msgstr ""
+msgstr "ქვედა 6"
 
 #. Translators: this is the spoken word for the character '₇' (U+2087)
 #.
 #: src/orca/chnames.py:747
 msgid "subscript 7"
-msgstr ""
+msgstr "ქვედა 7"
 
 #. Translators: this is the spoken word for the character '₈' (U+2088)
 #.
 #: src/orca/chnames.py:751
 msgid "subscript 8"
-msgstr ""
+msgstr "ქვედა 8"
 
 #. Translators: this is the spoken word for the character '₉' (U+2089)
 #.
 #: src/orca/chnames.py:755
 msgid "subscript 9"
-msgstr ""
+msgstr "ქვედა 9"
 
 #. Translators: this is the spoken word for the character '₊' (U+208a)
 #.
 #: src/orca/chnames.py:759
 msgid "subscript plus"
-msgstr ""
+msgstr "ქვედა პლუსი"
 
 #. Translators: this is the spoken word for the character '₋' (U+208b)
 #.
 #: src/orca/chnames.py:763
 msgid "subscript minus"
-msgstr ""
+msgstr "ქვედა მინუსი"
 
 #. Translators: this is the spoken word for the character '₌' (U+208c)
 #.
 #: src/orca/chnames.py:767
 msgid "subscript equals"
-msgstr ""
+msgstr "ქვდა ტოლობა"
 
 #. Translators: this is the spoken word for the character '₍' (U+208d)
 #.
 #: src/orca/chnames.py:771
 msgid "subscript left paren"
-msgstr ""
+msgstr "ქვედა მარცხენა ფრჩხილი"
 
 #. Translators: this is the spoken word for the character '₎' (U+208e)
 #.
 #: src/orca/chnames.py:775
 msgid "subscript right paren"
-msgstr ""
+msgstr "ქვედა მარჯვენა ფრჩხილი"
 
 #. Translators:  StarOffice/OOo includes private-use unicode character U+E00A
 #. as a bullet which looks like the black square: ■ (U+25A0).  Therefore,
@@ -1736,7 +1736,7 @@ msgstr ""
 #.
 #: src/orca/chnames.py:781
 msgid "black square"
-msgstr ""
+msgstr "შავი კვადრატი"
 
 #. Translators:  StarOffice/OOo includes private-use unicode character U+E00C
 #. as a bullet which looks like the black diamond: ◆ (U+25C6).  Therefore,
@@ -1744,7 +1744,7 @@ msgstr ""
 #.
 #: src/orca/chnames.py:787
 msgid "black diamond"
-msgstr ""
+msgstr "შავი ალმასი"
 
 #. Translators: This refers to U+FFFC, the "object replacement character."
 #. This character appears in the accessible text of documents and serves as
@@ -1760,13 +1760,13 @@ msgstr ""
 #.
 #: src/orca/chnames.py:801
 msgid "object replacement character"
-msgstr ""
+msgstr "ობიექტის ჩანაცვლების სიმბოლო"
 
 #. Translators: this command will move the mouse pointer to the current item
 #. without clicking on it.
 #: src/orca/cmdnames.py:37
 msgid "Route the pointer to the current item"
-msgstr ""
+msgstr "მაჩვენებლის მიმდინარე ელემენტზე გადამისამართება"
 
 #. Translators: the 'flat review' feature of Orca allows the blind user to
 #. explore the text in a window in a 2D fashion.  That is, Orca treats all
@@ -1794,7 +1794,7 @@ msgstr ""
 #. and the cursor will be positioned at the point where the speech was interrupted.
 #: src/orca/cmdnames.py:59
 msgid "Speak entire document"
-msgstr ""
+msgstr "მთელი დოკუმენტის თქმა"
 
 #. Translators: the 'flat review' feature of Orca allows the user to explore the
 #. text in a window in a 2D fashion. That is, Orca treats all the text from all
@@ -1804,7 +1804,7 @@ msgstr ""
 #. which causes Orca to speak the entire contents of the window using flat review.
 #: src/orca/cmdnames.py:67
 msgid "Speak entire window using flat review"
-msgstr ""
+msgstr "მთელი ფანჯრის თქმა ბრტყელი გადახედვით"
 
 #. Translators: the "Where Am I" feature of Orca allows a user to press a key and
 #. then have information about their current context spoken and brailled to them.
@@ -1812,7 +1812,7 @@ msgstr ""
 #. with focus as well as its mnemonic.
 #: src/orca/cmdnames.py:73
 msgid "Perform the basic Where Am I operation"
-msgstr ""
+msgstr "საბაზისო სად ვარ ოპერაციის ჩატარება"
 
 #. Translators: the "Where Am I" feature of Orca allows a user to press a key and
 #. then have information about their current context spoken and brailled to them.
@@ -1820,7 +1820,7 @@ msgstr ""
 #. with focus as well as its mnemonic.
 #: src/orca/cmdnames.py:79
 msgid "Perform the detailed Where Am I operation"
-msgstr ""
+msgstr "დეტალური სად ვარ ოპერაციის ჩატარება"
 
 #. Translators: This is the description of a dedicated command to speak the
 #. current selection / highlighted object(s). For instance, in a text object,
@@ -1829,31 +1829,31 @@ msgstr ""
 #. the selected/highlighted icons. Etc.
 #: src/orca/cmdnames.py:86
 msgid "Speak the current selection"
-msgstr ""
+msgstr "ამჟამად მონიშნულის თქმა"
 
 #. Translators: This is the description of a dedicated command to speak details
 #. about a link, such as the uri and type of link.
 #: src/orca/cmdnames.py:90
 msgid "Speak link details"
-msgstr ""
+msgstr "ბმულის დეტალების თქმა"
 
 #. Translators: This command will cause the window's status bar contents to be
 #. spoken.
 #: src/orca/cmdnames.py:94
 msgid "Speak the status bar"
-msgstr ""
+msgstr "სტატუსის ზოლის თქმა"
 
 #. Translators: This command will cause the window's title to be spoken.
 #: src/orca/cmdnames.py:97
 msgid "Speak the title bar"
-msgstr ""
+msgstr "სათაურის ზოლის თქმა"
 
 #. Translators: the Orca "Find" dialog allows a user to search for text in a
 #. window and then move focus to that text. For example, they may want to find
 #. the "OK" button.
 #: src/orca/cmdnames.py:102
 msgid "Open the Find dialog"
-msgstr ""
+msgstr "ძებნის ფანჯრის გახსნა"
 
 #. Translators: the Orca "Find" dialog allows a user to search for text in a
 #. window and then move focus to that text. For example, they may want to find
@@ -1861,7 +1861,7 @@ msgstr ""
 #. string.
 #: src/orca/cmdnames.py:108
 msgid "Search for the next instance of a string"
-msgstr ""
+msgstr "საძებნი სტრიქონის შემდეგი კვალი"
 
 #. Translators: the Orca "Find" dialog allows a user to search for text in a
 #. window and then move focus to that text. For example, they may want to find
@@ -1869,7 +1869,7 @@ msgstr ""
 #. string.
 #: src/orca/cmdnames.py:114
 msgid "Search for the previous instance of a string"
-msgstr ""
+msgstr "საძებნი სტრიქონის წინა კვალი"
 
 #. Translators: the 'flat review' feature of Orca allows the blind user to
 #. explore the text in a window in a 2D fashion.  That is, Orca treats all
@@ -1878,7 +1878,7 @@ msgstr ""
 #. the user to explore this text by the {previous,next} {line,word,character}.
 #: src/orca/cmdnames.py:121
 msgid "Enter and exit flat review mode"
-msgstr ""
+msgstr "ბრტყელი გადახედვის რეჟიმში შესვლა/გამოსვლა"
 
 #. Translators: the 'flat review' feature of Orca allows the blind user to
 #. explore the text in a window in a 2D fashion.  That is, Orca treats all
@@ -2382,7 +2382,7 @@ msgstr "სანიშნის დამატება"
 #. to disk.
 #: src/orca/cmdnames.py:520
 msgid "Save bookmarks"
-msgstr ""
+msgstr "სანიშნების შენახვა"
 
 #. Translators: Orca allows the item under the pointer to be spoken. This toggles
 #. the feature without the need to get into a GUI.
@@ -2461,63 +2461,63 @@ msgstr ""
 #. button, the display scrolls to the left.
 #: src/orca/cmdnames.py:584
 msgid "Line Left"
-msgstr ""
+msgstr "ხაზი მარცხნივ"
 
 #. Translators: this is a command for a button on a refreshable braille display
 #. (an external hardware device used by people who are blind). When pressing the
 #. button, the display scrolls to the right.
 #: src/orca/cmdnames.py:589
 msgid "Line Right"
-msgstr ""
+msgstr "ხაზი მარჯვნივ"
 
 #. Translators: this is a command for a button on a refreshable braille display
 #. (an external hardware device used by people who are blind). When pressing the
 #. button, the display scrolls up.
 #: src/orca/cmdnames.py:594
 msgid "Line Up"
-msgstr ""
+msgstr "ხაზი მაღლა"
 
 #. Translators: this is a command for a button on a refreshable braille display
 #. (an external hardware device used by people who are blind). When pressing the
 #. button, the display scrolls down.
 #: src/orca/cmdnames.py:599
 msgid "Line Down"
-msgstr ""
+msgstr "ხაზი დაბლა"
 
 #. Translators: this is a command for a button on a refreshable braille display
 #. (an external hardware device used by people who are blind). When pressing the
 #. button, it instructs the braille display to freeze.
 #: src/orca/cmdnames.py:604
 msgid "Freeze"
-msgstr ""
+msgstr "დამაგრება"
 
 #. Translators: this is a command for a button on a refreshable braille display
 #. (an external hardware device used by people who are blind). When pressing the
 #. button, the display scrolls to the top left of the window.
 #: src/orca/cmdnames.py:609
 msgid "Top Left"
-msgstr ""
+msgstr "ზედა მარცხენა"
 
 #. Translators: this is a command for a button on a refreshable braille display
 #. (an external hardware device used by people who are blind). When pressing the
 #. button, the display scrolls to the bottom left of the window.
 #: src/orca/cmdnames.py:614
 msgid "Bottom Left"
-msgstr ""
+msgstr "ქვედა მარცხენა"
 
 #. Translators: this is a command for a button on a refreshable braille display
 #. (an external hardware device used by people who are blind). When pressing the
 #. button, the display scrolls to position containing the cursor.
 #: src/orca/cmdnames.py:619
 msgid "Cursor Position"
-msgstr ""
+msgstr "კურსორის პოზიცია"
 
 #. Translators: this is a command for a button on a refreshable braille display
 #. (an external hardware device used by people who are blind). When pressing the
 #. button, the display toggles between six-dot braille and eight-dot braille.
 #: src/orca/cmdnames.py:624
 msgid "Six Dots"
-msgstr ""
+msgstr "ექვსი წერტილი"
 
 #. Translators: this is a command for a button on a refreshable braille display
 #. (an external hardware device used by people who are blind). This command
@@ -2526,7 +2526,7 @@ msgstr ""
 #. display.
 #: src/orca/cmdnames.py:631
 msgid "Cursor Routing"
-msgstr ""
+msgstr "კურსორული მართვა"
 
 #. Translators: this is a command for a button on a refreshable braille display
 #. (an external hardware device used by people who are blind). This command
@@ -3198,7 +3198,7 @@ msgstr ""
 #: src/orca/colornames.py:35
 msgctxt "color name"
 msgid "alice blue"
-msgstr ""
+msgstr "ღია-ცისფერი"
 
 #. Translators: This refers to a CSS color name. The name, hex value, and color
 #. can be found at http://www.w3schools.com/cssref/css_colornames.asp and at
@@ -3206,7 +3206,7 @@ msgstr ""
 #: src/orca/colornames.py:40
 msgctxt "color name"
 msgid "antique white"
-msgstr ""
+msgstr "ანტიკური თეთრი"
 
 #. Translators: This refers to a CSS color name. The name, hex value, and color
 #. can be found at http://www.w3schools.com/cssref/css_colornames.asp and at
@@ -3214,7 +3214,7 @@ msgstr ""
 #: src/orca/colornames.py:45
 msgctxt "color name"
 msgid "aquamarine"
-msgstr ""
+msgstr "აკვამარინული"
 
 #. Translators: This refers to a CSS color name. The name, hex value, and color
 #. can be found at http://www.w3schools.com/cssref/css_colornames.asp and at
@@ -3574,7 +3574,7 @@ msgstr ""
 #: src/orca/colornames.py:270
 msgctxt "color name"
 msgid "gold"
-msgstr ""
+msgstr "ოქროსფერი"
 
 #. Translators: This refers to a CSS color name. The name, hex value, and color
 #. can be found at http://www.w3schools.com/cssref/css_colornames.asp and at
