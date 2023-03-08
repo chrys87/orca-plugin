@@ -230,11 +230,13 @@ class Utilities(script_utilities.Utilities):
         self._currentCharacterContents = None
         self._currentTextAttrs = {}
 
-    def isDocument(self, obj):
+    def isDocument(self, obj, excludeDocumentFrame=True):
         if not obj:
             return False
 
-        roles = [pyatspi.ROLE_DOCUMENT_FRAME, pyatspi.ROLE_DOCUMENT_WEB, pyatspi.ROLE_EMBEDDED]
+        roles = [pyatspi.ROLE_DOCUMENT_WEB, pyatspi.ROLE_EMBEDDED]
+        if not excludeDocumentFrame:
+            roles.append(pyastpi.ROLE_DOCUMENT_FRAME)
 
         try:
             rv = obj.getRole() in roles
@@ -4712,6 +4714,33 @@ class Utilities(script_utilities.Utilities):
                 debug.println(debug.LEVEL_INFO, msg, True)
                 return True
 
+        return False
+
+    def eventIsIrrelevantSelectionChangedEvent(self, event):
+        if event.type != "object:selection-changed":
+            return False
+        if not orca_state.locusOfFocus:
+            msg = "WEB: Selection changed event is relevant (no locusOfFocus)"
+            debug.println(debug.LEVEL_INFO, msg, True)
+            return False
+        if event.source == orca_state.locusOfFocus:
+            msg = "WEB: Selection changed event is relevant (is locusOfFocus)"
+            debug.println(debug.LEVEL_INFO, msg, True)
+            return False
+        if pyatspi.findAncestor(orca_state.locusOfFocus, lambda x: x == event.source):
+            msg = "WEB: Selection changed event is relevant (ancestor of locusOfFocus)"
+            debug.println(debug.LEVEL_INFO, msg, True)
+            return False
+
+        # There may be other roles where we need to do this. For now, solve the known one.
+        if event.source.role in [pyatspi.ROLE_PAGE_TAB_LIST]:
+            msg = "WEB: Selection changed event is irrelevant (unrelated %s)" \
+                % event.source.getRoleName()
+            debug.println(debug.LEVEL_INFO, msg, True)
+            return True
+
+        msg = "WEB: Selection changed event is relevant (no reason found to ignore it)"
+        debug.println(debug.LEVEL_INFO, msg, True)
         return False
 
     def textEventIsDueToDeletion(self, event):
