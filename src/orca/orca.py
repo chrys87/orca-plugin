@@ -874,7 +874,6 @@ class Orca(GObject.Object):
         # for now add compatibility layer using Dynamic API
         # should be removed step by step
         # use clean objects, getters and setters instead
-        #self.getResourceManager().addResourceContext('')
 
         self.getDynamicApiManager().registerAPI('Logger', _logger)
         self.getDynamicApiManager().registerAPI('SettingsManager', settings_manager)
