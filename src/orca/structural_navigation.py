@@ -27,7 +27,9 @@ __copyright__ = "Copyright (c) 2005-2009 Sun Microsystems Inc." \
                 "Copyright (c) 2010-2013 The Orca Team"
 __license__   = "LGPL"
 
-import pyatspi
+import gi
+gi.require_version("Atspi", "2.0")
+from gi.repository import Atspi
 
 from . import cmdnames
 from . import debug
@@ -37,11 +39,13 @@ from . import input_event
 from . import keybindings
 from . import messages
 from . import object_properties
-from . import orca
 from . import orca_gui_navlist
 from . import orca_state
 from . import settings
 from . import settings_manager
+from .ax_object import AXObject
+from .ax_selection import AXSelection
+from .ax_utilities import AXUtilities
 
 _settingsManager = settings_manager.getManager()
 #############################################################################
@@ -78,7 +82,7 @@ class MatchCriteria:
         Arguments:
         - collection: the collection interface for the document in
           which the accessible objects can be found.
-        - states: a list of pyatspi states of interest
+        - states: a list of accessible states of interest
         - matchStates: whether an object must have all of the states
           in the states list, any of the states in the list, or none
           of the states in the list.  Must be one of the collection
@@ -112,7 +116,7 @@ class MatchCriteria:
         self.invert = invert
         self.applyPredicate = applyPredicate
 
-        self.states = pyatspi.StateSet()
+        self.states = Atspi.StateSet()
         for state in states:
             self.states.add(state)
 
@@ -361,7 +365,7 @@ class StructuralNavigationObject:
 
         try:
             objects, criteria = self.structuralNavigation._getAll(self)
-        except:
+        except Exception:
             script.presentMessage(messages.NAVIGATION_DIALOG_ERROR)
             return
 
@@ -384,7 +388,7 @@ class StructuralNavigationObject:
         currentObject, offset = script.utilities.getCaretContext()
         try:
             index = objects.index(currentObject)
-        except:
+        except Exception:
             index = 0
 
         rows = [[obj, -1] + rowData(obj) for obj in objects]
@@ -432,7 +436,7 @@ class StructuralNavigationObject:
         def showListAtLevel(script, inputEvent):
             try:
                 objects, criteria = self.structuralNavigation._getAll(self, arg=level)
-            except:
+            except Exception:
                 script.presentMessage(messages.NAVIGATION_DIALOG_ERROR)
                 return
 
@@ -453,7 +457,7 @@ class StructuralNavigationObject:
             currentObject, offset = script.utilities.getCaretContext()
             try:
                 index = objects.index(currentObject)
-            except:
+            except Exception:
                 index = 0
 
             rows = [[obj, -1] + rowData(obj) for obj in objects]
@@ -580,58 +584,58 @@ class StructuralNavigation:
     # is for the purpose of match rules and predicates and refers to
     # AT-SPI roles. 
     #
-    FORM_ROLES = [pyatspi.ROLE_CHECK_BOX,
-                  pyatspi.ROLE_RADIO_BUTTON,
-                  pyatspi.ROLE_COMBO_BOX,
-                  pyatspi.ROLE_DOCUMENT_FRAME, # rich text editing
-                  pyatspi.ROLE_LIST_BOX,
-                  pyatspi.ROLE_ENTRY,
-                  pyatspi.ROLE_PASSWORD_TEXT,
-                  pyatspi.ROLE_PUSH_BUTTON,
-                  pyatspi.ROLE_SPIN_BUTTON,
-                  pyatspi.ROLE_TEXT]
+    FORM_ROLES = [Atspi.Role.CHECK_BOX,
+                  Atspi.Role.RADIO_BUTTON,
+                  Atspi.Role.COMBO_BOX,
+                  Atspi.Role.DOCUMENT_FRAME, # rich text editing
+                  Atspi.Role.LIST_BOX,
+                  Atspi.Role.ENTRY,
+                  Atspi.Role.PASSWORD_TEXT,
+                  Atspi.Role.PUSH_BUTTON,
+                  Atspi.Role.SPIN_BUTTON,
+                  Atspi.Role.TEXT]
 
     # Roles which are recognized as being potential "large objects"
     # or "chunks." Note that this refers to AT-SPI roles.
     #
-    OBJECT_ROLES = [pyatspi.ROLE_HEADING,
-                    pyatspi.ROLE_LIST_ITEM,
-                    pyatspi.ROLE_MATH,
-                    pyatspi.ROLE_PARAGRAPH,
-                    pyatspi.ROLE_STATIC,
-                    pyatspi.ROLE_COLUMN_HEADER,
-                    pyatspi.ROLE_ROW_HEADER,
-                    pyatspi.ROLE_TABLE_CELL,
-                    pyatspi.ROLE_TABLE_ROW,
-                    pyatspi.ROLE_TEXT,
-                    pyatspi.ROLE_SECTION,
-                    pyatspi.ROLE_ARTICLE,
-                    pyatspi.ROLE_DESCRIPTION_TERM,
-                    pyatspi.ROLE_DESCRIPTION_VALUE,
-                    pyatspi.ROLE_DOCUMENT_EMAIL,
-                    pyatspi.ROLE_DOCUMENT_FRAME,
-                    pyatspi.ROLE_DOCUMENT_PRESENTATION,
-                    pyatspi.ROLE_DOCUMENT_SPREADSHEET,
-                    pyatspi.ROLE_DOCUMENT_TEXT,
-                    pyatspi.ROLE_DOCUMENT_WEB]
+    OBJECT_ROLES = [Atspi.Role.HEADING,
+                    Atspi.Role.LIST_ITEM,
+                    Atspi.Role.MATH,
+                    Atspi.Role.PARAGRAPH,
+                    Atspi.Role.STATIC,
+                    Atspi.Role.COLUMN_HEADER,
+                    Atspi.Role.ROW_HEADER,
+                    Atspi.Role.TABLE_CELL,
+                    Atspi.Role.TABLE_ROW,
+                    Atspi.Role.TEXT,
+                    Atspi.Role.SECTION,
+                    Atspi.Role.ARTICLE,
+                    Atspi.Role.DESCRIPTION_TERM,
+                    Atspi.Role.DESCRIPTION_VALUE,
+                    Atspi.Role.DOCUMENT_EMAIL,
+                    Atspi.Role.DOCUMENT_FRAME,
+                    Atspi.Role.DOCUMENT_PRESENTATION,
+                    Atspi.Role.DOCUMENT_SPREADSHEET,
+                    Atspi.Role.DOCUMENT_TEXT,
+                    Atspi.Role.DOCUMENT_WEB]
 
-    CONTAINER_ROLES = [pyatspi.ROLE_BLOCK_QUOTE,
-                       pyatspi.ROLE_DESCRIPTION_LIST,
-                       pyatspi.ROLE_FORM,
-                       pyatspi.ROLE_FOOTER,
-                       pyatspi.ROLE_HEADER,
-                       pyatspi.ROLE_LANDMARK,
-                       pyatspi.ROLE_LOG,
-                       pyatspi.ROLE_LIST,
-                       pyatspi.ROLE_MARQUEE,
-                       pyatspi.ROLE_PANEL,
-                       pyatspi.ROLE_SECTION,
-                       pyatspi.ROLE_TABLE,
-                       pyatspi.ROLE_TREE,
-                       pyatspi.ROLE_TREE_TABLE]
+    CONTAINER_ROLES = [Atspi.Role.BLOCK_QUOTE,
+                       Atspi.Role.DESCRIPTION_LIST,
+                       Atspi.Role.FORM,
+                       Atspi.Role.FOOTER,
+                       Atspi.Role.HEADER,
+                       Atspi.Role.LANDMARK,
+                       Atspi.Role.LOG,
+                       Atspi.Role.LIST,
+                       Atspi.Role.MARQUEE,
+                       Atspi.Role.PANEL,
+                       Atspi.Role.SECTION,
+                       Atspi.Role.TABLE,
+                       Atspi.Role.TREE,
+                       Atspi.Role.TREE_TABLE]
 
-    IMAGE_ROLES = [pyatspi.ROLE_IMAGE,
-                   pyatspi.ROLE_IMAGE_MAP]
+    IMAGE_ROLES = [Atspi.Role.IMAGE,
+                   Atspi.Role.IMAGE_MAP]
 
     def __init__(self, script, enabledTypes, enabled=False):
         """Creates an instance of the StructuralNavigation class.
@@ -707,7 +711,7 @@ class StructuralNavigation:
 
         try:
             dialogData = eval("self._%sDialogData" % name)
-        except:
+        except Exception:
             dialogData = None
 
         return StructuralNavigationObject(self, name, bindings, predicate,
@@ -799,7 +803,7 @@ class StructuralNavigation:
         Arguments:
         - structuralNavigationObject: the StructuralNavigationObject which
           represents the table cell.
-        - thisCell: the pyatspi accessible TABLE_CELL we're currently in
+        - thisCell: the accessible TABLE_CELL we're currently in
         - currentCoordinates: the [row, column] of thisCell.  Note, we
           cannot just get the coordinates because in table cells which
           span multiple rows and/or columns, the value returned by 
@@ -886,7 +890,7 @@ class StructuralNavigation:
             msg = "STRUCTURAL NAVIGATION: %s does not implement collection" % document
             debug.println(debug.LEVEL_INFO, msg, True)
             return [], None
-        except:
+        except Exception:
             msg = "STRUCTURAL NAVIGATION: Exception querying collection on %s" % document
             debug.println(debug.LEVEL_INFO, msg, True)
             return [], None
@@ -906,7 +910,7 @@ class StructuralNavigation:
 
         if inModalDialog:
             originalSize = len(matches)
-            matches = [m for m in matches if pyatspi.findAncestor(m, lambda x: x == modalDialog)]
+            matches = [m for m in matches if AXObject.find_ancestor(m, lambda x: x == modalDialog)]
             msg = "STRUCTURAL NAVIGATION: Removed %i objects outside of modal dialog %s" % \
                 (originalSize - len(matches), modalDialog)
             debug.println(debug.LEVEL_INFO, msg, True)
@@ -942,7 +946,7 @@ class StructuralNavigation:
             return
 
         if obj == container:
-            obj = obj[-1]
+            obj = AXObject.get_child(obj, -1)
 
         structuralNavigationObject.present(obj, sameContainer=True)
 
@@ -984,10 +988,11 @@ class StructuralNavigation:
             while obj:
                 if obj in matches:
                     return obj, matches.index(obj)
-                obj = obj.parent
+                obj = AXObject.get_parent(obj)
 
             return None, -1
 
+        offset = 0
         if not obj:
             obj, offset = self._script.utilities.getCaretContext()
         thisObj, index = _getMatchingObjAndIndex(obj)
@@ -995,15 +1000,15 @@ class StructuralNavigation:
             matches = matches[index:]
             obj = thisObj
 
-        currentPath = pyatspi.utils.getPath(obj)
+        currentPath = AXObject.get_path(obj)
         for i, match in enumerate(matches):
             if not _isValidMatch(match):
                 continue
 
-            if match.parent == obj:
+            if AXObject.get_parent(match) == obj:
                 comparison = self._script.utilities.characterOffsetInParent(match) - offset
             else:
-                path = pyatspi.utils.getPath(match)
+                path = AXObject.get_path(match)
                 comparison = self._script.utilities.pathComparison(path, currentPath)
             if (comparison > 0 and isNext) or (comparison < 0 and not isNext):
                 structuralNavigationObject.present(match, arg)
@@ -1036,7 +1041,7 @@ class StructuralNavigation:
     #########################################################################
 
     def _getListDescription(self, obj):
-        children = [x for x in obj if x.getRole() == pyatspi.ROLE_LIST_ITEM]
+        children = [x for x in AXObject.iter_children(obj, AXUtilities.is_list_item)]
         if not children:
             return ""
 
@@ -1053,7 +1058,7 @@ class StructuralNavigation:
         caption = obj.queryTable().caption
         try:
             caption.queryText()
-        except:
+        except Exception:
             return None
         else:
             return self._script.utilities.displayedText(caption)
@@ -1078,31 +1083,23 @@ class StructuralNavigation:
         - obj: the accessible object of interest.
         """
 
-        cellRoles = [pyatspi.ROLE_TABLE_CELL,
-                     pyatspi.ROLE_COLUMN_HEADER,
-                     pyatspi.ROLE_ROW_HEADER]
-        isCell = lambda x: x and x.getRole() in cellRoles
-        if obj and not isCell(obj):
-            obj = pyatspi.utils.findAncestor(obj, isCell)
+        if not AXUtilities.is_table_cell_or_header(obj):
+            obj = AXObject.find_ancestor(obj, AXUtilities.is_table_cell_or_header)
 
         while obj and self._script.utilities.isLayoutOnly(self.getTableForCell(obj)):
-            cell = pyatspi.utils.findAncestor(obj, isCell)
-            if not cell:
+            cell = AXObject.find_ancestor(obj, AXUtilities.is_table_cell_or_header)
+            if cell is None:
                 break
             obj = cell
 
         return obj
 
     def _isContainer(self, obj):
-        try:
-            role = obj.getRole()
-        except:
-            return False
-
+        role = AXObject.get_role(obj)
         if role not in self.CONTAINER_ROLES:
             return False
 
-        if role == pyatspi.ROLE_SECTION \
+        if role == Atspi.Role.SECTION \
            and not self._script.utilities.isLandmark(obj) \
            and not self._script.utilities.isBlockquote(obj):
             return False
@@ -1116,7 +1113,7 @@ class StructuralNavigation:
         if self._isContainer(obj):
             return obj
 
-        return pyatspi.utils.findAncestor(obj, self._isContainer)
+        return AXObject.find_ancestor(obj, self._isContainer)
 
     def getTableForCell(self, obj):
         """Looks for a table in the ancestry of obj, if obj is not a table.
@@ -1125,9 +1122,8 @@ class StructuralNavigation:
         - obj: the accessible object of interest.
         """
 
-        isTable = lambda x: x and x.getRole() == pyatspi.ROLE_TABLE
-        if obj and not isTable(obj):
-            obj = pyatspi.utils.findAncestor(obj, isTable)
+        if obj and not AXUtilities.is_table(obj):
+            obj = AXObject.find_ancestor(obj, AXUtilities.is_table)
 
         return obj
 
@@ -1138,12 +1134,12 @@ class StructuralNavigation:
         - obj: the accessible table cell to examine
         """
 
-        if obj and (obj.name or obj.childCount):
+        if obj and (AXObject.get_name(obj) or AXObject.get_child_count(obj)):
             return False
 
         try:
             text = obj.queryText()
-        except:
+        except Exception:
             pass
         else:
             if text.getText(0, -1).strip():
@@ -1159,10 +1155,10 @@ class StructuralNavigation:
         """
 
         text = ""
-        if obj and not obj.childCount:
+        if obj and not AXObject.get_child_count(obj):
             text = self._script.utilities.displayedText(obj)
         else:
-            for child in obj:
+            for child in AXObject.iter_children(obj):
                 childText = self._script.utilities.displayedText(child)
                 text = self._script.utilities.appendString(text, childText)
 
@@ -1187,7 +1183,7 @@ class StructuralNavigation:
         if rowDiff:
             rowHeaders = self._script.utilities.rowHeadersForCell(cell)
             for header in rowHeaders:
-                if not header in oldRowHeaders:
+                if header not in oldRowHeaders:
                     text = self._getCellText(header)
                     voice = self._script.speechGenerator.voice(string=text)
                     self._script.speakMessage(text, voice=voice, force=True)
@@ -1195,7 +1191,7 @@ class StructuralNavigation:
         if colDiff:
             colHeaders = self._script.utilities.columnHeadersForCell(cell)
             for header in colHeaders:
-                if not header in oldColHeaders:
+                if header not in oldColHeaders:
                     text = self._getCellText(header)
                     voice = self._script.speechGenerator.voice(string=text)
                     self._script.speakMessage(text, voice=voice, force=True)
@@ -1246,28 +1242,21 @@ class StructuralNavigation:
     def _setCaretPosition(self, obj, characterOffset):
         """Sets the caret at the specified offset within obj."""
 
-        try:
-            objPath = pyatspi.getPath(obj)
-            objRole = obj.getRole()
-        except:
+        objPath = AXObject.get_path(obj)
+        objRole = AXObject.get_role(obj)
+        if objRole == Atspi.Role.INVALID:
             return obj, characterOffset
 
         self._script.utilities.setCaretPosition(obj, characterOffset)
-
-        try:
-            obj.clearCache()
-            isDefunct = obj.getState().contains(pyatspi.STATE_DEFUNCT)
-        except:
-            isDefunct = True
-
-        if not isDefunct:
+        AXObject.clear_cache(obj)
+        if not AXUtilities.is_defunct(obj):
             return obj, characterOffset
 
         msg = "STRUCTURAL NAVIGATION: %s became defunct after setting caret position" % obj
         debug.println(debug.LEVEL_INFO, msg, True)
 
         replicant = self._script.utilities.getObjectFromPath(objPath)
-        if replicant and replicant.getRole() == objRole:
+        if replicant and AXObject.get_role(replicant) == objRole:
             msg = "STRUCTURAL NAVIGATION: Updating obj to replicant %s" % replicant
             debug.println(debug.LEVEL_INFO, msg, True)
             obj = replicant
@@ -1324,14 +1313,13 @@ class StructuralNavigation:
     def _getSelectedItem(self, obj):
         # Another case where we'll do this for now, and clean it up when
         # object presentation is refactored.
-        if obj.getRole() == pyatspi.ROLE_COMBO_BOX:
-            obj = obj[0]
-        try:
-            selection = obj.querySelection()
-        except NotImplementedError:
+        if AXUtilities.is_combo_box(obj):
+            obj = AXObject.get_child(obj, 0)
+
+        if not AXObject.supports_selection(obj):
             return None
 
-        return selection.getSelectedChild(0)
+        return AXSelection.get_selected_child(obj, 0)
 
     def _getText(self, obj):
         # Another case where we'll do this for now, and clean it up when
@@ -1342,18 +1330,20 @@ class StructuralNavigation:
         if not text:
             item = self._getSelectedItem(obj)
             if item:
-                text = item.name
-        if not text and obj.getRole() == pyatspi.ROLE_IMAGE:
+                text = AXObject.get_name(item)
+        if not text and AXUtilities.is_image(obj):
             try:
                 image = obj.queryImage()
-            except:
-                text = obj.description
+            except Exception:
+                text = AXObject.get_description(obj)
             else:
-                text = image.imageDescription or obj.description
-            if not text and obj.parent.getRole() == pyatspi.ROLE_LINK:
-                text = self._script.utilities.linkBasename(obj.parent)
-        if not text and obj.getRole() == pyatspi.ROLE_LIST:
-            children = [x for x in obj if x.getRole() == pyatspi.ROLE_LIST_ITEM]
+                text = image.imageDescription or AXObject.get_description(obj)
+            if not text:
+                parent = AXObject.get_parent(obj)
+                if AXUtilities.is_link(parent):
+                    text = self._script.utilities.linkBasename(parent)
+        if not text and AXUtilities.is_list(obj):
+            children = [x for x in AXObject.iter_children(obj, AXUtilities.is_list_item)]
             text = " ".join(list(map(self._getText, children)))
 
         return text
@@ -1371,30 +1361,25 @@ class StructuralNavigation:
     def _getState(self, obj):
         # Another case where we'll do this for now, and clean it up when
         # object presentation is refactored.
-        try:
-            state = obj.getState()
-            role = obj.getRole()
-        except RuntimeError:
-            return ''
 
         # For now, we'll just grab the spoken indicator from settings.
         # When object presentation is refactored, we can clean this up.
-        if role == pyatspi.ROLE_CHECK_BOX:
+        if AXUtilities.is_check_box(obj):
             unchecked, checked, partially = object_properties.CHECK_BOX_INDICATORS_SPEECH
-            if state.contains(pyatspi.STATE_INDETERMINATE):
+            if AXUtilities.is_indeterminate(obj):
                 return partially
-            if state.contains(pyatspi.STATE_CHECKED):
+            if AXUtilities.is_checked(obj):
                 return checked
             return unchecked
 
-        if role == pyatspi.ROLE_RADIO_BUTTON:
+        if AXUtilities.is_radio_button(obj):
             unselected, selected = object_properties.RADIO_BUTTON_INDICATORS_SPEECH
-            if state.contains(pyatspi.STATE_CHECKED):
+            if AXUtilities.is_checked(obj):
                 return selected
             return unselected
 
-        if role == pyatspi.ROLE_LINK:
-            if state.contains(pyatspi.STATE_VISITED):
+        if AXUtilities.is_link(obj):
+            if AXUtilities.is_visited(obj):
                 return object_properties.STATE_VISITED
             else:
                 return object_properties.STATE_UNVISITED
@@ -1541,8 +1526,8 @@ class StructuralNavigation:
           the criteria (e.g. the level of a heading).
         """
 
-        role = [pyatspi.ROLE_PUSH_BUTTON, pyatspi.ROLE_TOGGLE_BUTTON]
-        state = [pyatspi.STATE_SENSITIVE]
+        role = [Atspi.Role.PUSH_BUTTON, Atspi.Role.TOGGLE_BUTTON]
+        state = [Atspi.StateType.SENSITIVE]
         stateMatch = collection.MATCH_ALL
         return MatchCriteria(collection,
                              states=state,
@@ -1559,12 +1544,7 @@ class StructuralNavigation:
           the criteria (e.g. the level of a heading).
         """
 
-        isMatch = False
-        if obj and obj.getRole() in [pyatspi.ROLE_PUSH_BUTTON, pyatspi.ROLE_TOGGLE_BUTTON]:
-            state = obj.getState()
-            isMatch = state.contains(pyatspi.STATE_SENSITIVE)
-
-        return isMatch
+        return AXUtilities.is_button(obj) and AXUtilities.is_sensitive(obj)
 
     def _buttonPresentation(self, obj, arg=None):
         """Presents the button or indicates that one was not found.
@@ -1624,8 +1604,8 @@ class StructuralNavigation:
           the criteria (e.g. the level of a heading).
         """
 
-        role = [pyatspi.ROLE_CHECK_BOX]
-        state = [pyatspi.STATE_FOCUSABLE, pyatspi.STATE_SENSITIVE]
+        role = [Atspi.Role.CHECK_BOX]
+        state = [Atspi.StateType.FOCUSABLE, Atspi.StateType.SENSITIVE]
         stateMatch = collection.MATCH_ALL
         return MatchCriteria(collection,
                              states=state,
@@ -1642,13 +1622,9 @@ class StructuralNavigation:
           the criteria (e.g. the level of a heading).
         """
 
-        isMatch = False
-        if obj and obj.getRole() == pyatspi.ROLE_CHECK_BOX:
-            state = obj.getState()
-            isMatch = state.contains(pyatspi.STATE_FOCUSABLE) \
-                  and state.contains(pyatspi.STATE_SENSITIVE)
-
-        return isMatch
+        return AXUtilities.is_check_box(obj) \
+              and AXUtilities.is_sensitive(obj) \
+              and AXUtilities.is_focusable(obj)
 
     def _checkBoxPresentation(self, obj, arg=None):
         """Presents the check box or indicates that one was not found.
@@ -1729,11 +1705,11 @@ class StructuralNavigation:
         if not obj:
             return False
 
-        role = obj.getRole()
+        role = AXObject.get_role(obj)
         if role not in self.OBJECT_ROLES + self.CONTAINER_ROLES:
             return False
 
-        if role == pyatspi.ROLE_HEADING:
+        if role == Atspi.Role.HEADING:
             return True
 
         text = self._script.utilities.queryNonEmptyText(obj)
@@ -1806,8 +1782,8 @@ class StructuralNavigation:
           the criteria (e.g. the level of a heading).
         """
 
-        role = [pyatspi.ROLE_COMBO_BOX]
-        state = [pyatspi.STATE_FOCUSABLE, pyatspi.STATE_SENSITIVE]
+        role = [Atspi.Role.COMBO_BOX]
+        state = [Atspi.StateType.FOCUSABLE, Atspi.StateType.SENSITIVE]
         stateMatch = collection.MATCH_ALL
         return MatchCriteria(collection,
                              states=state,
@@ -1824,13 +1800,9 @@ class StructuralNavigation:
           the criteria (e.g. the level of a heading).
         """
 
-        isMatch = False
-        if obj and obj.getRole() == pyatspi.ROLE_COMBO_BOX:
-            state = obj.getState()
-            isMatch = state.contains(pyatspi.STATE_FOCUSABLE) \
-                  and state.contains(pyatspi.STATE_SENSITIVE)
-
-        return isMatch
+        return AXUtilities.is_combo_box(obj) \
+              and AXUtilities.is_sensitive(obj) \
+              and AXUtilities.is_focusable(obj)
 
     def _comboBoxPresentation(self, obj, arg=None):
         """Presents the combo box or indicates that one was not found.
@@ -1891,9 +1863,9 @@ class StructuralNavigation:
           the criteria (e.g. the level of a heading).
         """
 
-        state = [pyatspi.STATE_FOCUSABLE,
-                 pyatspi.STATE_SENSITIVE,
-                 pyatspi.STATE_EDITABLE]
+        state = [Atspi.StateType.FOCUSABLE,
+                 Atspi.StateType.SENSITIVE,
+                 Atspi.StateType.EDITABLE]
         stateMatch = collection.MATCH_ALL
         return MatchCriteria(collection,
                              states=state,
@@ -1910,10 +1882,14 @@ class StructuralNavigation:
           the criteria (e.g. the level of a heading).
         """
 
-        if not obj and obj.parent:
+        if not obj:
             return False
 
-        return not obj.parent.getState().contains(pyatspi.STATE_EDITABLE)
+        parent = AXObject.get_parent(obj)
+        if not parent:
+            return False
+
+        return not AXUtilities.is_editable(parent)
 
     def _entryPresentation(self, obj, arg=None):
         """Presents the entry or indicates that one was not found.
@@ -1978,7 +1954,7 @@ class StructuralNavigation:
 
         role = self.FORM_ROLES
         roleMatch = collection.MATCH_ANY
-        state = [pyatspi.STATE_FOCUSABLE, pyatspi.STATE_SENSITIVE]
+        state = [Atspi.StateType.FOCUSABLE, Atspi.StateType.SENSITIVE]
         stateMatch = collection.MATCH_ALL
         return MatchCriteria(collection,
                              states=state,
@@ -2000,18 +1976,17 @@ class StructuralNavigation:
         if not obj:
             return False
 
-        role = obj.getRole()
-        if not role in self.FORM_ROLES:
+        role = AXObject.get_role(obj)
+        if role not in self.FORM_ROLES:
             return False
 
-        state = obj.getState()
-        isMatch = state.contains(pyatspi.STATE_FOCUSABLE) \
-                  and state.contains(pyatspi.STATE_SENSITIVE)
+        if not (AXUtilities.is_sensitive(obj) and AXUtilities.is_focusable(obj)):
+            return False
 
-        if role == pyatspi.ROLE_DOCUMENT_FRAME:
-            isMatch = isMatch and state.contains(pyatspi.STATE_EDITABLE)
+        if role == Atspi.Role.DOCUMENT_FRAME:
+            return AXUtilities.is_editable(obj)
 
-        return isMatch
+        return True
 
     def _formFieldPresentation(self, obj, arg=None):
         """Presents the form field or indicates that one was not found.
@@ -2023,8 +1998,8 @@ class StructuralNavigation:
         """
 
         if obj:
-            if obj.getRole() == pyatspi.ROLE_TEXT and obj.childCount:
-                obj = obj[0]
+            if AXUtilities.is_text(obj) and AXObject.get_child_count(obj):
+                obj = AXObject.get_child(obj, 0)
             [obj, characterOffset] = self._getCaretPosition(obj)
             obj, characterOffset = self._setCaretPosition(obj, characterOffset)
             self._presentObject(obj, characterOffset)
@@ -2109,7 +2084,7 @@ class StructuralNavigation:
           the criteria (e.g. the level of a heading).
         """
 
-        role = [pyatspi.ROLE_HEADING]
+        role = [Atspi.Role.HEADING]
         attrs = []
         if arg:
             attrs.append('level:%d' % arg)
@@ -2129,7 +2104,7 @@ class StructuralNavigation:
         """
 
         isMatch = False
-        if obj and obj.getRole() == pyatspi.ROLE_HEADING:
+        if obj and AXObject.get_role(obj) == Atspi.Role.HEADING:
             if arg:
                 isMatch = arg == self._script.utilities.headingLevel(obj)
             else:
@@ -2221,7 +2196,7 @@ class StructuralNavigation:
           the criteria (e.g. the level of a heading).
         """
 
-        return (obj and obj.getRole() in self.IMAGE_ROLES)
+        return (obj and AXObject.get_role(obj) in self.IMAGE_ROLES)
 
     def _imagePresentation(self, obj, arg=None):
         """Presents the image/graphic or indicates that one was not found.
@@ -2282,7 +2257,7 @@ class StructuralNavigation:
         """
 
         if self._script.utilities.supportsLandmarkRole():
-            return MatchCriteria(collection, roles=[pyatspi.ROLE_LANDMARK])
+            return MatchCriteria(collection, roles=[Atspi.Role.LANDMARK])
 
         # NOTE: there is a limitation in the AT-SPI Collections interface
         # when it comes to an attribute whose value can be a list.  For
@@ -2325,7 +2300,7 @@ class StructuralNavigation:
         if obj:
             [obj, characterOffset] = self._getCaretPosition(obj)
             obj, characterOffset = self._setCaretPosition(obj, characterOffset)
-            self._script.presentMessage(obj.name)
+            self._script.presentMessage(AXObject.get_name(obj))
             self._presentLine(obj, characterOffset)
         else:
             full = messages.NO_LANDMARK_FOUND
@@ -2337,7 +2312,7 @@ class StructuralNavigation:
         columnHeaders.append(guilabels.SN_HEADER_ROLE)
 
         def rowData(obj):
-            return [obj.name, self._getRoleName(obj)]
+            return [AXObject.get_name(obj), self._getRoleName(obj)]
 
         return guilabels.SN_TITLE_LANDMARK, columnHeaders, rowData
 
@@ -2373,8 +2348,8 @@ class StructuralNavigation:
           the criteria (e.g. the level of a heading).
         """
 
-        role = [pyatspi.ROLE_LIST]
-        state = [pyatspi.STATE_FOCUSABLE]
+        role = [Atspi.Role.LIST]
+        state = [Atspi.StateType.FOCUSABLE]
         stateMatch = collection.MATCH_NONE
         return MatchCriteria(collection,
                              states=state,
@@ -2393,8 +2368,8 @@ class StructuralNavigation:
 
         isMatch = False
 
-        if obj and obj.getRole() == pyatspi.ROLE_LIST:
-            isMatch = not obj.getState().contains(pyatspi.STATE_FOCUSABLE)
+        if obj and AXObject.get_role(obj) == Atspi.Role.LIST:
+            isMatch = not AXUtilities.is_focusable(obj)
 
         return isMatch
 
@@ -2458,8 +2433,8 @@ class StructuralNavigation:
           the criteria (e.g. the level of a heading).
         """
 
-        role = [pyatspi.ROLE_LIST_ITEM]
-        state = [pyatspi.STATE_FOCUSABLE]
+        role = [Atspi.Role.LIST_ITEM]
+        state = [Atspi.StateType.FOCUSABLE]
         stateMatch = collection.MATCH_NONE
         return MatchCriteria(collection,
                              states=state,
@@ -2478,8 +2453,8 @@ class StructuralNavigation:
 
         isMatch = False
 
-        if obj and obj.getRole() == pyatspi.ROLE_LIST_ITEM:
-            isMatch = not obj.getState().contains(pyatspi.STATE_FOCUSABLE)
+        if obj and AXObject.get_role(obj) == Atspi.Role.LIST_ITEM:
+            isMatch = not AXUtilities.is_focusable(obj)
 
         return isMatch
 
@@ -2542,6 +2517,7 @@ class StructuralNavigation:
           the criteria (e.g. the level of a heading).
         """
 
+        # TODO - JD: Is this still an issue?
         # Matches based on object attributes assume unique name-value pairs
         # because pyatspi creates a dictionary from the list. In addition,
         # wildcard matching is not possible. As a result, we cannot search
@@ -2558,8 +2534,10 @@ class StructuralNavigation:
           the criteria (e.g. the level of a heading).
         """
 
-        isMatch = False
+        if self._script.liveRegionManager is None:
+            return False
 
+        isMatch = False
         regobjs = self._script.liveRegionManager.getLiveNoneObjects()
         if self._script.liveRegionManager.matchLiveRegion(obj) or obj in regobjs:
             isMatch = True
@@ -2619,7 +2597,7 @@ class StructuralNavigation:
         # Treat headings as paragraphs so that the user doesn't miss context when
         # the topic of the paragraph changes. Besides, a heading is paragraphy.
 
-        role = [pyatspi.ROLE_PARAGRAPH, pyatspi.ROLE_HEADING]
+        role = [Atspi.Role.PARAGRAPH, Atspi.Role.HEADING]
         roleMatch = collection.MATCH_ANY
         return MatchCriteria(collection, roles=role, matchRoles=roleMatch, applyPredicate=True)
 
@@ -2636,12 +2614,12 @@ class StructuralNavigation:
         if not obj:
             return False
 
-        role = obj.getRole()
-        if role == pyatspi.ROLE_HEADING:
+        role = AXObject.get_role(obj)
+        if role == Atspi.Role.HEADING:
             return True
 
         isMatch = False
-        if role == pyatspi.ROLE_PARAGRAPH:
+        if role == Atspi.Role.PARAGRAPH:
             try:
                 text = obj.queryText()
                 # We're choosing 3 characters as the minimum because some
@@ -2650,7 +2628,7 @@ class StructuralNavigation:
                 # We want to skip these.
                 #
                 isMatch = text.characterCount > 2
-            except:
+            except Exception:
                 pass
 
         return isMatch
@@ -2713,8 +2691,8 @@ class StructuralNavigation:
           the criteria (e.g. the level of a heading).
         """
 
-        role = [pyatspi.ROLE_RADIO_BUTTON]
-        state = [pyatspi.STATE_FOCUSABLE, pyatspi.STATE_SENSITIVE]
+        role = [Atspi.Role.RADIO_BUTTON]
+        state = [Atspi.StateType.FOCUSABLE, Atspi.StateType.SENSITIVE]
         stateMatch = collection.MATCH_ALL
         return MatchCriteria(collection,
                              states=state,
@@ -2731,13 +2709,9 @@ class StructuralNavigation:
           the criteria (e.g. the level of a heading).
         """
 
-        isMatch = False
-        if obj and obj.getRole() == pyatspi.ROLE_RADIO_BUTTON:
-            state = obj.getState()
-            isMatch = state.contains(pyatspi.STATE_FOCUSABLE) \
-                  and state.contains(pyatspi.STATE_SENSITIVE)
-
-        return isMatch
+        return AXUtilities.is_radio_button(obj) \
+              and AXUtilities.is_sensitive(obj) \
+              and AXUtilities.is_focusable(obj)
 
     def _radioButtonPresentation(self, obj, arg=None):
         """Presents the radio button or indicates that one was not found.
@@ -2795,7 +2769,7 @@ class StructuralNavigation:
           the criteria (e.g. the level of a heading).
         """
 
-        role = [pyatspi.ROLE_SEPARATOR]
+        role = [Atspi.Role.SEPARATOR]
         return MatchCriteria(collection, roles=role, applyPredicate=False)
 
     def _separatorPredicate(self, obj, arg=None):
@@ -2808,7 +2782,7 @@ class StructuralNavigation:
           the criteria (e.g. the level of a heading).
         """
 
-        return obj and obj.getRole() == pyatspi.ROLE_SEPARATOR
+        return AXUtilities.is_separator(obj)
 
     def _separatorPresentation(self, obj, arg=None):
         """Presents the separator or indicates that one was not found.
@@ -2860,7 +2834,7 @@ class StructuralNavigation:
           the criteria (e.g. the level of a heading).
         """
 
-        role = [pyatspi.ROLE_TABLE]
+        role = [Atspi.Role.TABLE]
         return MatchCriteria(collection, roles=role, applyPredicate=True)
 
     def _tablePredicate(self, obj, arg=None):
@@ -2873,7 +2847,10 @@ class StructuralNavigation:
           the criteria (e.g. the level of a heading).
         """
 
-        if not (obj and obj.childCount and obj.getRole() == pyatspi.ROLE_TABLE):
+        if not AXUtilities.is_table(obj):
+            return False
+
+        if not AXObject.get_child_count(obj):
             return False
 
         attrs = self._script.utilities.objectAttributes(obj)
@@ -2882,7 +2859,7 @@ class StructuralNavigation:
 
         try:
             return obj.queryTable().nRows > 0
-        except:
+        except Exception:
             pass
 
         return False
@@ -2905,7 +2882,7 @@ class StructuralNavigation:
             if not cell:
                 msg = 'ERROR: Broken table interface for %s' % obj
                 debug.println(debug.LEVEL_INFO, msg)
-                cell = pyatspi.findDescendant(obj, self._tableCellPredicate)
+                cell = AXObject.find_descendant(obj, self._tableCellPredicate)
                 if cell:
                     msg = 'HACK: Located %s for first cell' % cell
                     debug.println(debug.LEVEL_INFO, msg)
@@ -2970,9 +2947,9 @@ class StructuralNavigation:
           the criteria (e.g. the level of a heading).
         """
 
-        role = [pyatspi.ROLE_TABLE_CELL,
-                pyatspi.ROLE_COLUMN_HEADER,
-                pyatspi.ROLE_ROW_HEADER]
+        role = [Atspi.Role.TABLE_CELL,
+                Atspi.Role.COLUMN_HEADER,
+                Atspi.Role.ROW_HEADER]
         return MatchCriteria(collection, roles=role)
 
     def _tableCellPredicate(self, obj, arg=None):
@@ -2985,9 +2962,9 @@ class StructuralNavigation:
           the criteria (e.g. the level of a heading).
         """
 
-        return (obj and obj.getRole() in [pyatspi.ROLE_COLUMN_HEADER,
-                                          pyatspi.ROLE_ROW_HEADER,
-                                          pyatspi.ROLE_TABLE_CELL])
+        return (obj and AXObject.get_role(obj) in [Atspi.Role.COLUMN_HEADER,
+                                          Atspi.Role.ROW_HEADER,
+                                          Atspi.Role.TABLE_CELL])
 
     def _tableCellPresentation(self, cell, arg):
         """Presents the table cell or indicates that one was not found.
@@ -3057,8 +3034,8 @@ class StructuralNavigation:
           the criteria (e.g. the level of a heading).
         """
 
-        role = [pyatspi.ROLE_LINK]
-        state = [pyatspi.STATE_VISITED]
+        role = [Atspi.Role.LINK]
+        state = [Atspi.StateType.VISITED]
         stateMatch = collection.MATCH_NONE
         return MatchCriteria(collection,
                              states=state,
@@ -3076,14 +3053,9 @@ class StructuralNavigation:
           the criteria (e.g. the level of a heading).
         """
 
-        isMatch = False
-
-        if obj and obj.getRole() == pyatspi.ROLE_LINK:
-            state = obj.getState()
-            isMatch = not state.contains(pyatspi.STATE_VISITED) \
-                and state.contains(pyatspi.STATE_FOCUSABLE)
-
-        return isMatch
+        return AXUtilities.is_link(obj) \
+              and not AXUtilities.is_visited(obj) \
+              and AXUtilities.is_focusable(obj)
 
     def _unvisitedLinkPresentation(self, obj, arg=None):
         """Presents the unvisited link or indicates that one was not
@@ -3146,8 +3118,8 @@ class StructuralNavigation:
           the criteria (e.g. the level of a heading).
         """
 
-        role = [pyatspi.ROLE_LINK]
-        state = [pyatspi.STATE_VISITED, pyatspi.STATE_FOCUSABLE]
+        role = [Atspi.Role.LINK]
+        state = [Atspi.StateType.VISITED, Atspi.StateType.FOCUSABLE]
         stateMatch = collection.MATCH_ALL
         return MatchCriteria(collection,
                              states=state,
@@ -3164,14 +3136,9 @@ class StructuralNavigation:
           the criteria (e.g. the level of a heading).
         """
 
-        isMatch = False
-
-        if obj and obj.getRole() == pyatspi.ROLE_LINK:
-            state = obj.getState()
-            isMatch = state.contains(pyatspi.STATE_VISITED) \
-                and state.contains(pyatspi.STATE_FOCUSABLE)
-
-        return isMatch
+        return AXUtilities.is_link(obj) \
+              and AXUtilities.is_visited(obj) \
+              and AXUtilities.is_focusable(obj)
 
     def _visitedLinkPresentation(self, obj, arg=None):
         """Presents the visited link or indicates that one was not
@@ -3233,8 +3200,8 @@ class StructuralNavigation:
           the criteria (e.g. the level of a heading).
         """
 
-        role = [pyatspi.ROLE_LINK]
-        state = [pyatspi.STATE_FOCUSABLE]
+        role = [Atspi.Role.LINK]
+        state = [Atspi.StateType.FOCUSABLE]
         stateMatch = collection.MATCH_ALL
         return MatchCriteria(collection,
                              states=state,
@@ -3251,11 +3218,7 @@ class StructuralNavigation:
           the criteria (e.g. the level of a heading).
         """
 
-        isMatch = False
-        if obj and obj.getRole() == pyatspi.ROLE_LINK:
-            state = obj.getState()
-            isMatch = state.contains(pyatspi.STATE_FOCUSABLE)
-        return isMatch
+        return AXUtilities.is_link(obj) and AXUtilities.is_focusable(obj)
 
     def _linkPresentation(self, obj, arg=None):
         """Presents the link or indicates that one was not found.

@@ -1,6 +1,9 @@
+import gi
+gi.require_version("Atspi", "2.0")
+from gi.repository import Atspi
+
 import bisect
 import copy
-import pyatspi
 import time
 from gi.repository import GLib
 
@@ -12,6 +15,7 @@ from . import messages
 from . import input_event
 from . import orca_state
 from . import settings_manager
+from .ax_object import AXObject
 
 _settingsManager = settings_manager.getManager()
 
@@ -380,21 +384,20 @@ class LiveRegionManager:
         results = []
 
         # get the description if there is one.
-        for relation in obj.getRelationSet():
-            relationtype = relation.getRelationType()
-            if relationtype == pyatspi.RELATION_DESCRIBED_BY:
-                targetobj = relation.getTarget(0)
-                try:
-                    # We will add on descriptions if they don't duplicate
-                    # what's already in the object's description.
-                    # See http://bugzilla.gnome.org/show_bug.cgi?id=568467
-                    # for more information.
-                    #
-                    description = targetobj.queryText().getText(0, -1)
-                    if description.strip() != obj.description.strip():
-                        results.append(description)
-                except NotImplemented:
-                    pass
+        relation = AXObject.get_relation(obj, Atspi.RelationType.DESCRIBED_BY)
+        if relation:
+            targetobj = relation.getTarget(0)
+            try:
+                # We will add on descriptions if they don't duplicate
+                # what's already in the object's description.
+                # See http://bugzilla.gnome.org/show_bug.cgi?id=568467
+                # for more information.
+                #
+                description = targetobj.queryText().getText(0, -1)
+                if description.strip() != AXObject.get_description(obj).strip():
+                    results.append(description)
+            except NotImplementedError:
+                pass
 
         # get the politeness level as a string
         try:
@@ -420,14 +423,14 @@ class LiveRegionManager:
         if isContainer(obj):
             return obj
 
-        return pyatspi.findAncestor(obj, isContainer)
+        return AXObject.find_ancestor(obj, isContainer)
 
     def _getMessage(self, event):
         """Gets the message associated with a given live event."""
         attrs = self._getAttrDictionary(event.source)
         content = ""
         labels = ""
-        
+
         # A message is divided into two parts: labels and content.  We
         # will first try to get the content.  If there is None, 
         # assume it is an invalid message and return None
@@ -439,7 +442,7 @@ class LiveRegionManager:
 
         elif event.type.startswith('object:text-changed:insert'):
             if attrs.get('container-atomic') != 'true':
-                if not "\ufffc" in event.any_data:
+                if "\ufffc" not in event.any_data:
                     content = event.any_data
                 else:
                     content = self._script.utilities.expandEOCs(
@@ -458,7 +461,7 @@ class LiveRegionManager:
         # Proper live regions typically come with proper aria labels. These
         # labels are typically exposed as names. Failing that, descriptions.
         # Looking for actual labels seems a non-performant waste of time.
-        name = (event.source.name or event.source.description).strip()
+        name = (AXObject.get_name(event.source) or AXObject.get_description(event.source)).strip()
         if name and name != content:
             labels = name
 
@@ -520,7 +523,8 @@ class LiveRegionManager:
                 return LIVE_ASSERTIVE
             elif attrs['container-live'] == 'rude': 
                 return LIVE_RUDE
-            else: return LIVE_NONE
+            else:
+                return LIVE_NONE
         except KeyError:
             return LIVE_NONE
 
@@ -536,25 +540,23 @@ class LiveRegionManager:
             return 'rude'
         elif politeness == LIVE_NONE: 
             return 'none'
-        else: return 'unknown'
+        else:
+            return 'unknown'
 
     def _getAttrDictionary(self, obj):
         return self._script.utilities.objectAttributes(obj)
-    
+
     def _getPath(self, obj):
         """ Returns, as a tuple of integers, the path from the given object 
         to the document frame."""
         docframe = self._script.utilities.documentFrame()
         path = []
         while True:
-            if obj.parent is None or obj == docframe:
+            if obj == docframe or AXObject.get_parent(obj) is None:
                 path.reverse()
                 return tuple(path)
-            try:
-                path.append(obj.getIndexInParent())
-            except Exception:
-                raise LookupError
-            obj = obj.parent
+            path.append(AXObject.get_index_in_parent(obj))
+            obj = AXObject.get_parent(obj)
 
     def toggleMonitoring(self, script, inputEvent):
         if not _settingsManager.getSetting('inferLiveRegions'):

@@ -27,6 +27,10 @@ __copyright__ = "Copyright (c) 2005-2008 Sun Microsystems Inc." \
                 "Copyright (c) 2011-2016 Igalia, S.L."
 __license__   = "LGPL"
 
+import gi
+gi.require_version("Atspi", "2.0")
+from gi.repository import Atspi
+
 import math
 import pyatspi
 import time
@@ -40,6 +44,8 @@ from . import messages
 from . import orca_state
 from . import script_manager
 from . import settings
+from .ax_object import AXObject
+from .ax_utilities import AXUtilities
 
 KEYBOARD_EVENT     = "keyboard"
 BRAILLE_EVENT      = "braille"
@@ -65,14 +71,14 @@ class InputEvent:
         pass
 
 def _getXkbStickyKeysState():
-    from subprocess import check_output, CalledProcessError
+    from subprocess import check_output
 
     try:
         output = check_output(['xkbset', 'q'])
         for line in output.decode('ASCII', errors='ignore').split('\n'):
             if line.startswith('Sticky-Keys = '):
                 return line.endswith('On')
-    except:
+    except Exception:
         pass
     return False
 
@@ -232,8 +238,8 @@ class KeyboardEvent(InputEvent):
         self.type = event.type
         self.hw_code = event.hw_code
         self.modifiers = event.modifiers & Gdk.ModifierType.MODIFIER_MASK
-        if event.modifiers & (1 << pyatspi.MODIFIER_NUMLOCK):
-            self.modifiers |= (1 << pyatspi.MODIFIER_NUMLOCK)
+        if event.modifiers & (1 << Atspi.ModifierType.NUMLOCK):
+            self.modifiers |= (1 << Atspi.ModifierType.NUMLOCK)
         self.event_string = event.event_string
         self.keyval_name = Gdk.keyval_name(event.id)
         if self.event_string  == "":
@@ -270,7 +276,7 @@ class KeyboardEvent(InputEvent):
         # trying to heuristically hack around this just by looking at the event
         # is not reliable. Ditto regarding asking Gdk for the numlock state.
         if self.keyval_name.startswith("KP"):
-            if event.modifiers & (1 << pyatspi.MODIFIER_NUMLOCK):
+            if event.modifiers & (1 << Atspi.ModifierType.NUMLOCK):
                 self._is_kp_with_numlock = True
 
         if self._script:
@@ -280,8 +286,8 @@ class KeyboardEvent(InputEvent):
                 msg = 'INPUT EVENT: Updated window and active window to %s' % self._window
                 debug.println(debug.LEVEL_INFO, msg, True)
 
-        if self._window and self._app != self._window.getApplication():
-            self._script = script_manager.getManager().getScript(self._window.getApplication())
+        if self._window and self._app != AXObject.get_application(self._window):
+            self._script = script_manager.getManager().getScript(AXObject.get_application(self._window))
             self._app = self._script.app
             msg = 'INPUT EVENT: Updated script to %s' % self._script
             debug.println(debug.LEVEL_INFO, msg, True)
@@ -293,13 +299,9 @@ class KeyboardEvent(InputEvent):
 
         self.keyType = None
 
-        _isPressed = event.type == pyatspi.KEY_PRESSED_EVENT
-
-        try:
-            role = self._obj.getRole()
-        except:
-            role = None
-        _mayEcho = _isPressed or role == pyatspi.ROLE_TERMINAL
+        _isPressed = event.type == Atspi.EventType.KEY_PRESSED_EVENT
+        role = AXObject.get_role(self._obj)
+        _mayEcho = _isPressed or role == Atspi.Role.TERMINAL
 
         if KeyboardEvent.stickyKeys and not self.isOrcaModifier() \
            and not KeyboardEvent.lastOrcaModifierAlone:
@@ -327,7 +329,7 @@ class KeyboardEvent(InputEvent):
         elif self.isModifierKey():
             self.keyType = KeyboardEvent.TYPE_MODIFIER
             self.shouldEcho = _mayEcho and settings.enableModifierKeys
-            if self.isOrcaModifier():
+            if self.isOrcaModifier() and not self.is_duplicate:
                 now = time.time()
                 if KeyboardEvent.lastOrcaModifierAlone:
                     if _isPressed:
@@ -425,7 +427,7 @@ class KeyboardEvent(InputEvent):
         if self.is_duplicate:
             return
 
-        if self.type == pyatspi.KEY_RELEASED_EVENT:
+        if self.type == Atspi.EventType.KEY_RELEASED_EVENT:
             return
 
         if self._clickCount < 3:
@@ -467,12 +469,7 @@ class KeyboardEvent(InputEvent):
              + ("                 shouldEcho=%s\n" % self.shouldEcho)
 
     def _shouldObscure(self):
-        try:
-            role = self._obj.getRole()
-        except:
-            return False
-
-        if role != pyatspi.ROLE_PASSWORD_TEXT:
+        if not AXUtilities.is_password_text(self._obj):
             return False
 
         if not self.isPrintableKey():
@@ -570,11 +567,11 @@ class KeyboardEvent(InputEvent):
             return self.keyType in KeyboardEvent.TYPE_LOCKING
 
         lockingKeys = ["Caps_Lock", "Shift_Lock", "Num_Lock", "Scroll_Lock"]
-        if not self.event_string in lockingKeys:
+        if self.event_string not in lockingKeys:
             return False
 
         if not orca_state.bypassNextCommand and not self._bypassOrca:
-            return not self.event_string in settings.orcaModifierKeys
+            return self.event_string not in settings.orcaModifierKeys
 
         return True
 
@@ -646,7 +643,7 @@ class KeyboardEvent(InputEvent):
     def isPressedKey(self):
         """Returns True if the key is pressed"""
 
-        return self.type == pyatspi.KEY_PRESSED_EVENT
+        return self.type == Atspi.EventType.KEY_PRESSED_EVENT
 
     def isPunctuationKey(self):
         """Return True if this is a punctuation key."""
@@ -698,11 +695,11 @@ class KeyboardEvent(InputEvent):
             return None
 
         if self.event_string == "Caps_Lock":
-            mod = pyatspi.MODIFIER_SHIFTLOCK
+            mod = Atspi.ModifierType.SHIFTLOCK
         elif self.event_string == "Shift_Lock":
-            mod = pyatspi.MODIFIER_SHIFT
+            mod = Atspi.ModifierType.SHIFT
         elif self.event_string == "Num_Lock":
-            mod = pyatspi.MODIFIER_NUMLOCK
+            mod = Atspi.ModifierType.NUMLOCK
         else:
             return None
 
@@ -735,17 +732,17 @@ class KeyboardEvent(InputEvent):
         # TODO - JD: This should go away once plugin support is in place.
         try:
             bindings = settings.keyBindingsMap.get(self._script.__module__)
-        except:
+        except Exception:
             bindings = None
         if not bindings:
             try:
                 bindings = settings.keyBindingsMap.get("default")
-            except:
+            except Exception:
                 bindings = None
 
         try:
             handler = bindings.getInputHandler(self)
-        except:
+        except Exception:
             handler = None
 
         return handler
@@ -891,7 +888,7 @@ class KeyboardEvent(InputEvent):
         if self._bypassOrca:
             if (self.event_string == "Caps_Lock" \
                 or self.event_string == "Shift_Lock") \
-               and self.type == pyatspi.KEY_PRESSED_EVENT:
+               and self.type == Atspi.EventType.KEY_PRESSED_EVENT:
                     self._lock_mod()
                     self.keyType = KeyboardEvent.TYPE_LOCKING
                     self._present()
@@ -921,7 +918,7 @@ class KeyboardEvent(InputEvent):
         if orca_state.bypassNextCommand:
             if not self.isModifierKey():
                 orca_state.bypassNextCommand = False
-            self._script.addKeyGrabs()
+            self._script.addKeyGrabs("bypassed next command")
             return False, 'Bypass next command'
 
         if not self._should_consume:
@@ -941,22 +938,22 @@ class KeyboardEvent(InputEvent):
             def lockit():
                 try:
                     if modifiers & modifier:
-                        lock = pyatspi.KEY_UNLOCKMODIFIERS
+                        lock = Atspi.KeySynthType.UNLOCKMODIFIERS
                         debug.println(debug.LEVEL_INFO, "Unlocking capslock", True)
                     else:
-                        lock = pyatspi.KEY_LOCKMODIFIERS
+                        lock = Atspi.KeySynthType.LOCKMODIFIERS
                         debug.println(debug.LEVEL_INFO, "Locking capslock", True)
                     pyatspi.Registry.generateKeyboardEvent(modifier, None, lock)
                     debug.println(debug.LEVEL_INFO, "Done with capslock", True)
-                except:
+                except Exception:
                     debug.println(debug.LEVEL_INFO, "Could not trigger capslock, " \
                         "at-spi2-core >= 2.32 is needed for triggering capslock", True)
                     pass
             return lockit
         if self.event_string == "Caps_Lock":
-            modifier = 1 << pyatspi.MODIFIER_SHIFTLOCK
+            modifier = 1 << Atspi.ModifierType.SHIFTLOCK
         elif self.event_string == "Shift_Lock":
-            modifier = 1 << pyatspi.MODIFIER_SHIFT
+            modifier = 1 << Atspi.ModifierType.SHIFT
         else:
             msg = "Unknown locking key %s" % self.event_string
             debug.println(debug.LEVEL_WARNING, msg, True)
@@ -1007,7 +1004,7 @@ class MouseButtonEvent(InputEvent):
         display = Gdk.Display.get_default()
         seat = Gdk.Display.get_default_seat(display)
         _pointer = seat.get_pointer()
-    except:
+    except Exception:
         _pointer = None
 
     def __init__(self, event):
@@ -1126,7 +1123,7 @@ class InputEventHandler:
         else:
             try:
                 consumed = self.function(script, inputEvent)
-            except:
+            except Exception:
                 debug.printException(debug.LEVEL_SEVERE)
 
         return consumed

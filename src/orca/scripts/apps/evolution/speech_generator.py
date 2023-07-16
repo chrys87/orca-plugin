@@ -25,10 +25,11 @@ __date__      = "$Date$"
 __copyright__ = "Copyright (c) 2015 Igalia, S.L."
 __license__   = "LGPL"
 
-import pyatspi
-
 import orca.scripts.toolkits.WebKitGtk as WebKitGtk
 import orca.speech_generator as speech_generator
+from orca.ax_object import AXObject
+from orca.ax_utilities import AXUtilities
+
 
 class SpeechGenerator(WebKitGtk.SpeechGenerator, speech_generator.SpeechGenerator):
 
@@ -40,7 +41,7 @@ class SpeechGenerator(WebKitGtk.SpeechGenerator, speech_generator.SpeechGenerato
         cached = self._cache.get(hash(obj), {})
         rv = cached.get("isTreeTableCell")
         if rv is None:
-            rv = obj.parent and obj.parent.getRole() == pyatspi.ROLE_TREE_TABLE
+            rv = AXUtilities.is_tree_table(AXObject.get_parent(obj))
             cached["isTreeTableCell"] = rv
             self._cache[hash(obj)] = cached
 
@@ -70,7 +71,7 @@ class SpeechGenerator(WebKitGtk.SpeechGenerator, speech_generator.SpeechGenerato
         cached = self._cache.get(hash(obj), {})
         rv = cached.get("isFocused")
         if rv is None:
-            rv = obj.getState().contains(pyatspi.STATE_FOCUSED)
+            rv = AXUtilities.is_focused(obj)
             cached["isFocused"] = rv
             self._cache[hash(obj)] = cached
 
@@ -80,7 +81,7 @@ class SpeechGenerator(WebKitGtk.SpeechGenerator, speech_generator.SpeechGenerato
         cached = self._cache.get(hash(obj), {})
         rv = cached.get("isChecked")
         if rv is None:
-            rv = obj.getState().contains(pyatspi.STATE_CHECKED)
+            rv = AXUtilities.is_checked(obj)
             cached["isChecked"] = rv
             self._cache[hash(obj)] = cached
 

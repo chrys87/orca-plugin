@@ -33,7 +33,6 @@ gi.require_version('Atspi', '2.0')
 from gi.repository import Atspi
 
 import functools
-import pyatspi
 
 from . import debug
 from . import settings
@@ -46,32 +45,32 @@ _keycodeCache = {}
 
 MODIFIER_ORCA = 8
 NO_MODIFIER_MASK              =  0
-ALT_MODIFIER_MASK             =  1 << pyatspi.MODIFIER_ALT
-CTRL_MODIFIER_MASK            =  1 << pyatspi.MODIFIER_CONTROL
+ALT_MODIFIER_MASK             =  1 << Atspi.ModifierType.ALT
+CTRL_MODIFIER_MASK            =  1 << Atspi.ModifierType.CONTROL
 ORCA_MODIFIER_MASK            =  1 << MODIFIER_ORCA
 ORCA_ALT_MODIFIER_MASK        = (1 << MODIFIER_ORCA |
-                                 1 << pyatspi.MODIFIER_ALT)
+                                 1 << Atspi.ModifierType.ALT)
 ORCA_CTRL_MODIFIER_MASK       = (1 << MODIFIER_ORCA |
-                                 1 << pyatspi.MODIFIER_CONTROL)
+                                 1 << Atspi.ModifierType.CONTROL)
 ORCA_CTRL_ALT_MODIFIER_MASK   = (1 << MODIFIER_ORCA |
-                                 1 << pyatspi.MODIFIER_CONTROL |
-                                 1 << pyatspi.MODIFIER_ALT)
+                                 1 << Atspi.ModifierType.CONTROL |
+                                 1 << Atspi.ModifierType.ALT)
 ORCA_SHIFT_MODIFIER_MASK      = (1 << MODIFIER_ORCA |
-                                 1 << pyatspi.MODIFIER_SHIFT)
-SHIFT_MODIFIER_MASK           =  1 << pyatspi.MODIFIER_SHIFT
-SHIFT_ALT_MODIFIER_MASK       = (1 << pyatspi.MODIFIER_SHIFT |
-                                 1 << pyatspi.MODIFIER_ALT)
-CTRL_ALT_MODIFIER_MASK        = (1 << pyatspi.MODIFIER_CONTROL |
-                                 1 << pyatspi.MODIFIER_ALT)
-COMMAND_MODIFIER_MASK         = (1 << pyatspi.MODIFIER_ALT |
-                                 1 << pyatspi.MODIFIER_CONTROL |
-                                 1 << pyatspi.MODIFIER_META2 |
-                                 1 << pyatspi.MODIFIER_META3)
-NON_LOCKING_MODIFIER_MASK     = (1 << pyatspi.MODIFIER_SHIFT |
-                                 1 << pyatspi.MODIFIER_ALT |
-                                 1 << pyatspi.MODIFIER_CONTROL |
-                                 1 << pyatspi.MODIFIER_META2 |
-                                 1 << pyatspi.MODIFIER_META3 |
+                                 1 << Atspi.ModifierType.SHIFT)
+SHIFT_MODIFIER_MASK           =  1 << Atspi.ModifierType.SHIFT
+SHIFT_ALT_MODIFIER_MASK       = (1 << Atspi.ModifierType.SHIFT |
+                                 1 << Atspi.ModifierType.ALT)
+CTRL_ALT_MODIFIER_MASK        = (1 << Atspi.ModifierType.CONTROL |
+                                 1 << Atspi.ModifierType.ALT)
+COMMAND_MODIFIER_MASK         = (1 << Atspi.ModifierType.ALT |
+                                 1 << Atspi.ModifierType.CONTROL |
+                                 1 << Atspi.ModifierType.META2 |
+                                 1 << Atspi.ModifierType.META3)
+NON_LOCKING_MODIFIER_MASK     = (1 << Atspi.ModifierType.SHIFT |
+                                 1 << Atspi.ModifierType.ALT |
+                                 1 << Atspi.ModifierType.CONTROL |
+                                 1 << Atspi.ModifierType.META2 |
+                                 1 << Atspi.ModifierType.META3 |
                                  1 << MODIFIER_ORCA)
 defaultModifierMask = NON_LOCKING_MODIFIER_MASK
 
@@ -147,29 +146,29 @@ def getModifierNames(mods):
             # Translators: this is presented in a GUI to represent the
             # "caps lock" modifier.
             text += _("Caps_Lock") + "+"
-    elif mods & (1 << pyatspi.MODIFIER_SHIFTLOCK):
+    elif mods & (1 << Atspi.ModifierType.SHIFTLOCK):
         # Translators: this is presented in a GUI to represent the
         # "caps lock" modifier.
         #
         text += _("Caps_Lock") + "+"
-    #if mods & (1 << pyatspi.MODIFIER_NUMLOCK):
+    #if mods & (1 << Atspi.ModifierType.NUMLOCK):
     #    text += _("Num_Lock") + "+"
     if mods & 128:
         # Translators: this is presented in a GUI to represent the
         # "right alt" modifier.
         #
         text += _("Alt_R") + "+"
-    if mods & (1 << pyatspi.MODIFIER_META3):
+    if mods & (1 << Atspi.ModifierType.META3):
         # Translators: this is presented in a GUI to represent the
         # "super" modifier.
         #
         text += _("Super") + "+"
-    if mods & (1 << pyatspi.MODIFIER_META2):
+    if mods & (1 << Atspi.ModifierType.META2):
         # Translators: this is presented in a GUI to represent the
         # "meta 2" modifier.
         #
         text += _("Meta2") + "+"
-    #if mods & (1 << pyatspi.MODIFIER_META):
+    #if mods & (1 << Atspi.ModifierType.META):
     #    text += _("Meta") + "+"
     if mods & ALT_MODIFIER_MASK:
         # Translators: this is presented in a GUI to represent the
@@ -220,10 +219,10 @@ class KeyBinding:
           from /usr/include/X11/keysymdef.h with the preceding 'XK_'
           removed (e.g., XK_KP_Enter becomes the string 'KP_Enter').
         - modifier_mask: bit mask where a set bit tells us what modifiers
-          we care about (see pyatspi.MODIFIER_*)
+          we care about (see Atspi.ModifierType.*)
         - modifiers: the state the modifiers we care about must be in for
           this key binding to match an input event (see also
-          pyatspi.MODIFIER_*)
+          Atspi.ModifierType.*)
         - handler: the InputEventHandler for this key binding
         """
 
@@ -257,7 +256,7 @@ class KeyBinding:
 
         try:
             return self.handler.description
-        except:
+        except Exception:
             return ''
 
     def asString(self):
@@ -324,10 +323,15 @@ class KeyBindings:
                        keyBinding.handler.description)
         result += "]"
         return result
-    
+
     def add(self, keyBinding):
         """Adds the given KeyBinding instance to this set of keybindings.
         """
+
+        if keyBinding.keysymstring and self.hasKeyBinding(keyBinding, "keysNoMask"):
+           msg = "WARNING: '%s' (%s) already in keybindings" % \
+            (keyBinding.asString(), keyBinding.description())
+           debug.println(debug.LEVEL_INFO, msg, True)
 
         self.keyBindings.append(keyBinding)
 
@@ -337,7 +341,7 @@ class KeyBindings:
 
         try:
             i = self.keyBindings.index(keyBinding)
-        except:
+        except Exception:
             pass
         else:
             del self.keyBindings[i]
@@ -416,6 +420,15 @@ class KeyBindings:
             handlers = [kb.handler.description for kb in bound]
             bound = [bound[i] for i in map(handlers.index, set(handlers))]
 
+        bindings = {}
+        for kb in bound:
+            string = kb.asString()
+            match = bindings.get(string)
+            if match is not None:
+                msg = "WARNING: '%s' (%s) also matches: %s" % (string, kb.description(), match)
+                debug.println(debug.LEVEL_INFO, msg, True)
+            bindings[string] = kb.description()
+
         return bound
 
     def getBindingsForHandler(self, handler):
@@ -423,24 +436,45 @@ class KeyBindings:
 
         return [kb for kb in self.keyBindings if kb.handler == handler]
 
+    def _checkMatchingBindings(self, keyboardEvent, result):
+        if debug.debugLevel > debug.LEVEL_INFO:
+            return
+
+        # If we don't have multiple matches, we're good.
+        if len(result) <= 1:
+            return
+
+        # If we have multiple matches, but they have unique click counts, we're good.
+        if len(set(map(lambda x: x.click_count, result))) == len(result):
+            return
+
+        toString = lambda x: "%s (%ix)" % (x.handler.description, x.click_count)
+        msg = "WARNING: '%s' matches multiple handlers: %s" % \
+            (keyboardEvent.event_string, ", ".join(map(toString, result)))
+        debug.println(debug.LEVEL_INFO, msg, True)
+
     def getInputHandler(self, keyboardEvent):
         """Returns the input handler of the key binding that matches the
         given keycode and modifiers, or None if no match exists.
         """
 
+        matches = []
         candidates = []
         clickCount = keyboardEvent.getClickCount()
         for keyBinding in self.keyBindings:
-            if keyBinding.matches(keyboardEvent.hw_code,
-                                  keyboardEvent.modifiers):
+            if keyBinding.matches(keyboardEvent.hw_code, keyboardEvent.modifiers):
                 if keyBinding.modifier_mask == keyboardEvent.modifiers and \
                    keyBinding.click_count == clickCount:
-                    return keyBinding.handler
+                    matches.append(keyBinding)
                 # If there's no keysymstring, it's unbound and cannot be
                 # a match.
                 #
                 if keyBinding.keysymstring:
                     candidates.append(keyBinding)
+
+        self._checkMatchingBindings(keyboardEvent, matches)
+        if matches:
+            return matches[0].handler
 
         if keyboardEvent.isKeyPadKeyWithNumlockOn():
             return None
@@ -451,6 +485,7 @@ class KeyBindings:
         #
         comparison = lambda x, y: y.click_count - x.click_count
         candidates.sort(key=functools.cmp_to_key(comparison))
+        self._checkMatchingBindings(keyboardEvent, candidates)
         for candidate in candidates:
             if candidate.click_count <= clickCount:
                 return candidate.handler
@@ -473,7 +508,7 @@ class KeyBindings:
             handler = i[3]
             try:
                 clickCount = i[4]
-            except:
+            except Exception:
                 clickCount = 1
 
             if handler in handlers:

@@ -25,12 +25,16 @@ __date__      = "$Date$"
 __copyright__ = "Copyright (c) 2005-2009 Sun Microsystems Inc."
 __license__   = "LGPL"
 
-import pyatspi
+import gi
+gi.require_version("Atspi", "2.0")
+from gi.repository import Atspi
 
 import orca.braille as braille
 import orca.braille_generator as braille_generator
 import orca.object_properties as object_properties
 import orca.settings_manager as settings_manager
+from orca.ax_object import AXObject
+from orca.ax_utilities import AXUtilities
 
 _settingsManager = settings_manager.getManager()
 
@@ -92,13 +96,13 @@ class BrailleGenerator(braille_generator.BrailleGenerator):
         if not self._script.utilities.inDocumentContent(obj):
             return super()._generateRealTableCell(obj, **args)
 
-        if not obj.childCount:
+        if not AXObject.get_child_count(obj):
             result = super()._generateRealTableCell(obj, **args)
         else:
             result = []
             formatType = args.get('formatType')
             args['formatType'] = 'focused'
-            for child in obj:
+            for child in AXObject.iter_children(obj):
                 result.extend(self.generate(child, **args))
             args['formatType'] = formatType
 
@@ -108,7 +112,7 @@ class BrailleGenerator(braille_generator.BrailleGenerator):
         try:
             objectText = self._script.utilities.substring(obj, 0, -1)
             cellName = self._script.utilities.spreadSheetCellName(obj)
-        except:
+        except Exception:
             return []
 
         return [braille.Component(obj, " ".join((objectText, cellName)))]
@@ -141,20 +145,18 @@ class BrailleGenerator(braille_generator.BrailleGenerator):
         current page tab. See bug #538056 for more details.
         """
         result = []
-        rolesList = [pyatspi.ROLE_SCROLL_PANE, \
-                     pyatspi.ROLE_PANEL, \
-                     pyatspi.ROLE_PANEL, \
-                     pyatspi.ROLE_ROOT_PANE, \
-                     pyatspi.ROLE_FRAME, \
-                     pyatspi.ROLE_APPLICATION]
+        rolesList = [Atspi.Role.SCROLL_PANE, \
+                     Atspi.Role.PANEL, \
+                     Atspi.Role.PANEL, \
+                     Atspi.Role.ROOT_PANE, \
+                     Atspi.Role.FRAME, \
+                     Atspi.Role.APPLICATION]
         if self._script.utilities.hasMatchingHierarchy(obj, rolesList):
-            for child in obj.parent:
-                if child.getRole() == pyatspi.ROLE_PAGE_TAB_LIST:
-                    for tab in child:
-                        eventState = tab.getState()
-                        if eventState.contains(pyatspi.STATE_SELECTED):
-                            args['role'] = tab.getRole()
-                            result.extend(self.generate(tab, **args))
+            parent = AXObject.get_parent(obj)
+            for child in AXObject.iter_children(parent, AXUtilities.is_page_tab_list):
+                for tab in AXObject.iter_children(child, AXUtilities.is_selected):
+                    args['role'] = AXObject.get_role(tab)
+                    result.extend(self.generate(tab, **args))
         return result
 
     def _generateAncestors(self, obj, **args):

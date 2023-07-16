@@ -25,11 +25,11 @@ __date__      = "$Date$"
 __copyright__ = "Copyright (c) 2005-2008 Sun Microsystems Inc."
 __license__   = "LGPL"
 
-import pyatspi
-
 import orca.orca as orca
 import orca.orca_state as orca_state
 import orca.scripts.toolkits.gtk as gtk
+from orca.ax_object import AXObject
+from orca.ax_utilities import AXUtilities
 from .spellcheck import SpellCheck
 
 class Script(gtk.Script):
@@ -85,8 +85,7 @@ class Script(gtk.Script):
     def onCaretMoved(self, event):
         """Callback for object:text-caret-moved accessibility events."""
 
-        state = event.source.getState()
-        if state.contains(pyatspi.STATE_MULTI_LINE):
+        if AXUtilities.is_multi_line(event.source):
             self.spellcheck.setDocumentPosition(event.source, event.detail1)
 
         gtk.Script.onCaretMoved(self, event)
@@ -106,14 +105,14 @@ class Script(gtk.Script):
             gtk.Script.onNameChanged(self, event)
             return
 
-        name = event.source.name
+        name = AXObject.get_name(event.source)
         if name == self.spellcheck.getMisspelledWord():
             self.spellcheck.presentErrorDetails()
             return
 
-        parent = event.source.parent
+        parent = AXObject.get_parent(event.source)
         if parent != self.spellcheck.getSuggestionsList() \
-           or not parent.getState().contains(pyatspi.STATE_FOCUSED):
+           or not AXUtilities.is_focused(parent):
             return
 
         entry = self.spellcheck.getChangeToEntry()

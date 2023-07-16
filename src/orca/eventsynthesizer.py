@@ -30,15 +30,15 @@ __license__   = "LGPL"
 import gi
 import pyatspi
 
+gi.require_version("Atspi", "2.0")
+from gi.repository import Atspi
+
 gi.require_version("Gtk", "3.0")
 from gi.repository import Gtk
 
 from . import debug
-
-try:
-    _canScrollTo = pyatspi.Component.scrollTo is not None
-except:
-    _canScrollTo = False
+from .ax_object import AXObject
+from .ax_utilities import AXUtilities
 
 _banner = None
 
@@ -96,8 +96,8 @@ def _extentsAtCaret(obj):
 
     try:
         text = obj.queryText()
-        extents = text.getCharacterExtents(text.caretOffset, pyatspi.DESKTOP_COORDS)
-    except:
+        extents = text.getCharacterExtents(text.caretOffset, Atspi.CoordType.SCREEN)
+    except Exception:
         msg = "ERROR: Exception getting character extents for %s" % obj
         debug.println(debug.LEVEL_INFO, msg, True)
         return 0, 0, 0, 0
@@ -108,8 +108,8 @@ def _objectExtents(obj):
     """Returns the bounding box associated with obj."""
 
     try:
-        extents = obj.queryComponent().getExtents(pyatspi.DESKTOP_COORDS)
-    except:
+        extents = obj.queryComponent().getExtents(Atspi.CoordType.SCREEN)
+    except Exception:
         msg = "ERROR: Exception getting extents for %s" % obj
         debug.println(debug.LEVEL_INFO, msg, True)
         return 0, 0, 0, 0
@@ -236,7 +236,7 @@ def _scrollSubstringToLocation(obj, location, startOffset, endOffset):
         msg = "ERROR: Text interface not implemented for %s" % obj
         debug.println(debug.LEVEL_INFO, msg, True)
         return False
-    except:
+    except Exception:
         msg = "ERROR: Exception scrolling %s (%s,%s) to %s." % \
             (obj, startOffset, endOffset, location)
         debug.println(debug.LEVEL_INFO, msg, True)
@@ -256,7 +256,7 @@ def _scrollObjectToLocation(obj, location):
         msg = "ERROR: Component interface not implemented for %s" % obj
         debug.println(debug.LEVEL_INFO, msg, True)
         return False
-    except:
+    except Exception:
         msg = "ERROR: Exception scrolling %s to %s." % (obj, location)
         debug.println(debug.LEVEL_INFO, msg, True)
         return False
@@ -270,17 +270,17 @@ def _scrollToLocation(obj, location, startOffset=None, endOffset=None):
 
     try:
         component = obj.queryComponent()
-    except:
+    except Exception:
         msg = "ERROR: Exception querying component of %s" % obj
         debug.println(debug.LEVEL_INFO, msg, True)
         return
 
-    before = component.getExtents(pyatspi.DESKTOP_COORDS)
+    before = component.getExtents(Atspi.CoordType.SCREEN)
 
     if not _scrollSubstringToLocation(obj, location, startOffset, endOffset):
         _scrollObjectToLocation(obj, location)
 
-    after = component.getExtents(pyatspi.DESKTOP_COORDS)
+    after = component.getExtents(Atspi.CoordType.SCREEN)
     msg = "EVENT SYNTHESIZER: Before scroll: %i,%i. After scroll: %i,%i." % \
           (before[0], before[1], after[0], after[1])
     debug.println(debug.LEVEL_INFO, msg, True)
@@ -296,12 +296,12 @@ def _scrollSubstringToPoint(obj, x, y, startOffset, endOffset):
             startOffset = 0
         if endOffset is None:
             endOffset = text.characterCount - 1
-        result = text.scrollSubstringToPoint(startOffset, endOffset, pyatspi.DESKTOP_COORDS, x, y)
+        result = text.scrollSubstringToPoint(startOffset, endOffset, Atspi.CoordType.SCREEN, x, y)
     except NotImplementedError:
         msg = "ERROR: Text interface not implemented for %s" % obj
         debug.println(debug.LEVEL_INFO, msg, True)
         return False
-    except:
+    except Exception:
         msg = "ERROR: Exception scrolling %s (%i,%i) to %i,%i." % \
             (obj, startOffset, endOffset, x, y)
         debug.println(debug.LEVEL_INFO, msg, True)
@@ -316,12 +316,12 @@ def _scrollObjectToPoint(obj, x, y):
     """Attempts to scroll obj to the specified point."""
 
     try:
-        result = obj.queryComponent().scrollToPoint(pyatspi.DESKTOP_COORDS, x, y)
+        result = obj.queryComponent().scrollToPoint(Atspi.CoordType.SCREEN, x, y)
     except NotImplementedError:
         msg = "ERROR: Component interface not implemented for %s" % obj
         debug.println(debug.LEVEL_INFO, msg, True)
         return False
-    except:
+    except Exception:
         msg = "ERROR: Exception scrolling %s to %i,%i." % (obj, x, y)
         debug.println(debug.LEVEL_INFO, msg, True)
         return False
@@ -335,62 +335,42 @@ def _scrollToPoint(obj, x, y, startOffset=None, endOffset=None):
 
     try:
         component = obj.queryComponent()
-    except:
+    except Exception:
         msg = "ERROR: Exception querying component of %s" % obj
         debug.println(debug.LEVEL_INFO, msg, True)
         return
 
-    before = component.getExtents(pyatspi.DESKTOP_COORDS)
+    before = component.getExtents(Atspi.CoordType.SCREEN)
 
     if not _scrollSubstringToPoint(obj, x, y, startOffset, endOffset):
         _scrollObjectToPoint(obj, x, y)
 
-    after = component.getExtents(pyatspi.DESKTOP_COORDS)
+    after = component.getExtents(Atspi.CoordType.SCREEN)
     msg = "EVENT SYNTHESIZER: Before scroll: %i,%i. After scroll: %i,%i." % \
           (before[0], before[1], after[0], after[1])
     debug.println(debug.LEVEL_INFO, msg, True)
 
 def scrollIntoView(obj, startOffset=None, endOffset=None):
-    if not _canScrollTo:
-        msg = "INFO: Installed version of AT-SPI2 doesn't support scrolling."
-        debug.println(debug.LEVEL_INFO, msg, True)
-        return
-
-    _scrollToLocation(obj, pyatspi.SCROLL_ANYWHERE, startOffset, endOffset)
+    _scrollToLocation(obj, Atspi.ScrollType.ANYWHERE, startOffset, endOffset)
 
 def _containingDocument(obj):
-    roles = [pyatspi.ROLE_DOCUMENT_EMAIL,
-             pyatspi.ROLE_DOCUMENT_FRAME,
-             pyatspi.ROLE_DOCUMENT_PRESENTATION,
-             pyatspi.ROLE_DOCUMENT_SPREADSHEET,
-             pyatspi.ROLE_DOCUMENT_TEXT,
-             pyatspi.ROLE_DOCUMENT_WEB]
-    isDocument = lambda x: x and x.getRole() in roles
-    document = pyatspi.findAncestor(obj, isDocument)
+    document = AXObject.find_ancestor(obj, AXUtilities.is_document)
     while document:
-        ancestor = pyatspi.findAncestor(document, isDocument)
-        if not ancestor or ancestor == document:
+        ancestor = AXObject.find_ancestor(document, AXUtilities.is_document)
+        if ancestor is None or ancestor == document:
             break
         document = ancestor
 
     return document
 
-def _isDead(obj):
-    try:
-        obj.name
-    except:
-        return True
-
-    return False
-
 def _getAccessibleAtPoint(root, x, y):
     try:
-        result = root.queryComponent().getAccessibleAtPoint(x, y, pyatspi.DESKTOP_COORDS)
+        result = root.queryComponent().getAccessibleAtPoint(x, y, Atspi.CoordType.SCREEN)
     except NotImplementedError:
         msg = "ERROR: Component interface not implemented for %s" % root
         debug.println(debug.LEVEL_INFO, msg, True)
         return None
-    except:
+    except Exception:
         msg = "ERROR: Exception getting accessible at (%i, %i) for %s" % (x, y, root)
         debug.println(debug.LEVEL_INFO, msg, True)
         return None
@@ -406,7 +386,7 @@ def _obscuringBanner(obj):
         debug.println(debug.LEVEL_INFO, msg, True)
         return None
 
-    if not "Component" in pyatspi.listInterfaces(document):
+    if not AXObject.supports_component(document):
         msg = "EVENT SYNTHESIZER: No obscuring banner found for %s. No doc iface." % obj
         debug.println(debug.LEVEL_INFO, msg, True)
         return None
@@ -434,19 +414,14 @@ def _scrollBelowBanner(obj, banner, startOffset, endOffset, margin=25):
     _scrollToPoint(obj, objX, bannerY + bannerHeight + margin, startOffset, endOffset)
 
 def scrollToTopEdge(obj, startOffset=None, endOffset=None):
-    if not _canScrollTo:
-        msg = "INFO: Installed version of AT-SPI2 doesn't support scrolling."
-        debug.println(debug.LEVEL_INFO, msg, True)
-        return
-
     global _banner
-    if _banner and not _isDead(_banner):
+    if _banner and not AXObject.is_dead(_banner):
         msg = "EVENT SYNTHESIZER: Suspected existing banner found: %s" % _banner
         debug.println(debug.LEVEL_INFO, msg, True)
         _scrollBelowBanner(obj, _banner, startOffset, endOffset)
         return
 
-    _scrollToLocation(obj, pyatspi.SCROLL_TOP_EDGE, startOffset, endOffset)
+    _scrollToLocation(obj, Atspi.ScrollType.TOP_EDGE, startOffset, endOffset)
 
     _banner = _obscuringBanner(obj)
     if _banner:
@@ -455,77 +430,39 @@ def scrollToTopEdge(obj, startOffset=None, endOffset=None):
         debug.println(debug.LEVEL_INFO, msg, True)
 
 def scrollToTopLeft(obj, startOffset=None, endOffset=None):
-    if not _canScrollTo:
-        msg = "INFO: Installed version of AT-SPI2 doesn't support scrolling."
-        debug.println(debug.LEVEL_INFO, msg, True)
-        return
-
-    _scrollToLocation(obj, pyatspi.SCROLL_TOP_LEFT, startOffset, endOffset)
+    _scrollToLocation(obj, Atspi.ScrollType.TOP_LEFT, startOffset, endOffset)
 
 def scrollToLeftEdge(obj, startOffset=None, endOffset=None):
-    if not _canScrollTo:
-        msg = "INFO: Installed version of AT-SPI2 doesn't support scrolling."
-        debug.println(debug.LEVEL_INFO, msg, True)
-        return
-
-    _scrollToLocation(obj, pyatspi.SCROLL_LEFT_EDGE, startOffset, endOffset)
+    _scrollToLocation(obj, Atspi.ScrollType.LEFT_EDGE, startOffset, endOffset)
 
 def scrollToBottomEdge(obj, startOffset=None, endOffset=None):
-    if not _canScrollTo:
-        msg = "INFO: Installed version of AT-SPI2 doesn't support scrolling."
-        debug.println(debug.LEVEL_INFO, msg, True)
-        return
-
-    _scrollToLocation(obj, pyatspi.SCROLL_BOTTOM_EDGE, startOffset, endOffset)
+    _scrollToLocation(obj, Atspi.ScrollType.BOTTOM_EDGE, startOffset, endOffset)
 
 def scrollToBottomRight(obj, startOffset=None, endOffset=None):
-    if not _canScrollTo:
-        msg = "INFO: Installed version of AT-SPI2 doesn't support scrolling."
-        debug.println(debug.LEVEL_INFO, msg, True)
-        return
-
-    _scrollToLocation(obj, pyatspi.SCROLL_BOTTOM_RIGHT, startOffset, endOffset)
+    _scrollToLocation(obj, Atspi.ScrollType.BOTTOM_RIGHT, startOffset, endOffset)
 
 def scrollToRightEdge(obj, startOffset=None, endOffset=None):
-    if not _canScrollTo:
-        msg = "INFO: Installed version of AT-SPI2 doesn't support scrolling."
-        debug.println(debug.LEVEL_INFO, msg, True)
-        return
+    _scrollToLocation(obj, Atspi.ScrollType.RIGHT_EDGE, startOffset, endOffset)
 
-    _scrollToLocation(obj, pyatspi.SCROLL_RIGHT_EDGE, startOffset, endOffset)
+def tryAllClickableActions(obj):
+    actions = ["click", "press", "jump", "open"]
+    for a in actions:
+        if AXObject.do_named_action(obj, a):
+            msg = "INFO: '%s' on %s performed successfully" % (a, obj)
+            debug.println(debug.LEVEL_INFO, msg, True)
+            return True
 
-def _performNamedAction(obj, name):
-    try:
-        action = obj.queryAction()
-    except NotImplementedError:
-        msg = "ERROR: Action interface not implemented for %s" % obj
-        debug.println(debug.LEVEL_INFO, msg, True)
+    if debug.LEVEL_INFO < debug.debugLevel:
         return False
 
-    for i in range(action.nActions):
-        if action.getName(i).lower() == name.lower():
-            rv = action.doAction(i)
-            msg = "EVENT SYNTHESIZER: %s on %s result: %s" % (name, obj, rv)
-            debug.println(debug.LEVEL_INFO, msg, True)
-            return rv
-
-    msg = "INFO: %s not an available action for %s" % (name, obj)
+    msg = "INFO: Actions on %s: %s" % (obj, AXObject.actions_as_string(obj))
     debug.println(debug.LEVEL_INFO, msg, True)
     return False
-
-def activateActionOn(obj):
-    return _performNamedAction(obj, "activate")
-
-def clickActionOn(obj):
-    return _performNamedAction(obj, "click")
-
-def pressActionOn(obj):
-    return _performNamedAction(obj, "press")
 
 def grabFocusOn(obj):
     try:
         component = obj.queryComponent()
-    except:
+    except Exception:
         msg = "ERROR: Exception querying component of %s" % obj
         debug.println(debug.LEVEL_INFO, msg, True)
         return False

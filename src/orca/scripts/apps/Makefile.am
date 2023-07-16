@@ -1,8 +1,6 @@
 SUBDIRS = \
 	Banshee \
 	Eclipse \
-	ekiga \
-	empathy \
 	epiphany \
 	evince \
 	evolution \
@@ -10,17 +8,11 @@ SUBDIRS = \
 	gcalctool \
 	gedit \
 	gnome-documents \
-	gnome-keyring-ask \
-	gnome-panel \
-	gnome-screensaver-dialog \
 	gnome-shell \
 	gnome-search-tool \
-	gnome-window-properties \
-	Instantbird \
 	kwin \
 	notification-daemon \
 	notify-osd \
-	Mozilla \
 	pidgin \
 	rhythmbox \
 	soffice \

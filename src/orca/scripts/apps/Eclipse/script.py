@@ -25,9 +25,11 @@ __date__      = "$Date$"
 __copyright__ = "Copyright (c) 2010 Informal Informatica LTDA."
 __license__   = "LGPL"
 
+
+import orca.debug as debug
 import orca.orca as orca
 import orca.scripts.toolkits.GAIL as GAIL
-import pyatspi
+from orca.ax_utilities import AXUtilities
 
 ########################################################################
 #                                                                      #
@@ -58,7 +60,7 @@ class Script(GAIL.Script):
             return
 
         obj = otherObj or event.source
-        if obj.getState().contains(pyatspi.STATE_SINGLE_LINE):
+        if AXUtilities.is_single_line(obj):
             return
 
         # if Tab key is pressed and there is text selected, we must announce
@@ -81,14 +83,11 @@ class Script(GAIL.Script):
 
         # NOTE: This event type is deprecated and Orca should no longer use it.
         # This callback remains just to handle bugs in applications and toolkits.
-
-        role = event.source.getRole()
-
-        if role == pyatspi.ROLE_PANEL:
+        if AXUtilities.is_panel(event.source):
             orca.setLocusOfFocus(event, event.source)
             return
 
-        if role == pyatspi.ROLE_TEXT \
+        if AXUtilities.is_text(event.source) \
            and self.utilities.lastInputEventWasUnmodifiedArrow() \
            and self.utilities.inMenu():
             msg = "ECLIPSE: Ignoring event. In menu."
@@ -138,14 +137,10 @@ class Script(GAIL.Script):
     def onSelectionChanged(self, event):
         """Callback for object:selection-changed accessibility events."""
 
-        obj = event.source
-        state = obj.getState()
-        # sometimes eclipse issues an object:selection-changed for objects not focused.
-        # we do not want that orca announces this objects.
+        # Sometimes Eclipse fires an object:selection-changed event for non-focused
+        # containers. We don't want to present those. The exception is the MenuBar.
+        if not (AXUtilities.is_focused(event.source) or AXUtilities.is_menu_bar(event.source)):
+            return
 
-        if not state.contains(pyatspi.STATE_FOCUSED):
-            # the exception, at least for while, is the MenuBar
-            if obj.getRole() != pyatspi.ROLE_MENU_BAR:
-                return
         GAIL.Script.onSelectionChanged(self, event)
 

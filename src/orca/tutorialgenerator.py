@@ -29,11 +29,16 @@ __date__      = "$Date$"
 __copyright__ = "Copyright (c) 2008-2009 Sun Microsystems Inc."
 __license__   = "LGPL"
 
-import pyatspi
+import gi
+gi.require_version("Atspi", "2.0")
+from gi.repository import Atspi
+
 from . import debug
 from . import orca_state
 from . import settings
 
+from .ax_object import AXObject
+from .ax_utilities import AXUtilities
 from .orca_i18n import _         # for gettext support
 
 class TutorialGenerator:
@@ -57,49 +62,49 @@ class TutorialGenerator:
         # that generate tutorial strings for objects that implement that role.
         #
         self.tutorialGenerators = {}
-        self.tutorialGenerators[pyatspi.ROLE_CHECK_BOX] = \
+        self.tutorialGenerators[Atspi.Role.CHECK_BOX] = \
             self._getTutorialForCheckBox
-        self.tutorialGenerators[pyatspi.ROLE_COMBO_BOX] = \
+        self.tutorialGenerators[Atspi.Role.COMBO_BOX] = \
             self._getTutorialForComboBox
-        self.tutorialGenerators[pyatspi.ROLE_FRAME] = \
+        self.tutorialGenerators[Atspi.Role.FRAME] = \
             self._getTutorialForFrame
-        self.tutorialGenerators[pyatspi.ROLE_ICON] = \
+        self.tutorialGenerators[Atspi.Role.ICON] = \
             self._getTutorialForIcon
-        self.tutorialGenerators[pyatspi.ROLE_LAYERED_PANE] = \
+        self.tutorialGenerators[Atspi.Role.LAYERED_PANE] = \
             self._getTutorialForLayeredPane
-        self.tutorialGenerators[pyatspi.ROLE_LIST] = \
+        self.tutorialGenerators[Atspi.Role.LIST] = \
             self._getTutorialForList
-        self.tutorialGenerators[pyatspi.ROLE_LIST_ITEM] = \
+        self.tutorialGenerators[Atspi.Role.LIST_ITEM] = \
             self._getTutorialForListItem
-        self.tutorialGenerators[pyatspi.ROLE_PAGE_TAB] = \
+        self.tutorialGenerators[Atspi.Role.PAGE_TAB] = \
             self._getTutorialForPageTab
-        self.tutorialGenerators[pyatspi.ROLE_PARAGRAPH] = \
+        self.tutorialGenerators[Atspi.Role.PARAGRAPH] = \
             self._getTutorialForText
-        self.tutorialGenerators[pyatspi.ROLE_PASSWORD_TEXT] = \
+        self.tutorialGenerators[Atspi.Role.PASSWORD_TEXT] = \
             self._getTutorialForText
-        self.tutorialGenerators[pyatspi.ROLE_ENTRY] = \
+        self.tutorialGenerators[Atspi.Role.ENTRY] = \
             self._getTutorialForText
-        self.tutorialGenerators[pyatspi.ROLE_PUSH_BUTTON] = \
+        self.tutorialGenerators[Atspi.Role.PUSH_BUTTON] = \
             self._getTutorialForPushButton
-        self.tutorialGenerators[pyatspi.ROLE_SPIN_BUTTON] = \
+        self.tutorialGenerators[Atspi.Role.SPIN_BUTTON] = \
             self._getTutorialForSpinButton
-        self.tutorialGenerators[pyatspi.ROLE_TABLE_CELL] = \
+        self.tutorialGenerators[Atspi.Role.TABLE_CELL] = \
             self._getTutorialForTableCellRow
-        self.tutorialGenerators[pyatspi.ROLE_TEXT] = \
+        self.tutorialGenerators[Atspi.Role.TEXT] = \
             self._getTutorialForText
-        self.tutorialGenerators[pyatspi.ROLE_TOGGLE_BUTTON] = \
+        self.tutorialGenerators[Atspi.Role.TOGGLE_BUTTON] = \
             self._getTutorialForCheckBox
-        self.tutorialGenerators[pyatspi.ROLE_RADIO_BUTTON] = \
+        self.tutorialGenerators[Atspi.Role.RADIO_BUTTON] = \
             self._getTutorialForRadioButton
-        self.tutorialGenerators[pyatspi.ROLE_MENU]                = \
+        self.tutorialGenerators[Atspi.Role.MENU]                = \
             self._getTutorialForMenu
-        self.tutorialGenerators[pyatspi.ROLE_CHECK_MENU_ITEM]     = \
+        self.tutorialGenerators[Atspi.Role.CHECK_MENU_ITEM]     = \
             self._getTutorialForCheckBox
-        self.tutorialGenerators[pyatspi.ROLE_MENU_ITEM]           = \
+        self.tutorialGenerators[Atspi.Role.MENU_ITEM]           = \
             self._getTutorialForMenuItem
-        self.tutorialGenerators[pyatspi.ROLE_RADIO_MENU_ITEM]     = \
+        self.tutorialGenerators[Atspi.Role.RADIO_MENU_ITEM]     = \
             self._getTutorialForCheckBox
-        self.tutorialGenerators[pyatspi.ROLE_SLIDER]              = \
+        self.tutorialGenerators[Atspi.Role.SLIDER]              = \
             self._getTutorialForSlider
 
     def _debugGenerator(self, generatorName, obj, alreadyFocused, utterances):
@@ -116,9 +121,9 @@ class TutorialGenerator:
         debug.println(debug.LEVEL_FINER,
                       "GENERATOR: %s" % generatorName)
         debug.println(debug.LEVEL_FINER,
-                      "           obj             = %s" % obj.name)
+                      "           obj             = %s" % AXObject.get_name(obj))
         debug.println(debug.LEVEL_FINER,
-                      "           role            = %s" % obj.getRoleName())
+                      "           role            = %s" % AXObject.get_role_name(obj))
         debug.println(debug.LEVEL_FINER,
                       "           alreadyFocused  = %s" % alreadyFocused)
         debug.println(debug.LEVEL_FINER,
@@ -210,9 +215,6 @@ class TutorialGenerator:
         """
 
         utterances = []
-        name = self._script.utilities.displayedText(obj)
-        if not name and obj.description:
-            name = obj.description
 
         # Translators: If this application has more than one unfocused alert or
         # dialog window, inform user of how to refocus these.
@@ -223,7 +225,7 @@ class TutorialGenerator:
         try:
             alertAndDialogCount = \
                 self._script.utilities.unfocusedAlertAndDialogCount(obj)
-        except:
+        except Exception:
             alertAndDialogCount = 0
         if alertAndDialogCount > 0:
             utterances.append(childWindowsMsg)
@@ -246,8 +248,9 @@ class TutorialGenerator:
         Returns a list of tutorial utterances to be spoken for the object.
         """
 
-        if obj.parent.getRole() == pyatspi.ROLE_LAYERED_PANE:
-            utterances = self._getTutorialForLayeredPane(obj.parent,
+        parent = AXObject.get_parent(obj)
+        if AXUtilities.is_layered_pane(parent):
+            utterances = self._getTutorialForLayeredPane(parent,
                                                          alreadyFocused,
                                                          forceTutorial)
         else:
@@ -274,9 +277,6 @@ class TutorialGenerator:
         """
 
         utterances = []
-        name = self._script.utilities.displayedText(obj)
-        if not name and obj.description:
-            name = obj.description
 
         # Translators: this gives tips on how to navigate items in a
         # layered pane.
@@ -289,10 +289,7 @@ class TutorialGenerator:
         desktopMsg = _("To get to the system menus press the alt+f1 key.")
 
         scriptName = self._script.name
-        try:
-            sibling = obj.parent.getChildAtIndex(0)
-        except AttributeError:
-            sibling = None
+        sibling = AXObject.get_child(AXObject.get_parent(obj), 0)
         if 'nautilus' in scriptName and obj == sibling:
             utterances.append(desktopMsg)
 
@@ -363,9 +360,8 @@ class TutorialGenerator:
 
 
         # If already in focus then the tree probably collapsed or expanded
-        state = obj.getState()
-        if state.contains(pyatspi.STATE_EXPANDABLE):
-            if state.contains(pyatspi.STATE_EXPANDED):
+        if AXUtilities.is_expandable(obj):
+            if AXUtilities.is_expanded(obj):
                 if (self.lastTutorial != [expandedMsg]) or forceTutorial:
                     utterances.append(expandedMsg)
             else:
@@ -415,7 +411,7 @@ class TutorialGenerator:
         Returns a list of tutorial utterances to be spoken for the object.
         """
 
-        if not obj.getState().contains(pyatspi.STATE_EDITABLE):
+        if not AXUtilities.is_editable(obj):
             return []
 
         utterances = []
@@ -548,7 +544,7 @@ class TutorialGenerator:
         # 2) we get the label from the other cell.
         # See Orca bug #376015 for more details.
         #
-        if obj.childCount == 2:
+        if AXObject.get_child_count(obj) == 2:
             cellOrder = []
             hasToggle = [ False, False ]
             for i, child in enumerate(obj):
@@ -568,7 +564,7 @@ class TutorialGenerator:
                         pass
                     else:
                         utterances.extend( \
-                            self._getTutorialForTableCell(obj[i],
+                            self._getTutorialForTableCell(AXObject.get_child(obj, i),
                             alreadyFocused, forceTutorial))
                 return utterances
 
@@ -581,9 +577,8 @@ class TutorialGenerator:
             utterances = self._getTutorialForCheckBox(
                 obj, alreadyFocused, forceTutorial)
 
-        state = obj.getState()
-        if state.contains(pyatspi.STATE_EXPANDABLE):
-            if state.contains(pyatspi.STATE_EXPANDED):
+        if AXUtilities.is_expandable(obj):
+            if AXUtilities.is_expanded(obj):
                 if self.lastTutorial != [expandedMsg] or forceTutorial:
                     utterances.append(expandedMsg)
             else:
@@ -611,36 +606,17 @@ class TutorialGenerator:
         utterances = []
 
         if (not alreadyFocused):
+            parent = AXObject.get_parent(obj)
             try:
-                parent_table = obj.parent.queryTable()
-            except:
+                parent_table = parent.queryTable()
+            except Exception:
                 parent_table = None
             readFullRow = self._script.utilities.shouldReadFullRow(obj)
-            if readFullRow and parent_table \
-                and not self._script.utilities.isLayoutOnly(obj.parent):
-                parent = obj.parent
-                index = self._script.utilities.cellIndex(obj)
-                row = parent_table.getRowAtIndex(index)
-                column = parent_table.getColumnAtIndex(index)
-
-                # This is an indication of whether we should speak all the
-                # table cells (the user has moved focus up or down a row),
-                # or just the current one (focus has moved left or right in
-                # the same row).
-                #
-                speakAll = True
-                if "lastRow" in self._script.pointOfReference and \
-                    "lastColumn" in self._script.pointOfReference:
-                    pointOfReference = self._script.pointOfReference
-                    speakAll = (pointOfReference["lastRow"] != row) or \
-                        ((row == 0 or row == parent_table.nRows-1) and \
-                           pointOfReference["lastColumn"] == column)
-
+            if readFullRow and parent_table and not self._script.utilities.isLayoutOnly(parent):
                 utterances.extend(self._getTutorialForTableCell(obj,
-                                        alreadyFocused, forceTutorial))
+                                                                alreadyFocused, forceTutorial))
             else:
-                utterances = self._getTutorialForTableCell(obj,
-                  alreadyFocused, forceTutorial)
+                utterances = self._getTutorialForTableCell(obj, alreadyFocused, forceTutorial)
         else:
             utterances = self._getTutorialForTableCell(obj, alreadyFocused, \
               forceTutorial)
@@ -699,7 +675,10 @@ class TutorialGenerator:
 
         # Checking if we are a submenu,
         # we can't rely on our parent being just a menu.
-        if obj.parent.name != "" and obj.parent.__class__ == obj.__class__:
+        # TODO - JD: What exactly are the __class__ checks for? All accessible objects
+        # have the same class. Should this be checking the role instead?
+        parent = AXObject.get_parent(obj)
+        if AXObject.get_name(parent) and parent.__class__ == obj.__class__:
             if (self.lastTutorial != [subMenuMsg]) or forceTutorial:
                 utterances.append(subMenuMsg)
         else:
@@ -788,7 +767,7 @@ class TutorialGenerator:
             return []
 
         utterances = []
-        role = role or obj.getRole()
+        role = role or AXObject.get_role(obj)
         msg = self._getModeTutorial(obj, alreadyFocused, forceTutorial)
         if not msg:
             if role in self.tutorialGenerators:

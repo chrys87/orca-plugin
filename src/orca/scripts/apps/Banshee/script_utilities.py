@@ -1,5 +1,7 @@
-import pyatspi
 import orca.script_utilities as script_utilities
+from orca.ax_object import AXObject
+from orca.ax_utilities import AXUtilities
+
 
 class Utilities(script_utilities.Utilities):
 
@@ -16,17 +18,14 @@ class Utilities(script_utilities.Utilities):
         seconds = '%02d' % (s%60)
         minutes = '%02d' % (s/60)
         hours = '%02d' % (s/3600)
-        
         duration = [minutes, seconds]
-        
         if hours != '00':
             duration.insert(0, hours)
 
         return ':'.join(duration)
 
     def isSeekSlider(self, obj):
-        return bool(pyatspi.findAncestor(
-                obj, lambda x: x.getRole() == pyatspi.ROLE_TOOL_BAR))
+        return AXObject.find_ancestor(obj, AXUtilities.is_tool_bar) is not None
 
     def textForValue(self, obj):
         if not self.isSeekSlider(obj):

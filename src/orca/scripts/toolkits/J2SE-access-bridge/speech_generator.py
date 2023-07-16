@@ -25,12 +25,16 @@ __copyright__ = "Copyright (c) 2005-2009 Sun Microsystems Inc., " \
                 "Copyright (c) 2010 Joanmarie Diggs"
 __license__   = "LGPL"
 
-import pyatspi
+import gi
+gi.require_version("Atspi", "2.0")
+from gi.repository import Atspi
 
 import orca.messages as messages
 import orca.settings as settings
 import orca.settings_manager as settings_manager
 import orca.speech_generator as speech_generator
+from orca.ax_object import AXObject
+from orca.ax_utilities import AXUtilities
 
 _settingsManager = settings_manager.getManager()
 
@@ -71,7 +75,7 @@ class SpeechGenerator(speech_generator.SpeechGenerator):
         with focus.
         """
         result = []
-        if args.get('role', obj.getRole()) == pyatspi.ROLE_MENU:
+        if args.get('role', AXObject.get_role(obj)) == Atspi.Role.MENU:
             # We're way too chatty here -- at least with the Swing2
             # demo. Users entering a menu want to know they've gone
             # into a menu; not a huge ancestry.
@@ -91,9 +95,10 @@ class SpeechGenerator(speech_generator.SpeechGenerator):
             return []
 
         result = []
-        if obj and obj.getState().contains(pyatspi.STATE_EXPANDED) \
-           and obj.getRole() == pyatspi.ROLE_LABEL and obj.childCount:
-            result.append(messages.itemCount(obj.childCount))
+        childCount = AXObject.get_child_count(obj)
+        if childCount and AXUtilities.is_label(obj) \
+           and AXUtilities.is_expanded(obj):
+            result.append(messages.itemCount(childCount))
             result.extend(self.voice(speech_generator.SYSTEM, obj=obj, **args))
         else:
             result.extend(speech_generator.SpeechGenerator.\
@@ -111,13 +116,12 @@ class SpeechGenerator(speech_generator.SpeechGenerator):
             return []
 
         listObj = None
-        if obj and obj.getRole() == pyatspi.ROLE_COMBO_BOX:
-            hasRole = lambda x: x and x.getRole() == pyatspi.ROLE_LIST
-            allLists = pyatspi.findAllDescendants(obj, hasRole)
+        if AXUtilities.is_combo_box(obj):
+            allLists = self._script.utilities.findAllDescendants(obj, AXUtilities.is_list)
             if len(allLists) == 1:
                 listObj = allLists[0]
 
-        if not listObj:
+        if listObj is None:
             return speech_generator.SpeechGenerator._generatePositionInList(
                 self, obj, **args)
 
@@ -126,10 +130,10 @@ class SpeechGenerator(speech_generator.SpeechGenerator):
         position = -1
         index = total = 0
 
-        for child in listObj:
+        for child in AXObject.iter_children(listObj):
             nextName = self._generateName(child)
             if not nextName or nextName[0] in ["", "Empty", "separator"] \
-               or not child.getState().contains(pyatspi.STATE_VISIBLE):
+               or not AXUtilities.is_visible(child):
                 continue
 
             index += 1
@@ -146,22 +150,18 @@ class SpeechGenerator(speech_generator.SpeechGenerator):
                               %  {"index" : position, "total" : total})
             result.extend(self.voice(speech_generator.SYSTEM, obj=obj, **args))
         return result
-        
+
     def generateSpeech(self, obj, **args):
         result = []
-        if obj.getRole() == pyatspi.ROLE_CHECK_BOX \
-           and obj.parent.getRole() == pyatspi.ROLE_MENU:
-            oldRole = self._overrideRole(pyatspi.ROLE_CHECK_MENU_ITEM, args)
+        if AXUtilities.is_check_box(obj) and AXUtilities.is_menu(AXObject.get_parent(obj)):
+            oldRole = self._overrideRole(Atspi.Role.CHECK_MENU_ITEM, args)
             result.extend(speech_generator.SpeechGenerator.\
                                            generateSpeech(self, obj, **args))
             self._restoreRole(oldRole, args)
 
-        if args.get('formatType', 'unfocused') == 'basicWhereAmI' \
-           and obj.getRole() == pyatspi.ROLE_TEXT:
-            spinbox = self._script.utilities.ancestorWithRole(
-                obj, [pyatspi.ROLE_SPIN_BUTTON], None)
-            if spinbox:
+        if args.get('formatType', 'unfocused') == 'basicWhereAmI' and AXUtilities.is_text(obj):
+            spinbox = AXObject.find_ancestor(obj, AXUtilities.is_spin_button)
+            if spinbox is not None:
                 obj = spinbox
-        result.extend(speech_generator.SpeechGenerator.\
-                                       generateSpeech(self, obj, **args))
+        result.extend(speech_generator.SpeechGenerator.generateSpeech(self, obj, **args))
         return result

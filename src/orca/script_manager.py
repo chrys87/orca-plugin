@@ -25,10 +25,11 @@ __copyright__ = "Copyright (c) 2011. Orca Team."
 __license__   = "LGPL"
 
 import importlib
-import pyatspi
 
 from . import debug
 from . import orca_state
+from .ax_object import AXObject
+from .ax_utilities import AXUtilities
 from .scripts import apps, toolkits
 
 class ScriptManager:
@@ -47,10 +48,8 @@ class ScriptManager:
              "orca.scripts.apps",
              "orca.scripts.toolkits"]
         self._appNames = \
-            {'Firefox': 'Mozilla',
-             'Icedove': 'Thunderbird',
+            {'Icedove': 'Thunderbird',
              'Nereid': 'Banshee',
-             'empathy-chat': 'empathy',
              'gnome-calculator': 'gcalctool',
              'gtk-window-decorator': 'switcher',
              'marco': 'switcher',
@@ -59,10 +58,9 @@ class ScriptManager:
              'pluma': 'gedit',
             }
         self._toolkitNames = \
-            {'WebKitGTK': 'WebKitGtk'}
+            {'WebKitGTK': 'WebKitGtk', 'GTK': 'gtk'}
 
         self.setActiveScript(None, "__init__")
-        self._desktop = pyatspi.Registry.getDesktop(0)
         self._active = False
         debug.println(debug.LEVEL_INFO, 'SCRIPT MANAGER: Initialized', True)
 
@@ -79,7 +77,7 @@ class ScriptManager:
     def deactivate(self):
         """Called when this script manager is deactivated."""
 
-        debug.println(debug.LEVEL_INFO, 'SCRIPT MANAGER: Dectivating', True)
+        debug.println(debug.LEVEL_INFO, 'SCRIPT MANAGER: Deactivating', True)
         if self._defaultScript:
             self._defaultScript.deregisterEventListeners()
         self._defaultScript = None
@@ -93,17 +91,17 @@ class ScriptManager:
     def getModuleName(self, app):
         """Returns the module name of the script to use for application app."""
 
-        try:
-            appAndNameExist = app is not None and app.name != ''
-        except (LookupError, RuntimeError):
-            appAndNameExist = False
-            msg = 'ERROR: %s no longer exists' % app
+        if app is None:
+            msg = 'ERROR: Cannot get module name for null app'
             debug.println(debug.LEVEL_INFO, msg, True)
-
-        if not appAndNameExist:
             return None
 
-        name = app.name
+        name = AXObject.get_name(app)
+        if not name:
+            msg = 'ERROR: Cannot get module name for nameless app'
+            debug.println(debug.LEVEL_INFO, msg, True)
+            return None
+
         altNames = list(self._appNames.keys())
         if name.endswith(".py") or name.endswith(".bin"):
             name = name.split('.')[0]
@@ -120,33 +118,18 @@ class ScriptManager:
                     name = names[0]
                     break
 
-        msg = 'SCRIPT MANAGER: mapped %s to %s' % (app.name, name)
+        msg = 'SCRIPT MANAGER: mapped %s to %s' % (AXObject.get_name(app), name)
         debug.println(debug.LEVEL_INFO, msg, True)
         return name
 
     def _toolkitForObject(self, obj):
         """Returns the name of the toolkit associated with obj."""
 
-        name = ''
-        if obj:
-            try:
-                attributes = obj.getAttributes()
-            except (LookupError, RuntimeError):
-                pass
-            else:
-                attrs = dict([attr.split(':', 1) for attr in attributes])
-                name = attrs.get('toolkit', '')
-                name = self._toolkitNames.get(name, name)
-
-        return name
+        name = AXObject.get_attribute(obj, 'toolkit')
+        return self._toolkitNames.get(name, name)
 
     def _scriptForRole(self, obj):
-        try:
-            role = obj.getRole()
-        except:
-            return ''
-
-        if role == pyatspi.ROLE_TERMINAL:
+        if AXUtilities.is_terminal(obj):
             return 'terminal'
 
         return ''
@@ -175,7 +158,7 @@ class ScriptManager:
                 else:
                     script = module.Script(app)
                 break
-            except:
+            except Exception:
                 debug.printException(debug.LEVEL_INFO)
                 msg = 'ERROR: Could not load %s' % moduleName
                 debug.println(debug.LEVEL_INFO, msg, True)
@@ -195,14 +178,9 @@ class ScriptManager:
         if script:
             return script
 
-        try:
-            toolkitName = getattr(app, "toolkitName", None)
-        except (LookupError, RuntimeError):
-            msg = 'ERROR: Exception getting toolkitName for: %s' % app
-            debug.println(debug.LEVEL_INFO, msg, True)
-        else:
-            if app and toolkitName:
-                script = self._newNamedScript(app, toolkitName)
+        toolkitName = AXObject.get_application_toolkit_name(app)
+        if app and toolkitName:
+            script = self._newNamedScript(app, toolkitName)
 
         if not script:
             script = self.getDefaultScript(app)
@@ -227,21 +205,11 @@ class ScriptManager:
         if not self._active:
             return script
 
-        try:
-            appInDesktop = script.app in self._desktop
-        except:
-            appInDesktop = False
-
-        if appInDesktop:
+        if AXUtilities.is_application_in_desktop(script.app):
             return script
-
-        msg = "WARNING: %s is not in the registry's desktop" % script.app
-        debug.println(debug.LEVEL_INFO, msg, True)
 
         newScript = self._getScriptForAppReplicant(script.app)
         if newScript:
-            msg = "SCRIPT MANAGER: Script for app replicant found: %s" % newScript
-            debug.println(debug.LEVEL_INFO, msg, True)
             return newScript
 
         msg = "WARNING: Failed to get a replacement script for %s" % script.app
@@ -249,16 +217,9 @@ class ScriptManager:
         return script
 
     def getScriptForMouseButtonEvent(self, event):
-        try:
-            state = orca_state.activeWindow.getState()
-            isActive = state.contains(pyatspi.STATE_ACTIVE)
-        except:
-            msg = "SCRIPT MANAGER: Exception checking state of %s" % orca_state.activeWindow
-            debug.println(debug.LEVEL_INFO, msg, True)
-            isActive = False
-        else:
-            msg = "SCRIPT MANAGER: %s is active: %s" % (orca_state.activeWindow, isActive)
-            debug.println(debug.LEVEL_INFO, msg, True)
+        isActive = AXUtilities.is_active(orca_state.activeWindow)
+        msg = "SCRIPT MANAGER: %s is active: %s" % (orca_state.activeWindow, isActive)
+        debug.println(debug.LEVEL_INFO, msg, True)
 
         if isActive and orca_state.activeScript:
             return orca_state.activeScript
@@ -270,9 +231,9 @@ class ScriptManager:
 
         focusedObject = script.utilities.focusedObject(activeWindow)
         if focusedObject:
-            return self.getScript(focusedObject.getApplication(), focusedObject)
+            return self.getScript(AXObject.get_application(focusedObject), focusedObject)
 
-        return self.getScript(activeWindow.getApplication(), activeWindow)
+        return self.getScript(AXObject.get_application(activeWindow), activeWindow)
 
     def getScript(self, app, obj=None, sanityCheck=False):
         """Get a script for an app (and make it if necessary).  This is used
@@ -314,7 +275,7 @@ class ScriptManager:
             else:
                 appScript = self._createScript(app, None)
                 self.appScripts[app] = appScript
-        except:
+        except Exception:
             msg = 'WARNING: Exception getting app script.'
             debug.printException(debug.LEVEL_ALL)
             debug.println(debug.LEVEL_WARNING, msg, True)
@@ -323,16 +284,9 @@ class ScriptManager:
         if customScript:
             return customScript
 
-        try:
-            role = obj.getRole()
-        except:
-            forceAppScript = False
-        else:
-            forceAppScript = role in [pyatspi.ROLE_FRAME, pyatspi.ROLE_STATUS_BAR]
-
         # Only defer to the toolkit script for this object if the app script
         # is based on a different toolkit.
-        if toolkitScript and not forceAppScript \
+        if toolkitScript and not (AXUtilities.is_frame(obj) or AXUtilities.is_status_bar(obj)) \
            and not issubclass(appScript.__class__, toolkitScript.__class__):
             return toolkitScript
 
@@ -367,35 +321,17 @@ class ScriptManager:
         if not self._active:
             return None
 
-        def _pid(app):
-            try:
-                result = app.get_process_id()
-                msg = "SCRIPT MANAGER: %s is has pid: %s" % (app, result)
-                debug.println(debug.LEVEL_INFO, msg, True)
-                return result
-            except:
-                msg = "SCRIPT MANAGER: Exception getting pid for %s" % app
-                debug.println(debug.LEVEL_INFO, msg, True)
-                return -1
-
-        def _isValidApp(app):
-            try:
-                result = app in self._desktop
-                msg = "SCRIPT MANAGER: %s is in desktop: %s" % (app, result)
-                debug.println(debug.LEVEL_INFO, msg, True)
-                return result
-            except:
-                msg = "SCRIPT MANAGER: Exception seeing if %s is in desktop" % app
-                debug.println(debug.LEVEL_INFO, msg, True)
-                return False
-
-        pid = _pid(app)
+        pid = AXObject.get_process_id(app)
         if pid == -1:
             return None
 
         items = self.appScripts.items()
         for a, script in items:
-            if a != app and _pid(a) == pid and _isValidApp(a):
+            if AXObject.get_process_id(a) != pid:
+                continue
+            if a != app and AXUtilities.is_application_in_desktop(a):
+                msg = "SCRIPT MANAGER: Script for app replicant found: %s" % script
+                debug.println(debug.LEVEL_INFO, msg, True)
                 return script
 
         return None
@@ -405,16 +341,13 @@ class ScriptManager:
         deleting any scripts as necessary.
         """
 
-        appList = list(self.appScripts.keys())
-        try:
-            appList = [a for a in appList if a is not None and a not in self._desktop]
-        except:
-            debug.printException(debug.LEVEL_FINEST)
-            return
+        msg = "SCRIPT MANAGER: Checking and cleaning up scripts."
+        debug.println(debug.LEVEL_INFO, msg, True)
 
+        appList = list(self.appScripts.keys())
         for app in appList:
-            msg = "SCRIPT MANAGER: %s is no longer in registry's desktop" % app
-            debug.println(debug.LEVEL_INFO, msg, True)
+            if AXUtilities.is_application_in_desktop(app):
+                continue
 
             try:
                 appScript = self.appScripts.pop(app)
@@ -428,9 +361,6 @@ class ScriptManager:
 
             newScript = self._getScriptForAppReplicant(app)
             if newScript:
-                msg = "SCRIPT MANAGER: Script for app replicant found: %s" % newScript
-                debug.println(debug.LEVEL_INFO, msg, True)
-
                 attrs = appScript.getTransferableAttributes()
                 for attr, value in attrs.items():
                     msg = "SCRIPT MANAGER: Setting %s to %s" % (attr, value)

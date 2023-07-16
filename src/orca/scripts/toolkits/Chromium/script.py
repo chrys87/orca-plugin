@@ -27,12 +27,11 @@ __date__      = "$Date$"
 __copyright__ = "Copyright (c) 2018-2019 Igalia, S.L."
 __license__   = "LGPL"
 
-import pyatspi
-import time
-
 from orca import debug
 from orca import orca
 from orca import orca_state
+from orca.ax_object import AXObject
+from orca.ax_utilities import AXUtilities
 from orca.scripts import default
 from orca.scripts import web
 from .braille_generator import BrailleGenerator
@@ -58,7 +57,7 @@ class Script(web.Script):
         return SpeechGenerator(self)
 
     def getUtilities(self):
-        """Returns the utilites for this script."""
+        """Returns the utilities for this script."""
 
         return Utilities(self)
 
@@ -86,8 +85,7 @@ class Script(web.Script):
         if super().onActiveChanged(event):
             return
 
-        role = event.source.getRole()
-        if event.detail1 and role == pyatspi.ROLE_FRAME \
+        if event.detail1 and AXUtilities.is_frame(event.source) \
            and not self.utilities.canBeActiveWindow(event.source):
             return
 
@@ -440,13 +438,8 @@ class Script(web.Script):
         # Right now we don't get accessibility events for alerts which are
         # already showing at the time of window activation. If that changes,
         # we should store presented alerts so we don't double-present them.
-        for child in event.source:
-            if not child:
-                msg = "CHROMIUM: Event source claims null child"
-                debug.println(debug.LEVEL_INFO, msg, True)
-                continue
-
-            if child.getRole() == pyatspi.ROLE_ALERT:
+        for child in AXObject.iter_children(event.source):
+            if AXUtilities.is_alert(child):
                 self.presentObject(child)
 
     def onWindowDeactivated(self, event):

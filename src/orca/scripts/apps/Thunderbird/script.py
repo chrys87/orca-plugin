@@ -25,8 +25,6 @@ __date__      = "$Date$"
 __copyright__ = "Copyright (c) 2004-2008 Sun Microsystems Inc."
 __license__   = "LGPL"
 
-import pyatspi
-
 import orca.orca as orca
 import orca.cmdnames as cmdnames
 import orca.debug as debug
@@ -35,6 +33,8 @@ import orca.scripts.default as default
 import orca.settings_manager as settings_manager
 import orca.orca_state as orca_state
 import orca.scripts.toolkits.Gecko as Gecko
+from orca.ax_object import AXObject
+from orca.ax_utilities import AXUtilities
 
 from .spellcheck import SpellCheck
 
@@ -158,13 +158,13 @@ class Script(Gecko.Script):
 
         super().togglePresentationMode(inputEvent, documentFrame)
 
-    def useStructuralNavigationModel(self):
+    def useStructuralNavigationModel(self, debugOutput=True):
         """Returns True if structural navigation should be enabled here."""
 
         if self.utilities.isEditableMessage(orca_state.locusOfFocus):
             return False
 
-        return super().useStructuralNavigationModel()
+        return super().useStructuralNavigationModel(debugOutput)
 
     def onFocusedChanged(self, event):
         """Callback for object:state-changed:focused accessibility events."""
@@ -199,17 +199,13 @@ class Script(Gecko.Script):
 
         obj = event.source
         if self.utilities.isDocument(obj) and not event.detail1:
-            try:
-                role = orca_state.locusOfFocus.getRole()
-                name = orca_state.locusOfFocus.name
-            except:
-                pass
-            else:
-                if role in [pyatspi.ROLE_FRAME, pyatspi.ROLE_PAGE_TAB] and name:
-                    orca.setLocusOfFocus(event, event.source, False)
+            if AXObject.get_name(orca_state.locusOfFocus) \
+                and (AXUtilities.is_frame(orca_state.locusOfFocus) \
+                     or AXUtilities.is_page_tab(orca_state.locusOfFocus)):
+                orca.setLocusOfFocus(event, event.source, False)
 
             if self.utilities.inDocumentContent():
-                self.speakMessage(obj.name)
+                self.speakMessage(AXObject.get_name(obj))
                 self._presentMessage(obj)
 
     def onCaretMoved(self, event):
@@ -231,9 +227,8 @@ class Script(Gecko.Script):
         if event.source == self.spellcheck.getSuggestionsList():
             return
 
-        parent = event.source.parent
-        if parent and parent.getRole() == pyatspi.ROLE_COMBO_BOX \
-           and not parent.getState().contains(pyatspi.STATE_FOCUSED):
+        parent = AXObject.get_parent(event.source)
+        if AXUtilities.is_combo_box(parent) and not AXUtilities.is_focused(parent):
             return
 
         super().onSelectionChanged(event)
@@ -270,16 +265,8 @@ class Script(Gecko.Script):
         - event: the Event
         """
 
-        obj = event.source
-        parent = obj.parent
-
-        try:
-            role = event.source.getRole()
-            parentRole = parent.getRole()
-        except:
-            return
-
-        if role == pyatspi.ROLE_LABEL and parentRole == pyatspi.ROLE_STATUS_BAR:
+        if AXUtilities.is_label(event.source) \
+           and AXUtilities.is_status_bar(AXObject.get_parent(event.source)):
             return
 
         super().onTextDeleted(event)
@@ -287,29 +274,23 @@ class Script(Gecko.Script):
     def onTextInserted(self, event):
         """Callback for object:text-changed:insert accessibility events."""
 
-        obj = event.source
-        try:
-            role = obj.getRole()
-            parentRole = obj.parent.getRole()
-        except:
+        parent = AXObject.get_parent(event.source)
+        if AXUtilities.is_label(event.source) and AXUtilities.is_status_bar(parent):
             return
 
-        if role == pyatspi.ROLE_LABEL and parentRole == pyatspi.ROLE_STATUS_BAR:
-            return
-
-        if len(event.any_data) > 1 and obj == self.spellcheck.getChangeToEntry():
+        if len(event.any_data) > 1 and event.source == self.spellcheck.getChangeToEntry():
             return
 
         isSystemEvent = event.type.endswith("system")
 
         # Try to stop unwanted chatter when a message is being replied to.
         # See bgo#618484.
-        if isSystemEvent and self.utilities.isEditableMessage(obj):
+        if isSystemEvent and self.utilities.isEditableMessage(event.source):
             return
 
         # Speak the autocompleted text, but only if it is different
         # address so that we're not too "chatty." See bug #533042.
-        if parentRole == pyatspi.ROLE_AUTOCOMPLETE:
+        if AXUtilities.is_autocomplete(parent):
             if len(event.any_data) == 1:
                 default.Script.onTextInserted(self, event)
                 return
@@ -321,7 +302,7 @@ class Script(Gecko.Script):
             # to save their lives, so we'll add yet another sad hack.
             try:
                 text = event.source.queryText()
-            except:
+            except Exception:
                 hasSelection = False
             else:
                 hasSelection = text.getNSelections() > 0
@@ -352,7 +333,7 @@ class Script(Gecko.Script):
     def onNameChanged(self, event):
         """Callback for object:property-change:accessible-name events."""
 
-        if event.source.name == self.spellcheck.getMisspelledWord():
+        if AXObject.get_name(event.source) == self.spellcheck.getMisspelledWord():
             self.spellcheck.presentErrorDetails()
             return
 
@@ -388,16 +369,6 @@ class Script(Gecko.Script):
             msg = "THUNDERBIRD: SayAllOnLoad is True and speech is enabled"
             debug.println(debug.LEVEL_INFO, msg, True)
             self.sayAll(None)
-
-    def toggleFlatReviewMode(self, inputEvent=None):
-        """Toggles between flat review mode and focus tracking mode."""
-
-        # If we're leaving flat review dump the cache. See bug 568658.
-        #
-        if self.flatReviewContext:
-            pyatspi.clearCache()
-
-        return default.Script.toggleFlatReviewMode(self, inputEvent)
 
     def onWindowActivated(self, event):
         """Callback for window:activate accessibility events."""

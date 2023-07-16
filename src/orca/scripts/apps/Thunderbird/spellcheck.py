@@ -27,10 +27,11 @@ __date__      = "$Date$"
 __copyright__ = "Copyright (c) 2014 Igalia, S.L."
 __license__   = "LGPL"
 
-import pyatspi
-
 import orca.orca_state as orca_state
 import orca.spellcheck as spellcheck
+from orca.ax_object import AXObject
+from orca.ax_utilities import AXUtilities
+
 
 class SpellCheck(spellcheck.SpellCheck):
 
@@ -41,16 +42,11 @@ class SpellCheck(spellcheck.SpellCheck):
         if event.source != self._changeToEntry:
             return False
 
-        locusOfFocus = orca_state.locusOfFocus
-        if not locusOfFocus:
-            return False
-
-        role = locusOfFocus.getRole()
-        if not role == pyatspi.ROLE_PUSH_BUTTON:
+        if not AXUtilities.is_push_button(orca_state.locusOfFocus):
             return False
 
         lastKey, mods = self._script.utilities.lastKeyAndModifiers()
-        keys = self._script.utilities.mnemonicShortcutAccelerator(locusOfFocus)
+        keys = self._script.utilities.mnemonicShortcutAccelerator(orca_state.locusOfFocus)
         for key in keys:
             if key.endswith(lastKey.upper()):
                 return True
@@ -58,30 +54,38 @@ class SpellCheck(spellcheck.SpellCheck):
         return False
 
     def _isCandidateWindow(self, window):
-        if not (window and window.getRole() == pyatspi.ROLE_DIALOG):
+        if not AXUtilities.is_dialog(window):
             return False
 
-        roles = [pyatspi.ROLE_PAGE_TAB_LIST, pyatspi.ROLE_SPLIT_PANE]
-        isNonSpellCheckChild = lambda x: x and x.getRole() in roles
-        if pyatspi.findDescendant(window, isNonSpellCheckChild):
+        def isNonSpellCheckChild(x):
+            return AXUtilities.is_page_tab_list(x) or AXUtilities.is_split_pane(x)
+
+        if AXObject.find_descendant(window, isNonSpellCheckChild):
             return False
 
         return True
 
     def _findChangeToEntry(self, root):
-        isEntry = lambda x: x and x.getRole() == pyatspi.ROLE_ENTRY \
-                  and x.getState().contains(pyatspi.STATE_SINGLE_LINE)
-        return pyatspi.findDescendant(root, isEntry)
+        def isSingleLineEntry(x):
+            return AXUtilities.is_entry(x) and AXUtilities.is_single_line(x)
+
+        return AXObject.find_descendant(root, isSingleLineEntry)
 
     def _findErrorWidget(self, root):
-        isError = lambda x: x and x.getRole() == pyatspi.ROLE_LABEL \
-                  and not ":" in x.name and not x.getRelationSet()
-        return pyatspi.findDescendant(root, isError)
+        def isError(x):
+            return AXUtilities.is_label(x) \
+                    and ":" not in AXObject.get_name(x) \
+                    and not AXObject.get_relations(x)
+
+        return AXObject.find_descendant(root, isError)
 
     def _findSuggestionsList(self, root):
-        isList = lambda x: x and x.getRole() in [pyatspi.ROLE_LIST, pyatspi.ROLE_LIST_BOX] \
-                  and 'Selection' in x.get_interfaces()
-        return pyatspi.findDescendant(root, isList)
+        def isList(x):
+            if not AXObject.supports_selection(x):
+                return False
+            return AXUtilities.is_list_box(x) or AXUtilities.is_list(x)
+
+        return AXObject.find_descendant(root, isList)
 
     def _getSuggestionIndexAndPosition(self, suggestion):
         attrs = self._script.utilities.objectAttributes(suggestion)

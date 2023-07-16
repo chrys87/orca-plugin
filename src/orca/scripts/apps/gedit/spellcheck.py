@@ -27,8 +27,14 @@ __date__      = "$Date$"
 __copyright__ = "Copyright (c) 2014 Igalia, S.L."
 __license__   = "LGPL"
 
-import pyatspi
+import gi
+gi.require_version("Atspi", "2.0")
+from gi.repository import Atspi
+
 import orca.spellcheck as spellcheck
+from orca.ax_object import AXObject
+from orca.ax_utilities import AXUtilities
+
 
 class SpellCheck(spellcheck.SpellCheck):
 
@@ -39,37 +45,38 @@ class SpellCheck(spellcheck.SpellCheck):
         if not window:
             return False
 
-        role = window.getRole()
-        if role == pyatspi.ROLE_DIALOG:
+        role = AXObject.get_role(window)
+        if role == Atspi.Role.DIALOG:
             return True
-        if role != pyatspi.ROLE_FRAME:
+        if role != Atspi.Role.FRAME:
             return False
 
-        isSplitPane = lambda x: x and x.getRole() == pyatspi.ROLE_SPLIT_PANE
-        if pyatspi.findDescendant(window, isSplitPane):
+        if AXObject.find_descendant(window, AXUtilities.is_split_pane):
             return False
 
         return True
 
     def _findChangeToEntry(self, root):
-        isEntry = lambda x: x and x.getRole() == pyatspi.ROLE_TEXT \
-                  and x.getState().contains(pyatspi.STATE_SINGLE_LINE)
-        return pyatspi.findDescendant(root, isEntry)
+        def isEntry(x):
+            return AXUtilities.is_text(x) and AXUtilities.is_single_line(x)
+
+        return AXObject.find_descendant(root, isEntry)
 
     def _findErrorWidget(self, root):
-        isPanel = lambda x: x and x.getRole() == pyatspi.ROLE_PANEL
-        panel = pyatspi.findAncestor(self._changeToEntry, isPanel)
-        if not panel:
+        panel = AXObject.find_ancestor(self._changeToEntry, AXUtilities.is_panel)
+        if panel is None:
             return None
 
-        isError = lambda x: x and x.getRole() == pyatspi.ROLE_LABEL \
-                  and not ":" in x.name and not x.getRelationSet()
-        return pyatspi.findDescendant(panel, isError)
+        def isError(x):
+            return AXUtilities.is_label(x) \
+                  and ":" not in AXObject.get_name(x) and not AXObject.get_relations(x)
+
+        return AXObject.find_descendant(panel, isError)
 
     def _findSuggestionsList(self, root):
-        isTable = lambda x: x and x.getRole() == pyatspi.ROLE_TABLE \
-                  and 'Selection' in x.get_interfaces()
-        return pyatspi.findDescendant(root, isTable)
+        isTable = lambda x: x and AXObject.get_role(x) == Atspi.Role.TABLE \
+                  and AXObject.supports_selection(x)
+        return AXObject.find_descendant(root, isTable)
 
     def _getSuggestionIndexAndPosition(self, suggestion):
         index, total = self._script.utilities.getPositionAndSetSize(suggestion)

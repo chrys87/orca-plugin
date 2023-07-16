@@ -28,13 +28,19 @@ __date__      = "$Date$"
 __copyright__ = "Copyright (c) 2010 Joanmarie Diggs."
 __license__   = "LGPL"
 
-import pyatspi
+import gi
+gi.require_version("Atspi", "2.0")
+from gi.repository import Atspi
 
 import orca.debug as debug
 import orca.keybindings as keybindings
 import orca.messages as messages
 import orca.orca_state as orca_state
 import orca.script_utilities as script_utilities
+from orca.ax_object import AXObject
+from orca.ax_selection import AXSelection
+from orca.ax_utilities import AXUtilities
+
 
 #############################################################################
 #                                                                           #
@@ -75,58 +81,44 @@ class Utilities(script_utilities.Utilities):
         any text being shown.
         """
 
-        try:
-            role = obj.getRole()
-        except:
-            return ""
+        name = AXObject.get_name(obj)
+        if name and AXUtilities.is_push_button(obj):
+            return name
 
-        if role == pyatspi.ROLE_PUSH_BUTTON and obj.name:
-            return obj.name
-
-        if role == pyatspi.ROLE_TABLE_CELL:
-            strings = list(map(self.displayedText, [child for child in obj]))
+        if AXUtilities.is_table_cell(obj):
+            strings = list(map(self.displayedText, [x for x in AXObject.iter_children(obj)]))
             text = "\n".join(strings)
             if text.strip():
                 return text
 
         try:
             text = super().displayedText(obj)
-        except:
+        except Exception:
             return ""
 
         # TODO - JD: This is needed because the default behavior is to fall
         # back on the name, which is bogus. Once that has been fixed, this
         # hack can go.
-        if role == pyatspi.ROLE_TABLE_CELL and text == obj.name \
+        if AXUtilities.is_table_cell(obj) and text == name \
            and (self.isSpreadSheetCell(obj) or self.isTextDocumentCell(obj)):
             return ""
 
         # More bogusness from (at least) Calc combined with the aforementioned
         # fallback-to-name behavior....
-        if self.isDocument(obj) and text == obj.name and obj.name.startswith("file:///"):
+        if self.isDocument(obj) and text == name and text.startswith("file:///"):
             return ""
 
         return text
 
     def isCellBeingEdited(self, obj):
-        if not obj:
-            return False
-
-        parent = obj.parent
-        try:
-            role = parent.getRole()
-        except:
-            msg = "SOFFICE: Exception getting role of %s" % parent
-            debug.println(debug.LEVEL_INFO, msg, True)
-            return False
-
-        if role in [pyatspi.ROLE_EXTENDED, pyatspi.ROLE_PANEL]:
+        parent = AXObject.get_parent(obj)
+        if AXUtilities.is_panel(parent) or AXUtilities.is_extended(parent):
             return self.spreadSheetCellName(parent)
 
         return False
 
     def spreadSheetCellName(self, cell):
-        nameList = cell.name.split()
+        nameList = AXObject.get_name(cell).split()
         for name in nameList:
             name = name.replace('.', '')
             if not name.isalpha() and name.isalnum():
@@ -137,21 +129,21 @@ class Utilities(script_utilities.Utilities):
     def getRowColumnAndTable(self, cell):
         """Returns the (row, column, table) tuple for cell."""
 
-        if not (cell and cell.getRole() == pyatspi.ROLE_TABLE_CELL):
+        if not AXUtilities.is_table_cell(cell):
             return -1, -1, None
 
-        cellParent = cell.parent
-        if cellParent and cellParent.getRole() == pyatspi.ROLE_TABLE_CELL:
+        cellParent = AXObject.get_parent(cell)
+        if AXUtilities.is_table_cell(cellParent):
             cell = cellParent
-            cellParent = cell.parent
+            cellParent = AXObject.get_parent(cell)
 
         table = cellParent
-        if table and table.getRole() != pyatspi.ROLE_TABLE:
-            table = table.parent
+        if table is not None and not AXUtilities.is_table(table):
+            table = AXObject.get_parent(table)
 
         try:
             iTable = table.queryTable()
-        except:
+        except Exception:
             return -1, -1, None
 
         index = self.cellIndex(cell)
@@ -209,25 +201,17 @@ class Utilities(script_utilities.Utilities):
         if obj1 == obj2:
             return True
 
-        try:
-            role1 = obj1.getRole()
-            role2 = obj2.getRole()
-        except:
+        if not AXUtilities.have_same_role(obj1, obj2):
             return False
 
-        if role1 != role2 or role1 == pyatspi.ROLE_PARAGRAPH:
+        if AXUtilities.is_paragraph(obj1):
             return False
 
-        try:
-            name1 = obj1.name
-            name2 = obj2.name
-        except:
-            return False
-
-        if name1 == name2:
-            if role1 == pyatspi.ROLE_FRAME:
+        name = AXObject.get_name(obj1)
+        if name == AXObject.get_name(obj2):
+            if AXUtilities.is_frame(obj1):
                 return True
-            if role1 == pyatspi.ROLE_TABLE_CELL and not name1:
+            if AXUtilities.is_table_cell(obj1) and not name:
                 if self.isZombie(obj1) and self.isZombie(obj2):
                     return False
 
@@ -237,43 +221,21 @@ class Utilities(script_utilities.Utilities):
         """Returns True if the given object is a container which has
         no presentable information (label, name, displayed text, etc.)."""
 
-        try:
-            role = obj.getRole()
-            childCount = obj.childCount
-            name = obj.name
-        except:
-            msg = "SOFFICE: Exception getting properties of %s" % obj
-            debug.println(debug.LEVEL_INFO, msg, True)
-            return True
+        if AXUtilities.is_list(obj):
+            if AXUtilities.is_combo_box(AXObject.get_parent(obj)):
+                return True
+            return super().isLayoutOnly(obj)
 
-        if role == pyatspi.ROLE_PANEL and childCount == 1 and name:
-            try:
-                child = obj[0]
-            except:
-                msg = "SOFFICE: Exception getting child of %s" % obj
-                debug.println(debug.LEVEL_INFO, msg, True)
-            else:
-                if child and child.name == name:
-                    return True
+        name = AXObject.get_name(obj)
+        if not name:
+            return super().isLayoutOnly(obj)
 
-        if role == pyatspi.ROLE_LIST:
-            try:
-                parentRole = obj.parent.getRole()
-            except:
-                msg = "SOFFICE: Exception getting parent role of %s" % obj
-                debug.println(debug.LEVEL_INFO, msg, True)
-            else:
-                if parentRole == pyatspi.ROLE_COMBO_BOX:
-                    return True
+        if AXUtilities.is_frame(obj):
+            return name == AXObject.get_name(orca_state.activeWindow)
 
-        if role == pyatspi.ROLE_FRAME and name:
-            try:
-                windowName = orca_state.activeWindow.name
-            except:
-                msg = "SOFFICE: Exception getting name of active window"
-                debug.println(debug.LEVEL_INFO, msg, True)
-            else:
-                return name == windowName
+        if AXUtilities.is_panel(obj) and AXObject.get_child_count(obj):
+            if AXObject.get_name(AXObject.get_child(obj, 0)) == name:
+                return True
 
         return super().isLayoutOnly(obj)
 
@@ -283,27 +245,13 @@ class Utilities(script_utilities.Utilities):
         if obj == self.locateInputLine(obj):
             return True
 
-        parent = obj.parent
-        try:
-            role = parent.getRole()
-        except:
-            msg = "SOFFICE: Exception getting role of %s" % parent
-            debug.println(debug.LEVEL_INFO, msg, True)
-            return False
-
-        if role in [pyatspi.ROLE_EXTENDED, pyatspi.ROLE_PANEL]:
+        parent = AXObject.get_parent(obj)
+        if AXUtilities.is_panel(parent) or AXUtilities.is_extended(parent):
             if self.spreadSheetCellName(parent):
                 return False
 
-        parent = parent.parent
-        try:
-            role = parent.getRole()
-        except:
-            msg = "SOFFICE: Exception getting role of %s" % parent
-            debug.println(debug.LEVEL_INFO, msg, True)
-            return False
-
-        if role == pyatspi.ROLE_TEXT:
+        parent = AXObject.get_parent(parent)
+        if AXUtilities.is_text(parent):
             return True
 
         return False
@@ -322,35 +270,26 @@ class Utilities(script_utilities.Utilities):
         Returns the spread sheet input line component.
         """
 
-        if self._script.inputLineForCell:
-            try:
-                topLevel = self.topLevelObject(self._script.inputLineForCell)
-            except:
-                msg = "ERROR: Exception getting topLevelObject for inputline"
-                debug.println(debug.LEVEL_INFO, msg, True)
-                self._script.inputLineForCell = None
-            else:
-                if self.isSameObject(orca_state.activeWindow, topLevel):
-                    return self._script.inputLineForCell
+        if self._script.inputLineForCell is not None:
+            topLevel = self.topLevelObject(self._script.inputLineForCell)
+            if self.isSameObject(orca_state.activeWindow, topLevel):
+                return self._script.inputLineForCell
 
-        isScrollPane = lambda x: x and x.getRole() == pyatspi.ROLE_SCROLL_PANE
-        scrollPane = pyatspi.findAncestor(obj, isScrollPane)
-        if not scrollPane:
+        scrollPane = AXObject.find_ancestor(obj, AXUtilities.is_scroll_pane)
+        if scrollPane is None:
             return None
 
         toolbar = None
-        for child in scrollPane.parent:
-            if child and child.getRole() == pyatspi.ROLE_TOOL_BAR:
-                toolbar = child
-                break
+        for child in AXObject.iter_children(AXObject.get_parent(scrollPane), AXUtilities.is_tool_bar):
+            toolbar = child
+            break
 
-        if not toolbar:
+        if toolbar is None:
             msg = "ERROR: Calc inputline toolbar not found."
             debug.println(debug.LEVEL_INFO, msg, True)
             return None
 
-        isParagraph = lambda x: x and x.getRole() == pyatspi.ROLE_PARAGRAPH
-        allParagraphs = self.findAllDescendants(toolbar, isParagraph)
+        allParagraphs = self.findAllDescendants(toolbar, AXUtilities.is_paragraph)
         if len(allParagraphs) == 1:
             self._script.inputLineForCell = allParagraphs[0]
 
@@ -371,13 +310,13 @@ class Utilities(script_utilities.Utilities):
 
         results = [None, None]
 
-        parent = obj.parent
-        while parent and (parent.parent != parent):
-            if parent.getRole() == pyatspi.ROLE_FRAME:
+        parent = AXObject.get_parent_checked(obj)
+        while parent:
+            if AXObject.get_role(parent) == Atspi.Role.FRAME:
                 results[0] = parent
-            if parent.getRole() == pyatspi.ROLE_TABLE:
+            if AXObject.get_role(parent) == Atspi.Role.TABLE:
                 results[1] = parent
-            parent = parent.parent
+            parent = AXObject.get_parent_checked(parent)
 
         return results
 
@@ -387,7 +326,7 @@ class Utilities(script_utilities.Utilities):
         # bug seems to be fixed in LO v5.3.0. When that version is released, this
         # and hopefully other hacks can be removed.
         window = super().topLevelObject(obj)
-        if not window or window.getIndexInParent() >= 0:
+        if not window or AXObject.get_index_in_parent(window) >= 0:
             return window
 
         msg = "SOFFICE: %s's window %s has -1 indexInParent" % (obj, window)
@@ -398,11 +337,7 @@ class Utilities(script_utilities.Utilities):
                 window = child
                 break
 
-        try:
-            index = window.getIndexInParent()
-        except:
-            index = -1
-
+        index = AXObject.get_index_in_parent(window)
         msg = "SOFFICE: Returning %s (index: %i)" % (window, index)
         debug.println(debug.LEVEL_INFO, msg, True)
         return window
@@ -421,48 +356,16 @@ class Utilities(script_utilities.Utilities):
         debug.println(debug.LEVEL_INFO, msg, True)
         return windowA
 
-    def validParent(self, obj):
-        """Returns the first valid parent/ancestor of obj. We need to do
-        this in some applications and toolkits due to bogus hierarchies.
-
-        See bugs:
-        http://www.openoffice.org/issues/show_bug.cgi?id=78117
-        http://bugzilla.gnome.org/show_bug.cgi?id=489490
-
-        Arguments:
-        - obj: the Accessible object
-        """
-
-        parent = obj.parent
-        if parent and parent.getRole() in (pyatspi.ROLE_ROOT_PANE,
-                                           pyatspi.ROLE_DIALOG):
-            app = obj.getApplication()
-            for frame in app:
-                if frame.childCount < 1 \
-                   or frame[0].getRole() not in (pyatspi.ROLE_ROOT_PANE,
-                                                 pyatspi.ROLE_OPTION_PANE):
-                    continue
-
-                root_pane = frame[0]
-                if obj in root_pane:
-                    return root_pane
-
-        return parent
-
     @staticmethod
     def _flowsFromOrToSelection(obj):
-        try:
-            relationSet = obj.getRelationSet()
-        except:
-            return False
-
-        flows = [pyatspi.RELATION_FLOWS_FROM, pyatspi.RELATION_FLOWS_TO]
+        relationSet = AXObject.get_relations(obj)
+        flows = [Atspi.RelationType.FLOWS_FROM, Atspi.RelationType.FLOWS_TO]
         relations = filter(lambda r: r.getRelationType() in flows, relationSet)
         targets = [r.getTarget(0) for r in relations]
         for target in targets:
             try:
                 nSelections = target.queryText().getNSelections()
-            except:
+            except Exception:
                 return False
             if nSelections:
                 return True
@@ -491,13 +394,14 @@ class Utilities(script_utilities.Utilities):
         """Attempts to locate the Impress drawing view, which is the
         area in which slide editing occurs."""
 
-        return pyatspi.findDescendant(self.topLevelObject(obj), self.isDrawingView)
+        return AXObject.find_descendant(self.topLevelObject(obj), self.isDrawingView)
 
     def isDrawingView(self, obj):
         """Returns True if obj is the Impress Drawing View."""
 
         if self.isDocument(obj):
-            return (":" in obj.name and "/" in obj.name)
+            name = AXObject.get_name(obj)
+            return ":" in name and "/" in name
 
         return False
 
@@ -510,7 +414,7 @@ class Utilities(script_utilities.Utilities):
         if obj:
             try:
                 topLevel = self.topLevelObject(obj)
-            except:
+            except Exception:
                 msg = "ERROR: Exception getting top-level object for %s" % obj
                 debug.println(debug.LEVEL_INFO, msg, True)
                 return False
@@ -520,7 +424,7 @@ class Utilities(script_utilities.Utilities):
                 msg = "SOFFICE: Top level object %s is dead." % topLevel
                 debug.println(debug.LEVEL_INFO, msg, True)
                 return False
-            if topLevel.name.endswith("Impress"):
+            if AXObject.get_name(topLevel).endswith("Impress"):
                 return True
 
         return False
@@ -532,13 +436,13 @@ class Utilities(script_utilities.Utilities):
         if not drawingView:
             return None, None
 
-        parent = drawingView.parent
+        parent = AXObject.get_parent(drawingView)
         if parent:
-            parent = parent.parent
+            parent = AXObject.get_parent(parent)
         if not parent:
             return None, None
 
-        hasRole = lambda x: x and x.getRole() == pyatspi.ROLE_SPLIT_PANE
+        hasRole = lambda x: x and AXObject.get_role(x) == Atspi.Role.SPLIT_PANE
         panes = self.findAllDescendants(parent, hasRole)
         if not panes:
             return None, None
@@ -566,23 +470,25 @@ class Utilities(script_utilities.Utilities):
         if not dv or not self.isDrawingView(dv):
             return "", 0, 0
 
-        positionAndCount = dv.name.split(":")[1]
+        positionAndCount = AXObject.get_name(dv).split(":")[1]
         position, count = positionAndCount.split("/")
         title = ""
         for child in dv:
-            if not child.childCount:
+            childCount = AXObject.get_child_count(child)
+            if not childCount:
                 continue
             # We want an actual Title.
             #
-            if child.name.startswith("ImpressTitle"):
-                title = self.displayedText(child[0])
+            if AXObject.get_name(child).startswith("ImpressTitle"):
+                title = self.displayedText(AXObject.get_child(child, 0))
                 break
             # But we'll live with a Subtitle if we can't find a title.
             # Unlike Titles, a single subtitle can be made up of multiple
             # accessibles.
             #
-            elif child.name.startswith("ImpressSubtitle"):
-                for line in child:
+            elif AXObject.get_name(child).startswith("ImpressSubtitle"):
+                for i in range(childCount):
+                    line = AXObject.get_child(child, i)
                     title = self.appendString(title, self.displayedText(line))
 
         return title, int(position), int(count)
@@ -601,7 +507,7 @@ class Utilities(script_utilities.Utilities):
         - event: the accessible event being examined
         """
 
-        if event.source.getRole() != pyatspi.ROLE_PARAGRAPH:
+        if AXObject.get_role(event.source) != Atspi.Role.PARAGRAPH:
             return False
 
         lastKey, mods = self.lastKeyAndModifiers()
@@ -619,18 +525,18 @@ class Utilities(script_utilities.Utilities):
             if lastKey == "Return":
                 try:
                     charCount = event.source.queryText().characterCount
-                except:
+                except Exception:
                     charCount = 0
                 return charCount > 0
 
         return False
 
     def containingComboBox(self, obj):
-        isComboBox = lambda x: x and x.getRole() == pyatspi.ROLE_COMBO_BOX
+        isComboBox = lambda x: x and AXObject.get_role(x) == Atspi.Role.COMBO_BOX
         if isComboBox(obj):
             comboBox = obj
         else:
-            comboBox = pyatspi.findAncestor(obj, isComboBox)
+            comboBox = AXObject.find_ancestor(obj, isComboBox)
 
         if not comboBox:
             return None
@@ -638,14 +544,13 @@ class Utilities(script_utilities.Utilities):
         if not self.isZombie(comboBox):
             return comboBox
 
-        try:
-            parent = comboBox.parent
-        except:
-            pass
-        else:
-            replicant = self.findReplicant(parent, comboBox)
-            if replicant and not self.isZombie(replicant):
-                comboBox = replicant
+        parent = AXObject.get_parent(comboBox)
+        if not parent:
+            return comboBox
+
+        replicant = self.findReplicant(parent, comboBox)
+        if replicant and not self.isZombie(replicant):
+            comboBox = replicant
 
         return comboBox
 
@@ -655,14 +560,14 @@ class Utilities(script_utilities.Utilities):
             return False
 
         lastKey, mods = self.lastKeyAndModifiers()
-        if not lastKey in ["Down", "Up"]:
+        if lastKey not in ["Down", "Up"]:
             return False
 
         return True
 
     def isComboBoxNoise(self, event):
-        role = event.source.getRole()
-        if role == pyatspi.ROLE_TEXT and event.type.startswith("object:text-"):
+        role = AXObject.get_role(event.source)
+        if role == Atspi.Role.TEXT and event.type.startswith("object:text-"):
             return self.isComboBoxSelectionChange(event)
 
         return False
@@ -698,19 +603,22 @@ class Utilities(script_utilities.Utilities):
         return False
 
     def selectedChildren(self, obj):
+        # TODO - JD: Are these overrides still needed? They appear to be
+        # quite old.
+
         if not obj:
             return []
 
-        role = obj.getRole()
-        isSelection = lambda x: x and 'Selection' in pyatspi.listInterfaces(x)
-        if not isSelection(obj) and role == pyatspi.ROLE_COMBO_BOX:
-            child = pyatspi.findDescendant(obj, isSelection)
+        role = AXObject.get_role(obj)
+        isSelection = lambda x: AXObject.supports_selection(x)
+        if not isSelection(obj) and role == Atspi.Role.COMBO_BOX:
+            child = AXObject.find_descendant(obj, isSelection)
             if child:
                 return super().selectedChildren(child)
 
         # Things only seem broken for certain tables, e.g. the Paths table.
         # TODO - JD: File the LibreOffice bugs and reference them here.
-        if role != pyatspi.ROLE_TABLE:
+        if role != Atspi.Role.TABLE:
             return super().selectedChildren(obj)
 
         # We will need to special case this due to the possibility of there
@@ -719,24 +627,14 @@ class Utilities(script_utilities.Utilities):
         if self.isSpreadSheetTable(obj):
             return []
 
-        try:
-            selection = obj.querySelection()
-        except:
-            return []
-
-        children = []
-        for i, child in enumerate(obj):
-            if selection.isChildSelected(i):
-                children.append(obj[i])
-
-        return children
+        return AXSelection.get_selected_children(obj)
 
     def getFirstCaretPosition(self, obj):
         try:
-            text = obj.queryText()
-        except:
-            if obj and obj.childCount:
-                return self.getFirstCaretPosition(obj[0])
+            obj.queryText()
+        except Exception:
+            if AXObject.get_child_count(obj):
+                return self.getFirstCaretPosition(AXObject.get_child(obj, 0))
 
         return obj, 0
 
@@ -775,14 +673,14 @@ class Utilities(script_utilities.Utilities):
     def _getCellNameForCoordinates(self, obj, row, col, includeContents=False):
         try:
             table = obj.queryTable()
-        except:
+        except Exception:
             msg = "SOFFICE: Exception querying Table interface of %s" % obj
             debug.println(debug.LEVEL_INFO, msg, True)
             return
 
         try:
             cell = table.getAccessibleAt(row, col)
-        except:
+        except Exception:
             msg = "SOFFICE: Exception getting cell (%i,%i) of %s" % (row, col, obj)
             debug.println(debug.LEVEL_INFO, msg, True)
             return
@@ -795,11 +693,11 @@ class Utilities(script_utilities.Utilities):
         return name.strip()
 
     def _getCoordinatesForSelectedRange(self, obj):
-        interfaces = pyatspi.listInterfaces(obj)
-        if not ("Table" in interfaces and "Selection" in interfaces):
+        if not (AXObject.supports_table(obj) and AXObject.supports_selection(obj)):
             return (-1, -1), (-1, -1)
 
-        first, last = self.firstAndLastSelectedChildren(obj)
+        first = AXSelection.get_selected_child(obj, 0)
+        last = AXSelection.get_selected_child(obj, -1)
         firstCoords = self.coordinatesForCell(first)
         lastCoords = self.coordinatesForCell(last)
         return firstCoords, lastCoords
@@ -869,8 +767,7 @@ class Utilities(script_utilities.Utilities):
         return bool(len(msgs))
 
     def handleRowAndColumnSelectionChange(self, obj):
-        interfaces = pyatspi.listInterfaces(obj)
-        if not ("Table" in interfaces and "Selection" in interfaces):
+        if not (AXObject.supports_table(obj) and AXObject.supports_selection(obj)):
             return True
 
         table = obj.queryTable()

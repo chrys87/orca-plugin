@@ -27,9 +27,13 @@ __date__      = "$Date$"
 __copyright__ = "Copyright (C) 2011-2013 Igalia, S.L."
 __license__   = "LGPL"
 
-import pyatspi
+import gi
+gi.require_version("Atspi", "2.0")
+from gi.repository import Atspi
 
 from . import debug
+from .ax_object import AXObject
+from .ax_utilities import AXUtilities
 
 class LabelInference:
 
@@ -59,7 +63,7 @@ class LabelInference:
         if not obj:
             return None, []
 
-        if focusedOnly and not obj.getState().contains(pyatspi.STATE_FOCUSED):
+        if focusedOnly and not AXUtilities.is_focused(obj):
             debug.println(debug.LEVEL_INFO, "INFER - object not focused", True)
             return None, []
 
@@ -85,7 +89,7 @@ class LabelInference:
         # (i.e. the label is something on screen. Widget name and description
         # are each something other than a label.)
         if not result:
-            result, objects = obj.name, []
+            result, objects = AXObject.get_name(obj), []
             debug.println(debug.LEVEL_INFO, "INFER - Name: %s" % result, True)
         if result:
             result = result.strip()
@@ -110,54 +114,36 @@ class LabelInference:
         """Returns True if we should prefer text on the right, rather than the
         left, for the object obj."""
 
-        onRightRoles = [pyatspi.ROLE_CHECK_BOX, pyatspi.ROLE_RADIO_BUTTON]
-        return obj.getRole() in onRightRoles
+        return AXUtilities.is_check_box(obj) or AXUtilities.is_radio_button(obj)
 
     def _preventRight(self, obj):
         """Returns True if we should not permit inference based on text to
         the right for the object obj."""
 
-        roles = [pyatspi.ROLE_COMBO_BOX,
-                 pyatspi.ROLE_LIST,
-                 pyatspi.ROLE_LIST_BOX]
-
-        return obj.getRole() in roles
+        return AXUtilities.is_combo_box(obj) or AXUtilities.is_list_box(obj)
 
     def _preferTop(self, obj):
         """Returns True if we should prefer text above, rather than below for
         the object obj."""
 
-        roles = [pyatspi.ROLE_COMBO_BOX,
-                 pyatspi.ROLE_LIST,
-                 pyatspi.ROLE_LIST_BOX]
-
-        return obj.getRole() in roles
+        return AXUtilities.is_combo_box(obj) or AXUtilities.is_list_box(obj)
 
     def _preventBelow(self, obj):
         """Returns True if we should not permit inference based on text below
         the object obj."""
 
-        roles = [pyatspi.ROLE_ENTRY,
-                 pyatspi.ROLE_PASSWORD_TEXT]
-
-        return obj.getRole() not in roles
+        return not AXUtilities.is_text_input(obj)
 
     def _isSimpleObject(self, obj):
         """Returns True if the given object has 'simple' contents, such as text
         without embedded objects or a single embedded object without text."""
 
-        if not obj:
+        if obj is None:
             return False
 
         isMatch = lambda x: x and not self._script.utilities.isStaticTextLeaf(x)
-
-        try:
-            children = [child for child in obj if isMatch(child)]
-        except (LookupError, RuntimeError):
-            debug.println(debug.LEVEL_INFO, 'Dead Accessible in %s' % obj, True)
-            return False
-
-        children = [x for x in children if x.getRole() != pyatspi.ROLE_LINK]
+        children = [child for child in AXObject.iter_children(obj, isMatch)]
+        children = [x for x in children if not AXUtilities.is_link(x)]
         if len(children) > 1:
             return False
 
@@ -175,11 +161,10 @@ class LabelInference:
     def _cannotLabel(self, obj):
         """Returns True if the given object should not be treated as a label."""
 
-        if not obj:
+        if obj is None:
             return True
 
-        nonLabelTextRoles = [pyatspi.ROLE_HEADING, pyatspi.ROLE_LIST_ITEM]
-        if obj.getRole() in nonLabelTextRoles:
+        if AXUtilities.is_heading(obj) or AXUtilities.is_list_item(obj):
             return True
 
         return self._isWidget(obj)
@@ -187,27 +172,27 @@ class LabelInference:
     def _isWidget(self, obj):
         """Returns True if the given object is a widget."""
 
-        if not obj:
+        if obj is None:
             return False
 
         rv = self._isWidgetCache.get(hash(obj))
         if rv is not None:
             return rv
 
-        widgetRoles = [pyatspi.ROLE_CHECK_BOX,
-                       pyatspi.ROLE_RADIO_BUTTON,
-                       pyatspi.ROLE_TOGGLE_BUTTON,
-                       pyatspi.ROLE_COMBO_BOX,
-                       pyatspi.ROLE_LIST,
-                       pyatspi.ROLE_LIST_BOX,
-                       pyatspi.ROLE_MENU,
-                       pyatspi.ROLE_MENU_ITEM,
-                       pyatspi.ROLE_ENTRY,
-                       pyatspi.ROLE_PASSWORD_TEXT,
-                       pyatspi.ROLE_PUSH_BUTTON]
+        widgetRoles = [Atspi.Role.CHECK_BOX,
+                       Atspi.Role.RADIO_BUTTON,
+                       Atspi.Role.TOGGLE_BUTTON,
+                       Atspi.Role.COMBO_BOX,
+                       Atspi.Role.LIST,
+                       Atspi.Role.LIST_BOX,
+                       Atspi.Role.MENU,
+                       Atspi.Role.MENU_ITEM,
+                       Atspi.Role.ENTRY,
+                       Atspi.Role.PASSWORD_TEXT,
+                       Atspi.Role.PUSH_BUTTON]
 
-        isWidget = obj.getRole() in widgetRoles
-        if not isWidget and obj.getState().contains(pyatspi.STATE_EDITABLE):
+        isWidget = AXObject.get_role(obj) in widgetRoles
+        if not isWidget and AXUtilities.is_editable(obj):
             isWidget = True
 
         self._isWidgetCache[hash(obj)] = isWidget
@@ -228,12 +213,11 @@ class LabelInference:
         extents = 0, 0, 0, 0
         text = self._script.utilities.queryNonEmptyText(obj)
         if text:
-            skipTextExtents = [pyatspi.ROLE_ENTRY, pyatspi.ROLE_PASSWORD_TEXT]
-            if not obj.getRole() in skipTextExtents:
+            if not AXUtilities.is_text_input(obj):
                 if endOffset == -1:
                     try:
                         endOffset = text.characterCount
-                    except:
+                    except Exception:
                         msg = "ERROR: Exception getting character count for %s" % obj
                         debug.println(debug.LEVEL_INFO, msg, True)
                         return extents
@@ -246,7 +230,7 @@ class LabelInference:
             except NotImplementedError:
                 msg = "INFO: %s does not implement the component interface" % obj
                 debug.println(debug.LEVEL_INFO, msg, True)
-            except:
+            except Exception:
                 msg = "ERROR: Exception getting extents for %s" % obj
                 debug.println(debug.LEVEL_INFO, msg, True)
             else:
@@ -283,7 +267,7 @@ class LabelInference:
         key = hash(obj)
         if self._isWidget(obj):
             start, end = self._script.utilities.getHyperlinkRange(obj)
-            obj = obj.parent
+            obj = AXObject.get_parent(obj)
 
         rv = self._script.utilities.getLineContentsAtOffset(obj, start, True, False)
         self._lineCache[key] = rv
@@ -465,35 +449,26 @@ class LabelInference:
         return None, []
 
     def _isTable(self, obj):
-        if not obj:
-            return False
-
-        if obj.getRole() == pyatspi.ROLE_TABLE:
+        if AXUtilities.is_table(obj):
             return True
 
         return self._getTag(obj) == 'table'
 
     def _isRow(self, obj):
-        if not obj:
-            return False
-
-        if obj.getRole() == pyatspi.ROLE_TABLE_ROW:
+        if AXUtilities.is_table_row(obj):
             return True
 
         return self._getTag(obj) == 'tr'
 
     def _isCell(self, obj):
-        if not obj:
-            return False
-
-        if obj.getRole() == pyatspi.ROLE_TABLE_CELL:
+        if AXUtilities.is_table_cell(obj):
             return True
 
         return self._getTag(obj) in ['td', 'th']
 
     def _getCellFromTable(self, table, rowindex, colindex):
-        if "Table" not in pyatspi.listInterfaces(table):
-            return NOne
+        if not AXObject.supports_table(table):
+            return None
 
         if rowindex < 0 or colindex < 0:
             return None
@@ -505,7 +480,7 @@ class LabelInference:
         return table.queryTable().getAccessibleAt(rowindex, colindex)
 
     def _getCellFromRow(self, row, colindex):
-        if 0 <= colindex < row.childCount:
+        if 0 <= colindex < AXObject.get_child_count(row):
             return row[colindex]
 
         return None
@@ -526,34 +501,38 @@ class LabelInference:
         Returns the text which we think is the label, or None.
         """
 
-        cell = pyatspi.findAncestor(obj, self._isCell)
+        cell = AXObject.find_ancestor(obj, self._isCell)
         if not self._isSimpleObject(cell):
             return None, []
 
-        if not cell in [obj.parent, obj.parent.parent]:
+        parent = AXObject.get_parent(obj)
+        if cell not in [parent, AXObject.get_parent(parent)]:
             return None, []
 
-        grid = pyatspi.findAncestor(cell, self._isTable)
+        grid = AXObject.find_ancestor(cell, self._isTable)
         if not grid:
             return None, []
 
         cellLeft = cellRight = cellAbove = cellBelow = None
-        gridrow = pyatspi.findAncestor(cell, self._isRow)
+        gridrow = AXObject.find_ancestor(cell, self._isRow)
         rowindex, colindex = self._script.utilities.coordinatesForCell(cell)
         if colindex > -1:
             cellLeft = self._getCellFromTable(grid, rowindex, colindex - 1)
             cellRight = self._getCellFromTable(grid, rowindex, colindex + 1)
             cellAbove = self._getCellFromTable(grid, rowindex - 1, colindex)
             cellBelow = self._getCellFromTable(grid, rowindex + 1, colindex)
-        elif gridrow and cell.parent == gridrow:
-            cellindex = cell.getIndexInParent()
+        elif gridrow and AXObject.get_parent(cell) == gridrow:
+            cellindex = AXObject.get_index_in_parent(cell)
             cellLeft = self._getCellFromRow(gridrow, cellindex - 1)
             cellRight = self._getCellFromRow(gridrow, cellindex + 1)
-            rowindex = gridrow.getIndexInParent()
+            rowindex = AXObject.get_index_in_parent(gridrow)
+            gridrowParent = AXObject.get_parent(gridrow)
             if rowindex > 0:
-                cellAbove = self._getCellFromRow(gridrow.parent[rowindex - 1], cellindex)
-            if rowindex + 1 < grid.childCount:
-                cellBelow = self._getCellFromRow(gridrow.parent[rowindex + 1], cellindex)
+                rowAbove = AXObject.get_child(gridrowParent, rowindex - 1)
+                cellAbove = self._getCellFromRow(rowAbove, cellindex)
+            if rowindex + 1 < AXObject.get_child_count(grid):
+                rowBelow = AXObject.get_child(gridrowParent, rowindex + 1)
+                cellBelow = self._getCellFromRow(rowBelow, cellindex)
 
         if cellLeft and not self._preferRight(obj):
             label, sources = self._createLabelFromContents(cellLeft)
@@ -609,9 +588,13 @@ class LabelInference:
         if colindex < 0:
             return None, []
 
+        def isMatch(x):
+            if not AXObject.get_child_count(x):
+                return False
+            return not AXUtilities.have_same_role(AXObject.get_child(x, 0), obj)
+
         cells = [table.getAccessibleAt(i, colindex) for i in range(1, table.nRows)]
-        cells = [x for x in cells if x is not None]
-        if [x for x in cells if x.childCount and x[0].getRole() != obj.getRole()]:
+        if list(filter(isMatch, cells)):
             return None, []
 
         label, sources = self._createLabelFromContents(firstRow[colindex])

@@ -39,6 +39,7 @@ from . import script_manager
 from . import settings
 from . import pronunciation_dict
 from .acss import ACSS
+from .ax_object import AXObject
 from .keybindings import KeyBinding
 
 try:
@@ -50,7 +51,7 @@ try:
         '/org/a11y/bus',
         'org.freedesktop.DBus.Properties',
         None)
-except:
+except Exception:
     _proxy = None
 
 _scriptManager = script_manager.getManager()
@@ -162,7 +163,7 @@ class SettingsManager(object):
             backend = '.backends.%s_backend' % self.backendName
             self.backendModule = importlib.import_module(backend, 'orca')
             return True
-        except:
+        except Exception:
             return False
 
     def _createDefaults(self):
@@ -225,7 +226,7 @@ class SettingsManager(object):
             if value is None:
                 try:
                     value = getattr(settings, key)
-                except:
+                except Exception:
                     pass
             self.defaultGeneral[key] = value
 
@@ -297,7 +298,7 @@ class SettingsManager(object):
                 factories.append(module)
                 msg = "SETTINGS MANAGER: Valid speech server factory: %s" % moduleName
                 debug.println(debug.LEVEL_INFO, msg, True)
-            except:
+            except Exception:
                 msg = "SETTINGS MANAGER: Invalid speech server factory: %s" % moduleName
                 debug.println(debug.LEVEL_INFO, msg, True)
 
@@ -558,7 +559,7 @@ class SettingsManager(object):
 
         app = script.app
         if app:
-            self._saveAppSettings(app.name, general, pronunciations, keybindings)
+            self._saveAppSettings(AXObject.get_name(app), general, pronunciations, keybindings)
             return
 
         # Assign current profile
@@ -634,7 +635,7 @@ class SettingsManager(object):
         if not app:
             return None
 
-        appPrefs = self._backend.getAppSettings(app.name)
+        appPrefs = self._backend.getAppSettings(AXObject.get_name(app))
         profiles = appPrefs.get('profiles', {})
         profilePrefs = profiles.get(self.profile, {})
         general = profilePrefs.get('general', {})
@@ -658,14 +659,14 @@ class SettingsManager(object):
         for key in self._appPronunciations.keys():
             self.pronunciations.pop(key)
 
-        prefs = self._backend.getAppSettings(script.app.name)
+        prefs = self._backend.getAppSettings(AXObject.get_name(script.app))
         profiles = prefs.get('profiles', {})
         profilePrefs = profiles.get(self.profile, {})
 
         self._appGeneral = profilePrefs.get('general', {})
         self._appKeybindings = profilePrefs.get('keybindings', {})
         self._appPronunciations = profilePrefs.get('pronunciations', {})
-        self._activeApp = script.app.name
+        self._activeApp = AXObject.get_name(script.app)
 
         self._loadProfileSettings()
         self._mergeSettings()

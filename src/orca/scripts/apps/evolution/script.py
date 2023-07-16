@@ -27,13 +27,12 @@ __copyright__ = "Copyright (c) 2005-2008 Sun Microsystems Inc." \
                 "Copyright (c) 2013 Igalia, S.L."
 __license__   = "LGPL"
 
-import pyatspi
 
 import orca.orca as orca
 import orca.scripts.toolkits.gtk as gtk
 import orca.scripts.toolkits.WebKitGtk as WebKitGtk
-import orca.settings as settings
 import orca.settings_manager as settings_manager
+from orca.ax_utilities import AXUtilities
 
 from .braille_generator import BrailleGenerator
 from .speech_generator import SpeechGenerator
@@ -81,11 +80,11 @@ class Script(WebKitGtk.Script, gtk.Script):
         to say it shouldn't.
         """
 
-        if event.type.startswith("focus:") and event.source.getRole() == pyatspi.ROLE_MENU:
+        if event.type.startswith("focus:") and AXUtilities.is_menu(event.source):
             return True
 
         window = self.utilities.topLevelObject(event.source)
-        if window and not window.getState().contains(pyatspi.STATE_ACTIVE):
+        if not AXUtilities.is_active(window):
             return False
 
         return True
@@ -115,7 +114,7 @@ class Script(WebKitGtk.Script, gtk.Script):
             return
 
         if self.utilities.isComposeAutocomplete(event.source):
-            if event.any_data.getState().contains(pyatspi.STATE_SELECTED):
+            if AXUtilities.is_selected(event.any_data):
                 orca.setLocusOfFocus(event, event.any_data)
             else:
                 orca.setLocusOfFocus(event, event.source)
@@ -135,7 +134,7 @@ class Script(WebKitGtk.Script, gtk.Script):
 
         # This is some mystery child of the 'Messages' panel which fails to show
         # up in the hierarchy or emit object:state-changed:focused events.
-        if event.source.getRole() == pyatspi.ROLE_LAYERED_PANE:
+        if AXUtilities.is_layered_pane(event.source):
             obj = self.utilities.realActiveDescendant(event.source)
             orca.setLocusOfFocus(event, obj)
             return
@@ -153,9 +152,8 @@ class Script(WebKitGtk.Script, gtk.Script):
     def onSelectionChanged(self, event):
         """Callback for object:selection-changed accessibility events."""
 
-        obj = event.source
-        if obj.getRole() == pyatspi.ROLE_COMBO_BOX \
-           and not obj.getState().contains(pyatspi.STATE_FOCUSED):
+        if AXUtilities.is_combo_box(event.source) \
+           and not AXUtilities.is_focused(event.source):
             return
 
         gtk.Script.onSelectionChanged(self, event)

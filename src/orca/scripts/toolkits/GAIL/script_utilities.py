@@ -25,10 +25,12 @@ __date__      = "$Date$"
 __copyright__ = "Copyright (c) 2014 Igalia, S.L."
 __license__   = "LGPL"
 
-import pyatspi
 import re
 
 import orca.script_utilities as script_utilities
+from orca.ax_object import AXObject
+from orca.ax_utilities import AXUtilities
+
 
 class Utilities(script_utilities.Utilities):
 
@@ -40,18 +42,18 @@ class Utilities(script_utilities.Utilities):
         self._isTypeahead = {}
 
     def isTypeahead(self, obj):
-        if not (obj and obj.getRole() == pyatspi.ROLE_TEXT):
+        if not AXUtilities.is_text(obj):
             return False
 
         rv = self._isTypeahead.get(hash(obj))
         if rv is not None:
             return rv
 
-        parent = obj.parent
+        parent = AXObject.get_parent(obj)
         while parent and self.isLayoutOnly(parent):
-            parent = parent.parent
+            parent = AXObject.get_parent(parent)
 
-        rv = parent and parent.getRole() == pyatspi.ROLE_WINDOW
+        rv = AXUtilities.is_window(parent)
         self._isTypeahead[hash(obj)] = rv
         return rv
 

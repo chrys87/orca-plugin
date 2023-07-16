@@ -24,8 +24,8 @@ __date__      = "$Date$"
 __copyright__ = "Copyright (c) 2019 Igalia, S.L."
 __license__   = "LGPL"
 
-import pyatspi
-
+from orca.ax_object import AXObject
+from orca.ax_utilities import AXUtilities
 from orca.scripts import switcher
 
 
@@ -37,10 +37,7 @@ class Utilities(switcher.Utilities):
     def isSwitcherContainer(self, obj):
         """Returns True if obj is the switcher container."""
 
-        if not (obj and obj.getRole() == pyatspi.ROLE_FILLER):
-            return False
-
-        return obj.getState().contains(pyatspi.STATE_FOCUSED)
+        return AXUtilities.is_filler(obj) and AXUtilities.is_focused(obj)
 
     def isSwitcherSelectionChangeEventType(self, event):
         """Returns True if this event is the one we use to present changes."""
@@ -54,6 +51,6 @@ class Utilities(switcher.Utilities):
         """Returns the name of the currently-selected item."""
 
         if self.isSwitcherContainer(container):
-            return container.name
+            return AXObject.get_name(container)
 
         return ""

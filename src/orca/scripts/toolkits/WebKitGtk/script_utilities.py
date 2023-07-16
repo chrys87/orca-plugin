@@ -27,13 +27,17 @@ __copyright__ = "Copyright (c) 2010 Joanmarie Diggs." \
                 "Copyright (c) 2011-2012 Igalia, S.L."
 __license__   = "LGPL"
 
-import pyatspi
+import gi
+gi.require_version("Atspi", "2.0")
+from gi.repository import Atspi
 import re
 
 import orca.script_utilities as script_utilities
 import orca.keybindings as keybindings
 import orca.orca as orca
 import orca.orca_state as orca_state
+from orca.ax_object import AXObject
+from orca.ax_utilities import AXUtilities
 
 #############################################################################
 #                                                                           #
@@ -82,14 +86,13 @@ class Utilities(script_utilities.Utilities):
     def isReadOnlyTextArea(self, obj):
         """Returns True if obj is a text entry area that is read only."""
 
-        if not obj.getRole() == pyatspi.ROLE_ENTRY:
+        if not AXUtilities.is_entry(obj):
             return False
 
-        state = obj.getState()
-        readOnly = state.contains(pyatspi.STATE_FOCUSABLE) \
-                   and not state.contains(pyatspi.STATE_EDITABLE)
+        if AXUtilities.is_read_only(obj):
+            return True
 
-        return readOnly
+        return AXUtilities.is_focusable(obj) and not AXUtilities.is_editable(obj)
 
     def displayedText(self, obj):
         """Returns the text being displayed for an object.
@@ -105,8 +108,9 @@ class Utilities(script_utilities.Utilities):
         if text and text != self.EMBEDDED_OBJECT_CHARACTER:
             return text
 
-        if obj.getRole() in [pyatspi.ROLE_LINK, pyatspi.ROLE_LIST_ITEM]:
-            text = ' '.join(map(self.displayedText, (x for x in obj)))
+        if AXUtilities.is_link(obj) or AXUtilities.is_list_item(obj):
+            children = [x for x in AXObject.iter_children(obj)]
+            text = ' '.join(map(self.displayedText, children))
             if not text:
                 text = self.linkBasename(obj)
 
@@ -114,7 +118,7 @@ class Utilities(script_utilities.Utilities):
 
     def getLineContentsAtOffset(self, obj, offset, layoutMode=True, useCache=True):
         return self.getObjectsFromEOCs(
-            obj, offset, pyatspi.TEXT_BOUNDARY_LINE_START)
+            obj, offset, Atspi.TextBoundaryType.LINE_START)
 
     def getObjectContentsAtOffset(self, obj, offset=0, useCache=True):
         return self.getObjectsFromEOCs(obj, offset)
@@ -126,7 +130,7 @@ class Utilities(script_utilities.Utilities):
         Arguments
         - obj: the object whose EOCs we need to expand into tuples
         - offset: the character offset. If None, use the current offset.
-        - boundary: the pyatspi text boundary type. If None, get all text.
+        - boundary: the text boundary type. If None, get all text.
 
         Returns a list of (obj, startOffset, endOffset, string) tuples.
         """
@@ -147,7 +151,7 @@ class Utilities(script_utilities.Utilities):
             start = 0
             end = text.characterCount
         else:
-            if boundary == pyatspi.TEXT_BOUNDARY_CHAR:
+            if boundary == Atspi.TextBoundaryType.CHAR:
                 key, mods = self.lastKeyAndModifiers()
                 if (mods & keybindings.SHIFT_MODIFIER_MASK) and key == 'Right':
                     offset -= 1
@@ -160,7 +164,7 @@ class Utilities(script_utilities.Utilities):
         objects = []
         try:
             objs = [obj[htext.getLinkIndex(offset)] for offset in offsets]
-        except:
+        except Exception:
             objs = []
         ranges = [self.getHyperlinkRange(x) for x in objs]
         for i, (first, last) in enumerate(ranges):
@@ -175,81 +179,66 @@ class Utilities(script_utilities.Utilities):
     def findPreviousObject(self, obj):
         """Finds the object before this one."""
 
-        if not obj:
+        if obj is None:
             return None
 
-        if obj.getRole() == pyatspi.ROLE_LINK:
-            obj = obj.parent
+        if AXUtilities.is_link(obj):
+            obj = AXObject.get_parent(obj)
 
-        index = obj.getIndexInParent() - 1
-        if not (0 <= index < obj.parent.childCount - 1):
-            obj = obj.parent
-            index = obj.getIndexInParent() - 1
-
-        try:
-            prevObj = obj.parent[index]
-        except:
-            prevObj = obj
-        else:
-            if prevObj.getRole() == pyatspi.ROLE_LIST and prevObj.childCount:
-                if self.isTextListItem(prevObj[0]):
-                    prevObj = prevObj[-1]
+        prevObj = AXObject.get_previous_object(obj)
+        if AXUtilities.is_list(prevObj) and AXObject.get_child_count(prevObj):
+            child = AXObject.get_child(prevObj, -1)
+            if self.isTextListItem(child):
+                prevObj = child
 
         return prevObj
 
     def findNextObject(self, obj):
         """Finds the object after this one."""
 
-        if not obj:
+        if obj is None:
             return None
 
-        if obj.getRole() == pyatspi.ROLE_LINK:
-            obj = obj.parent
+        if AXUtilities.is_link(obj):
+            obj = AXObject.get_parent(obj)
 
-        index = obj.getIndexInParent() + 1
-        if not (0 < index < obj.parent.childCount):
-            obj = obj.parent
-            index = obj.getIndexInParent() + 1
-
-        try:
-            nextObj = obj.parent[index]
-        except:
-            nextObj = None
-        else:
-            if nextObj.getRole() == pyatspi.ROLE_LIST and nextObj.childCount:
-                if self.isTextListItem(nextObj[0]):
-                    nextObj = nextObj[0]
+        nextObj = AXObject.get_next_object(obj)
+        if AXUtilities.is_list(nextObj) and AXObject.get_child_count(nextObj):
+            child = AXObject.get_child(nextObj, 0)
+            if self.isTextListItem(child):
+                nextObj = child
 
         return nextObj
 
     def isTextListItem(self, obj):
         """Returns True if obj is an item in a non-selectable list."""
 
-        if obj.getRole() != pyatspi.ROLE_LIST_ITEM:
+        if not AXUtilities.is_list_item(obj):
             return False
 
-        return not obj.parent.getState().contains(pyatspi.STATE_FOCUSABLE)
+        parent = AXObject.get_parent(obj)
+        if parent is None:
+            return False
+
+        return not AXUtilities.is_focusable(parent)
 
     def isInlineContainer(self, obj):
         """Returns True if obj is an inline/non-wrapped container."""
 
-        if obj.getRole() == pyatspi.ROLE_SECTION:
-            if obj.childCount > 1:
-                return self.onSameLine(obj[1], obj[1])
-
+        if AXUtilities.is_section(obj):
+            if AXObject.get_child_count(obj) > 1:
+                return self.onSameLine(AXObject.get_child(obj, 0), AXObject.get_child(obj, 1))
             return False
 
-        if obj.getRole() == pyatspi.ROLE_LIST:
-            if obj.getState().contains(pyatspi.STATE_FOCUSABLE):
+        if AXUtilities.is_list(obj):
+            if AXUtilities.is_focusable(obj):
                 return False
-
-            if not obj.childCount:
-                return 'Text' in pyatspi.utils.listInterfaces(obj)
-
-            if obj.childCount == 1:
+            childCount = AXObject.get_child_count(obj)
+            if not childCount:
+                return AXObject.supports_text(obj)
+            if childCount == 1:
                 return False
-
-            return self.onSameLine(obj[0], obj[1])
+            return self.onSameLine(AXObject.get_child(obj, 0), AXObject.get_child(obj, 1))
 
         return False
 
@@ -257,15 +246,14 @@ class Utilities(script_utilities.Utilities):
         if not self.isWebKitGtk(obj):
             return False
 
-        docRoles = [pyatspi.ROLE_DOCUMENT_FRAME, pyatspi.ROLE_DOCUMENT_WEB]
-        if not (obj and obj.getRole() in docRoles):
+        if not AXUtilities.is_document(obj):
             return False
 
-        parent = obj.parent
+        parent = AXObject.get_parent(obj)
         if not (parent and self.isWebKitGtk(parent)):
             return False
 
-        parent = parent.parent
+        parent = AXObject.get_parent(parent)
         if not (parent and not self.isWebKitGtk(parent)):
             return False
 
@@ -273,13 +261,11 @@ class Utilities(script_utilities.Utilities):
 
     def setCaretAtStart(self, obj):
         def implementsText(obj):
-            if obj.getRole() == pyatspi.ROLE_LIST:
-                return False
-            return 'Text' in pyatspi.utils.listInterfaces(obj)
+            return not AXUtilities.is_list(obj) and AXObject.supports_text(obj)
 
         child = obj
         if not implementsText(obj):
-            child = pyatspi.utils.findDescendant(obj, implementsText)
+            child = AXObject.find_descendant(obj, implementsText)
             if not child:
                 return None, -1
 

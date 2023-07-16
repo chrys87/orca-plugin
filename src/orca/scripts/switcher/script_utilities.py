@@ -24,10 +24,13 @@ __date__      = "$Date$"
 __copyright__ = "Copyright (c) 2019 Igalia, S.L."
 __license__   = "LGPL"
 
-import pyatspi
+import gi
+gi.require_version("Atspi", "2.0")
+from gi.repository import Atspi
 
 from orca import debug
 from orca import script_utilities
+from orca.ax_object import AXObject
 
 
 class Utilities(script_utilities.Utilities):
@@ -38,7 +41,7 @@ class Utilities(script_utilities.Utilities):
     def isSwitcherContainer(self, obj):
         """Returns True if obj is the switcher container."""
 
-        return obj and obj.getRole() == pyatspi.ROLE_STATUS_BAR
+        return obj and AXObject.get_role(obj) == Atspi.Role.STATUS_BAR
 
     def isSwitcherSelectionChangeEventType(self, event):
         """Returns True if this event is the one we use to present changes."""
@@ -55,7 +58,7 @@ class Utilities(script_utilities.Utilities):
         """Returns the name of the currently-selected item."""
 
         if self.isSwitcherContainer(container):
-            return container.name
+            return AXObject.get_name(container)
 
         return ""
 
@@ -63,17 +66,10 @@ class Utilities(script_utilities.Utilities):
         if not super().isZombie(obj):
             return False
 
-        try:
-            index = obj.getIndexInParent()
-        except:
-            msg = "SWITCHER: Exception getting index in parent for %s" % obj
-            debug.println(debug.LEVEL_INFO, msg, True)
+        if AXObject.get_index_in_parent(obj) >= 0:
             return True
 
-        if index >= 0:
-            return True
-
-        obj.clearCache()
+        AXObject.clear_cache(obj)
 
         if self.isShowingAndVisible(obj):
             msg = "SWITCHER: Ignoring bad index of %s" % obj

@@ -43,7 +43,7 @@ from gi.repository import GObject
 try:
     from gi.repository.Gio import Settings
     a11yAppSettings = Settings(schema_id='org.gnome.desktop.a11y.applications')
-except:
+except Exception:
     a11yAppSettings = None
 
 try:
@@ -57,21 +57,16 @@ try:
 
     gi.require_version("Gdk", "3.0")
     from gi.repository import Gdk
-
-    # Note: This last import is here due to bgo #673396.
-    # See bgo#673397 for the rest of the story.
-    gi.require_version("GdkX11", "3.0")
-    from gi.repository.GdkX11 import X11Screen
-except:
+except Exception:
     pass
 
 from . import braille
 from . import debug
 from . import event_manager
-from . import keybindings
 from . import logger
 from . import messages
 from . import notification_messages
+from . import mouse_review
 from . import orca_state
 from . import orca_platform
 from . import script_manager
@@ -79,6 +74,8 @@ from . import settings
 from . import settings_manager
 from . import speech
 from . import sound
+from .ax_object import AXObject
+from .ax_utilities import AXUtilities
 from .input_event import BrailleEvent
 from . import cmdnames
 from orca import plugin_system_manager
@@ -104,7 +101,7 @@ _logger = logger.getLogger()
 def onEnabledChanged(gsetting, key):
     try:
         enabled = gsetting.get_boolean(key)
-    except:
+    except Exception:
         return
 
     if key == 'screen-reader-enabled' and not enabled:
@@ -154,7 +151,7 @@ def emitRegionChanged(obj, startOffset=None, endOffset=None, mode=None):
 
     try:
         obj.emit("mode-changed::" + mode, 1, "")
-    except:
+    except Exception:
         msg = "ORCA: Exception emitting mode-changed notification"
         debug.println(debug.LEVEL_INFO, msg, True)
 
@@ -167,7 +164,7 @@ def emitRegionChanged(obj, startOffset=None, endOffset=None, mode=None):
         msg = "ORCA: Region of interest: %s (%i, %i)" % (obj, startOffset, endOffset)
         debug.println(debug.LEVEL_INFO, msg, True)
         obj.emit("region-changed", startOffset, endOffset)
-    except:
+    except Exception:
         msg = "ORCA: Exception emitting region-changed notification"
         debug.println(debug.LEVEL_INFO, msg, True)
 
@@ -195,8 +192,8 @@ def setLocusOfFocus(event, obj, notifyScript=True, force=False):
 
     oldFocus = orca_state.locusOfFocus
     try:
-        oldFocus.getRole()
-    except:
+        oldFocus.name
+    except Exception:
         msg = "ORCA: Old locusOfFocus is null or defunct"
         debug.println(debug.LEVEL_INFO, msg, True)
         oldFocus = None
@@ -259,7 +256,7 @@ def _processBrailleEvent(event):
 
     try:
         consumed = _eventManager.processBrailleEvent(event)
-    except:
+    except Exception:
         debug.printException(debug.LEVEL_SEVERE)
 
     if (not consumed) and orca_state.learnModeEnabled:
@@ -361,7 +358,6 @@ def _createOrcaXmodmap():
 
     global _capsLockCleared
 
-    cmd = []
     if "Caps_Lock" in settings.orcaModifierKeys \
        or "Shift_Lock" in settings.orcaModifierKeys:
         _setCapsLockAsOrcaModifier(True)
@@ -394,11 +390,6 @@ def _restoreXmodmap(keyList=[]):
         stdin=subprocess.PIPE, stdout=None, stderr=None)
     p.communicate(_originalXmodmap)
 
-def setKeyHandling(new):
-    """Toggle use of the new vs. legacy key handling mode.
-    """
-    _eventManager.setKeyHandling(new)
-
 def loadUserSettings(script=None, inputEvent=None, skipReloadMessage=False):
     """Loads (and reloads) the user settings module, reinitializing
     things such as speech if necessary.
@@ -429,7 +420,7 @@ def loadUserSettings(script=None, inputEvent=None, skipReloadMessage=False):
             reloaded = True
         except ImportError:
             debug.printException(debug.LEVEL_INFO)
-        except:
+        except Exception:
             debug.printException(debug.LEVEL_SEVERE)
     else:
         _profile = _settingsManager.profile
@@ -437,7 +428,7 @@ def loadUserSettings(script=None, inputEvent=None, skipReloadMessage=False):
             _userSettings = _settingsManager.getGeneralSettings(_profile)
         except ImportError:
             debug.printException(debug.LEVEL_INFO)
-        except:
+        except Exception:
             debug.printException(debug.LEVEL_SEVERE)
 
     if not script:
@@ -452,7 +443,7 @@ def loadUserSettings(script=None, inputEvent=None, skipReloadMessage=False):
             speech.init()
             if reloaded and not skipReloadMessage:
                 script.speakMessage(messages.SETTINGS_RELOADED)
-        except:
+        except Exception:
             debug.printException(debug.LEVEL_SEVERE)
     else:
         msg = 'ORCA: Speech is not enabled in settings'
@@ -463,7 +454,7 @@ def loadUserSettings(script=None, inputEvent=None, skipReloadMessage=False):
         debug.println(debug.LEVEL_INFO, msg, True)
         try:
             braille.init(_processBrailleEvent)
-        except:
+        except Exception:
             debug.printException(debug.LEVEL_WARNING)
             msg = 'ORCA: Could not initialize connection to braille.'
             debug.println(debug.LEVEL_WARNING, msg, True)
@@ -488,14 +479,70 @@ def loadUserSettings(script=None, inputEvent=None, skipReloadMessage=False):
     _storeXmodmap(_orcaModifiers)
     _createOrcaXmodmap()
 
-    _scriptManager.activate()
     _eventManager.activate()
+<<<<<<< HEAD
     orcaApp.getSignalManager().emitSignal('load-setting-completed')
+=======
+    _scriptManager.activate()
+>>>>>>> master
 
     debug.println(debug.LEVEL_INFO, 'ORCA: User Settings Loaded', True)
 
     return True
 
+<<<<<<< HEAD
+=======
+def _showPreferencesUI(script, prefs):
+    if orca_state.orcaOS:
+        orca_state.orcaOS.showGUI()
+        return
+
+    try:
+        module = importlib.import_module('.orca_gui_prefs', 'orca')
+    except Exception:
+        debug.printException(debug.LEVEL_SEVERE)
+        return
+
+    uiFile = os.path.join(orca_platform.datadir,
+                          orca_platform.package,
+                          "ui",
+                          "orca-setup.ui")
+
+    orca_state.orcaOS = module.OrcaSetupGUI(uiFile, "orcaSetupWindow", prefs)
+    orca_state.orcaOS.init(script)
+    orca_state.orcaOS.showGUI()
+
+def showAppPreferencesGUI(script=None, inputEvent=None):
+    """Displays the user interface to configure the settings for a
+    specific applications within Orca and set up those app-specific
+    user preferences using a GUI.
+
+    Returns True to indicate the input event has been consumed.
+    """
+
+    prefs = {}
+    for key in settings.userCustomizableSettings:
+        prefs[key] = _settingsManager.getSetting(key)
+
+    script = script or orca_state.activeScript
+    _showPreferencesUI(script, prefs)
+
+    return True
+
+def showPreferencesGUI(script=None, inputEvent=None):
+    """Displays the user interface to configure Orca and set up
+    user preferences using a GUI.
+
+    Returns True to indicate the input event has been consumed.
+    """
+
+    prefs = _settingsManager.getGeneralSettings(_settingsManager.profile)
+    script = _scriptManager.getDefaultScript()
+    _showPreferencesUI(script, prefs)
+
+    return True
+
+>>>>>>> master
 def helpForOrca(script=None, inputEvent=None, page=""):
     """Show Orca Help window (part of the GNOME Access Guide).
 
@@ -544,14 +591,14 @@ def showFindGUI(script=None, inputEvent=None):
     try:
         module = importlib.import_module('.orca_gui_find', 'orca')
         module.showFindUI()
-    except:
+    except Exception:
         debug.printException(debug.LEVEL_SEVERE)
 
 # If True, this module has been initialized.
 #
 _initialized = False
 
-def init(registry):
+def init():
     """Initialize the orca module, which initializes the speech and braille
     modules.  Also builds up the application list, registers for AT-SPI events,
     and creates scripts for all known applications.
@@ -590,13 +637,13 @@ def init(registry):
 
     return True
 
-def start(registry, cacheValues):
+def start():
     """Starts Orca."""
 
     debug.println(debug.LEVEL_INFO, 'ORCA: Starting', True)
 
     if not _initialized:
-        init(registry)
+        init()
 
     # Do not hang on startup if we can help it.
     #
@@ -606,9 +653,6 @@ def start(registry, cacheValues):
 
     if settings.timeoutCallback and (settings.timeoutTime > 0):
         signal.alarm(0)
-
-    if cacheValues:
-        pyatspi.setCacheLevel(pyatspi.CACHE_PROPERTIES)
 
     # Event handlers for input devices being plugged in/unplugged.
     # Used to re-create the Xmodmap when a new keyboard is plugged in.
@@ -624,7 +668,7 @@ def start(registry, cacheValues):
     debug.println(debug.LEVEL_INFO, msg, True)
 
     debug.println(debug.LEVEL_INFO, 'ORCA: Starting registry', True)
-    registry.start(gil=False)
+    pyatspi.Registry.start(gil=False)
 
 def die(exitCode=1):
     pid = os.getpid()
@@ -701,7 +745,7 @@ def shutdownOnSignal(signum, frame):
     try:
         # Requires python 3.8
         signalString = '(%s)' % signal.strsignal(signum)
-    except:
+    except Exception:
         signalString = ''
 
     msg = 'ORCA: Shutting down and exiting due to signal=%d %s' % \
@@ -732,7 +776,7 @@ def shutdownOnSignal(signum, frame):
             speech.shutdown()
             shutdown()
         cleanExit = True
-    except:
+    except Exception:
         cleanExit = False
 
     if settings.timeoutCallback and (settings.timeoutTime > 0):
@@ -746,7 +790,7 @@ def crashOnSignal(signum, frame):
     _restoreXmodmap(_orcaModifiers)
     os.kill(os.getpid(), signum)
 
-def main(cacheValues=True):
+def main():
     """The main entry point for Orca.  The exit codes for Orca will
     loosely be based on signals, where the exit code will be the
     signal used to terminate Orca (if a signal was used).  Otherwise,
@@ -756,6 +800,13 @@ def main(cacheValues=True):
     msg = "ORCA: Launching version %s" % orca_platform.version
     if orca_platform.revision:
         msg += " (rev %s)" % orca_platform.revision
+
+    sessionType = os.environ.get('XDG_SESSION_TYPE') or ""
+    sessionDesktop = os.environ.get('XDG_SESSION_DESKTOP') or ""
+    session = "%s %s".strip() % (sessionType, sessionDesktop)
+    if session:
+        msg += " session: %s" % session
+
     debug.println(debug.LEVEL_INFO, msg, True)
 
     if debug.debugFile and os.path.exists(debug.debugFile.name):
@@ -779,13 +830,18 @@ def main(cacheValues=True):
     if not _settingsManager.isAccessibilityEnabled():
         _settingsManager.setAccessibility(True)
 
-    debug.println(debug.LEVEL_INFO, "ORCA: Initializing ATSPI registry.", True)
-    init(pyatspi.Registry)
-    debug.println(debug.LEVEL_INFO, "ORCA: ATSPI registry initialized.", True)
+    debug.println(debug.LEVEL_INFO, "ORCA: Initializing.", True)
+    init()
+    debug.println(debug.LEVEL_INFO, "ORCA: Initialized.", True)
 
     try:
         script = _scriptManager.getDefaultScript()
+<<<<<<< HEAD
     except:
+=======
+        script.presentMessage(message)
+    except Exception:
+>>>>>>> master
         debug.printException(debug.LEVEL_SEVERE)
 
     script = orca_state.activeScript
@@ -794,26 +850,21 @@ def main(cacheValues=True):
     if script:
         window = script.utilities.activeWindow()
         if window and not orca_state.locusOfFocus:
-            try:
-                app = window.getApplication()
-            except:
-                msg = "ORCA: Exception getting app for %s" % window
-                debug.println(debug.LEVEL_INFO, msg, True)
-            else:
-                script = _scriptManager.getScript(app, window)
-                _scriptManager.setActiveScript(script, "Launching.")
+            app = AXObject.get_application(window)
+            script = _scriptManager.getScript(app, window)
+            _scriptManager.setActiveScript(script, "Launching.")
 
             setLocusOfFocus(None, window)
             focusedObject = script.utilities.focusedObject(window)
             if focusedObject:
                 setLocusOfFocus(None, focusedObject)
-                script = _scriptManager.getScript(focusedObject.getApplication(), focusedObject)
+                script = _scriptManager.getScript(AXObject.get_application(focusedObject), focusedObject)
                 _scriptManager.setActiveScript(script, "Found focused object.")
 
     try:
         debug.println(debug.LEVEL_INFO, "ORCA: Starting ATSPI registry.", True)
-        start(pyatspi.Registry, cacheValues) # waits until we stop the registry
-    except:
+        start() # waits until we stop the registry
+    except Exception:
         debug.println(debug.LEVEL_SEVERE, "ORCA: Exception starting ATSPI registry.", True)
         die(EXIT_CODE_HANG)
     return 0
@@ -898,6 +949,8 @@ class Orca(GObject.Object):
         self.getDynamicApiManager().registerAPI('SpeechServer', speechserver)
         self.getDynamicApiManager().registerAPI('OrcaGtkbuilder', orca_gtkbuilder)
         self.getDynamicApiManager().registerAPI('EventSynthesizer', eventsynthesizer)
+        self.getDynamicApiManager().registerAPI('AXObject', AXObject)
+        self.getDynamicApiManager().registerAPI('AXUtilities', AXUtilities)
         # orca lets say, special compat handling....
         self.getDynamicApiManager().registerAPI('EmitRegionChanged', emitRegionChanged)
         self.getDynamicApiManager().registerAPI('LoadUserSettings', loadUserSettings)

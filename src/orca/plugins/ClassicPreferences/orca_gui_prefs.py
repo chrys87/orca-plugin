@@ -25,13 +25,17 @@ __date__      = "$Date$"
 __copyright__ = "Copyright (c) 2005-2009 Sun Microsystems Inc."
 __license__   = "LGPL"
 
-import os, sys, inspect
+import sys, inspect
+import gi
+gi.require_version("Atspi", "2.0")
+from gi.repository import Atspi
+
+import os
 from gi.repository import Gdk
 from gi.repository import GLib
 from gi.repository import Gtk
 from gi.repository import GObject
 from gi.repository import Pango
-import pyatspi
 import time
 
 currPath = os.path.dirname(os.path.realpath(os.path.abspath(inspect.getfile(inspect.currentframe()))))
@@ -57,8 +61,6 @@ pronunciation_dict = None
 text_attribute_names = None
 tablesdir = None
 _settingsManager = None
-
-
 
 try:
     import louis
@@ -124,6 +126,7 @@ class OrcaSetupGUI(orca_gtkbuilder.GtkBuilderWrapper):
         global _settingsManager
         global tablesdir
         global louis
+        global AXObject
         acss = self.app.getDynamicApiManager().getAPI('Acss')
         guilabels = self.app.getDynamicApiManager().getAPI('GuiLabels')
         orca_platform = self.app.getDynamicApiManager().getAPI('OrcaPlatform')
@@ -140,6 +143,7 @@ class OrcaSetupGUI(orca_gtkbuilder.GtkBuilderWrapper):
         pronunciation_dict = self.app.getDynamicApiManager().getAPI('PronunciationDict')
         text_attribute_names = self.app.getDynamicApiManager().getAPI('TextAttributeNames')
         orca_gui_profile = self.app.getAPIHelper().importModule('orca_gui_profile', currPath + '/orca_gui_profile.py')
+        AXObject = self.app.getDynamicApiManager().getAPI('AXObject')
 
         try:
             tablesdir = orca_platform.tablesdir
@@ -412,7 +416,7 @@ class OrcaSetupGUI(orca_gtkbuilder.GtkBuilderWrapper):
 
         appPage = self.script.getAppPreferencesGUI()
         if appPage:
-            label = Gtk.Label(label=self.script.app.name)
+            label = Gtk.Label(label=AXObject.get_name(self.script.app))
             self.get_widget("notebook").append_page(appPage, label)
 
         self._initGUIState()
@@ -991,7 +995,7 @@ class OrcaSetupGUI(orca_gtkbuilder.GtkBuilderWrapper):
                 servers = factory.SpeechServer.getSpeechServers()
                 if len(servers):
                     self.workingFactories.append(factory)
-            except:
+            except Exception:
                 debug.printException(debug.LEVEL_FINEST)
 
         self.speechSystemsChoices = []
@@ -1057,7 +1061,7 @@ class OrcaSetupGUI(orca_gtkbuilder.GtkBuilderWrapper):
 
         try:
             speech.init()
-        except:
+        except Exception:
             self.workingFactories = []
             self.speechSystemsChoice = None
             self.speechServersChoices = []
@@ -1445,7 +1449,7 @@ class OrcaSetupGUI(orca_gtkbuilder.GtkBuilderWrapper):
             thisIter = model.append() 
             try:
                 actual, replacement = pronDict[pronKey]
-            except:
+            except Exception:
                 # Try to do something sensible for the previous format of
                 # pronunciation dictionary entries. See bug #464754 for
                 # more details.
@@ -1993,7 +1997,7 @@ class OrcaSetupGUI(orca_gtkbuilder.GtkBuilderWrapper):
 
         try:
             ts = orca_state.lastInputEvent.timestamp
-        except:
+        except Exception:
             ts = 0
         if ts == 0:
             ts = Gtk.get_current_event_time()
@@ -2008,7 +2012,7 @@ class OrcaSetupGUI(orca_gtkbuilder.GtkBuilderWrapper):
                 True, True)
 
         if self.script.app:
-            title = guilabels.PREFERENCES_APPLICATION_TITLE % self.script.app.name
+            title = guilabels.PREFERENCES_APPLICATION_TITLE % AXObject.get_name(self.script.app)
             orcaSetupWindow.set_title(title)
 
         orcaSetupWindow.show()
@@ -2027,7 +2031,7 @@ class OrcaSetupGUI(orca_gtkbuilder.GtkBuilderWrapper):
         try:
             columnToDisplay = combobox.get_cells()[0]
             combobox.add_attribute(columnToDisplay, 'text', 1)
-        except:
+        except Exception:
             combobox.add_attribute(cell, 'text', 1)
         model = Gtk.ListStore(int, str)
         combobox.set_model(model)
@@ -2069,7 +2073,7 @@ class OrcaSetupGUI(orca_gtkbuilder.GtkBuilderWrapper):
         self.script.speakMessage(text, interrupt=interrupt)
         try:
             self.script.displayBrailleMessage(text, flashTime=-1)
-        except:
+        except Exception:
             pass
 
     def _createNode(self, appName):
@@ -2145,7 +2149,6 @@ class OrcaSetupGUI(orca_gtkbuilder.GtkBuilderWrapper):
                 text = None
             else:
                 clickCount = self._clickCountToString(kb.click_count)
-                modifierNames = keybindings.getModifierNames(kb.modifiers)
                 keysymstring = kb.keysymstring
                 text = keybindings.getModifierNames(kb.modifiers) \
                        + keysymstring \
@@ -2221,7 +2224,7 @@ class OrcaSetupGUI(orca_gtkbuilder.GtkBuilderWrapper):
                         treeModel.set_value(iterChild, MODIF, True)
                     iterChild = treeModel.iter_next(iterChild)
                 myiter = treeModel.iter_next(myiter)
-        except:
+        except Exception:
             debug.printException(debug.LEVEL_SEVERE)
 
     def _populateKeyBindings(self, clearModel=True):
@@ -2238,11 +2241,7 @@ class OrcaSetupGUI(orca_gtkbuilder.GtkBuilderWrapper):
             self.keyBindingsModel.clear()
             self.kbindings = None
 
-        try:
-            appName = self.script.app.name
-        except:
-            appName = ""
-
+        appName = AXObject.get_name(self.script.app)
         iterApp = self._createNode(appName)
         iterOrca = self._createNode(guilabels.KB_GROUP_DEFAULT)
         iterUnbound = self._createNode(guilabels.KB_GROUP_UNBOUND)
@@ -2373,7 +2372,7 @@ class OrcaSetupGUI(orca_gtkbuilder.GtkBuilderWrapper):
             del self.uppercaseVoice[acss.ACSS.FAMILY]
             del self.hyperlinkVoice[acss.ACSS.FAMILY]
             del self.systemVoice[acss.ACSS.FAMILY]
-        except:
+        except Exception:
             pass
 
         self._setupVoices()
@@ -2404,7 +2403,7 @@ class OrcaSetupGUI(orca_gtkbuilder.GtkBuilderWrapper):
                 variant = family[speechserver.VoiceFamily.VARIANT]
                 voiceType = self.get_widget("voiceTypesCombo").get_active()
                 self._setFamilyNameForVoiceType(voiceType, name, language, dialect, variant)
-        except:
+        except Exception:
             debug.printException(debug.LEVEL_SEVERE)
 
         # Remember the last family manually selected by the user for the
@@ -2436,7 +2435,7 @@ class OrcaSetupGUI(orca_gtkbuilder.GtkBuilderWrapper):
             variant = family[speechserver.VoiceFamily.VARIANT]
             voiceType = self.get_widget("voiceTypesCombo").get_active()
             self._setFamilyNameForVoiceType(voiceType, name, language, dialect, variant)
-        except:
+        except Exception:
             debug.printException(debug.LEVEL_SEVERE)
 
         # Remember the last family manually selected by the user for the
@@ -2987,7 +2986,7 @@ class OrcaSetupGUI(orca_gtkbuilder.GtkBuilderWrapper):
         myiter = treeModel.get_iter_from_string(path)
         try:
             originalBinding = treeModel.get_value(myiter, text)
-        except:
+        except Exception:
             originalBinding = ''
         modified = (originalBinding != new_text)
 
@@ -2995,15 +2994,15 @@ class OrcaSetupGUI(orca_gtkbuilder.GtkBuilderWrapper):
             string = self.newBinding.keysymstring
             mods = self.newBinding.modifiers
             clickCount = self.newBinding.click_count
-        except:
+        except Exception:
             string = ''
             mods = 0
             clickCount = 1
 
         mods = mods & Gdk.ModifierType.MODIFIER_MASK
-        if mods & (1 << pyatspi.MODIFIER_SHIFTLOCK) \
+        if mods & (1 << Atspi.ModifierType.SHIFTLOCK) \
            and mods & keybindings.ORCA_MODIFIER_MASK:
-            mods ^= (1 << pyatspi.MODIFIER_SHIFTLOCK)
+            mods ^= (1 << Atspi.ModifierType.SHIFTLOCK)
 
         treeModel.set(myiter,
                       modMask, str(keybindings.defaultModifierMask),
@@ -3421,7 +3420,7 @@ class OrcaSetupGUI(orca_gtkbuilder.GtkBuilderWrapper):
         availableProfiles = [p[1] for p in self.__getAvailableProfiles()]
         if isinstance(profileToSave, str) \
                 and profileToSave != '' \
-                and not profileToSave in availableProfiles \
+                and profileToSave not in availableProfiles \
                 and profileToSave != self._defaultProfile[1]:
             saveActiveProfile()
         else:
@@ -3441,7 +3440,7 @@ class OrcaSetupGUI(orca_gtkbuilder.GtkBuilderWrapper):
                     saveActiveProfile(False)
                 else:
                     dialog.destroy()
-                
+
 
     def removeProfileButtonClicked(self, widget):
         """Remove profile button clicked handler

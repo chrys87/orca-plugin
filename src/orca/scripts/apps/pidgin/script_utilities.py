@@ -28,10 +28,14 @@ __date__      = "$Date$"
 __copyright__ = "Copyright (c) 2010 Joanmarie Diggs."
 __license__   = "LGPL"
 
-import pyatspi
+import gi
+gi.require_version("Atspi", "2.0")
+from gi.repository import Atspi
 
 import orca.debug as debug
 import orca.script_utilities as script_utilities
+from orca.ax_object import AXObject
+from orca.ax_utilities import AXUtilities
 
 #############################################################################
 #                                                                           #
@@ -71,20 +75,20 @@ class Utilities(script_utilities.Utilities):
         if not self._script.chat.isInBuddyList(obj):
             return script_utilities.Utilities.childNodes(self, obj)
 
+        parent = AXObject.get_parent(obj)
         try:
-            table = obj.parent.queryTable()
-        except:
+            table = parent.queryTable()
+        except Exception:
             return []
         else:
-            if not obj.getState().contains(pyatspi.STATE_EXPANDED):
+            if not AXUtilities.is_expanded(obj):
                 return []
 
-        nodes = []        
+        nodes = []
         index = self.cellIndex(obj)
         row = table.getRowAtIndex(index)
         col = table.getColumnAtIndex(index + 1)
         nodeLevel = self.nodeLevel(obj)
-        done = False
 
         # Candidates will be in the rows beneath the current row.
         # Only check in the current column and stop checking as
@@ -93,20 +97,15 @@ class Utilities(script_utilities.Utilities):
         #
         for i in range(row+1, table.nRows):
             cell = table.getAccessibleAt(i, col)
-            nodeCell = cell.parent[cell.getIndexInParent() - 1]
-            relations = nodeCell.getRelationSet()
-            for relation in relations:
-                if relation.getRelationType() \
-                       == pyatspi.RELATION_NODE_CHILD_OF:
-                    nodeOf = relation.getTarget(0)
-                    if self.isSameObject(obj, nodeOf):
-                        nodes.append(cell)
-                    else:
-                        currentLevel = self.nodeLevel(nodeOf)
-                        if currentLevel <= nodeLevel:
-                            done = True
-                    break
-            if done:
+            nodeCell = AXObject.get_previous_sibling(cell)
+            relation = AXObject.get_relation(nodeCell, Atspi.RelationType.NODE_CHILD_OF)
+            if not relation:
+                continue
+
+            nodeOf = relation.getTarget(0)
+            if self.isSameObject(obj, nodeOf):
+                nodes.append(cell)
+            elif self.nodeLevel(nodeOf) <= nodeLevel:
                 break
 
         return nodes
@@ -127,27 +126,21 @@ class Utilities(script_utilities.Utilities):
         if not self._script.chat.isInBuddyList(obj):
             return script_utilities.Utilities.nodeLevel(self, obj)
 
+        obj = AXObject.get_previous_sibling(obj)
+        parent = AXObject.get_parent(obj)
         try:
-            obj = obj.parent[obj.getIndexInParent() - 1]
-        except:
-            return -1
-
-        try:
-            table = obj.parent.queryTable()
-        except:
+            parent.queryTable()
+        except Exception:
             return -1
 
         nodes = []
         node = obj
         done = False
         while not done:
-            relations = node.getRelationSet()
+            relation = AXObject.get_relation(node, Atspi.RelationType.NODE_CHILD_OF)
             node = None
-            for relation in relations:
-                if relation.getRelationType() \
-                       == pyatspi.RELATION_NODE_CHILD_OF:
-                    node = relation.getTarget(0)
-                    break
+            if relation:
+                node = relation.get_target(0)
 
             # We want to avoid situations where something gives us an
             # infinite cycle of nodes.  Bon Echo has been seen to do
@@ -184,9 +177,9 @@ class Utilities(script_utilities.Utilities):
         if not super().isZombie(obj):
             return False
 
-        if obj.getRole() != pyatspi.ROLE_TOGGLE_BUTTON:
+        if AXObject.get_role(obj) != Atspi.Role.TOGGLE_BUTTON:
             return True
 
         msg = 'INFO: Hacking around broken index in parent for %s' % obj
         debug.println(debug.LEVEL_INFO, msg, True)
-        return obj.getIndexInParent() != -1
+        return AXObject.get_index_in_parent(obj) != -1

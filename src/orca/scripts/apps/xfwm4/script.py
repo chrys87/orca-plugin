@@ -26,7 +26,8 @@ __copyright__ = "Copyright (c) 2011 The Orca Team."
 __license__   = "LGPL"
 
 import orca.scripts.default as default
-import pyatspi
+from orca.ax_object import AXObject
+from orca.ax_utilities import AXUtilities
 
 ########################################################################
 #                                                                      #
@@ -54,11 +55,11 @@ class Script(default.Script):
         - event: the Event
         """
 
-        if event.source.getRole() != pyatspi.ROLE_LABEL:
+        if not AXUtilities.is_label(event.source):
             default.Script.onTextInserted(self, event)
             return
 
-        self.presentMessage(event.source.name)
+        self.presentMessage(AXObject.get_name(event.source))
 
     def onTextDeleted(self, event):
         """Called whenever text is deleted from an object. Overridden
@@ -69,5 +70,5 @@ class Script(default.Script):
         - event: the Event
         """
 
-        if event.source.getRole() != pyatspi.ROLE_LABEL:
+        if not AXUtilities.is_label(event.source):
             default.Script.onTextDeleted(self, event)

@@ -20,13 +20,12 @@
 """Provides the default implementation for bookmarks in Orca."""
 
 import pickle
-import pyatspi
 import os
 import urllib.parse
 
 from . import messages
-from . import orca_state
 from . import settings_manager
+from .ax_object import AXObject
 
 _settingsManager = settings_manager.getManager()
 
@@ -74,7 +73,7 @@ class Bookmarks:
         self._script.presentMessage(messages.BOOKMARK_ENTERED)
 
     def saveBookmarks(self, inputEvent):
-        """ Save the bookmarks for this script. """        
+        """ Save the bookmarks for this script. """
         try:
             self.saveBookmarksToDisk(self._bookmarks)
             self._script.presentMessage(messages.BOOKMARKS_SAVED)
@@ -101,7 +100,7 @@ class Bookmarks:
             self.goToBookmark(None, index=hwkeys[0])
             return
 
-        # find current bookmark hw_code in our sorted list.  
+        # find current bookmark hw_code in our sorted list.
         # Go to next one if possible
         try:
             index = hwkeys.index(self._currentbookmarkindex)
@@ -122,7 +121,7 @@ class Bookmarks:
             self.goToBookmark(None, index=hwkeys[0])
             return
 
-        # find current bookmark hw_code in our sorted list.  
+        # find current bookmark hw_code in our sorted list.
         # Go to previous one if possible
         try:
             index = hwkeys.index(self._currentbookmarkindex)
@@ -203,10 +202,9 @@ class Bookmarks:
         document frame). """
         returnobj = self._script.utilities.documentFrame()
         for childnumber in path:
-            try:
-                returnobj = returnobj[childnumber]
-            except IndexError:
-                return None
+            returnobj = AXObject.get_child(returnobj, childnumber)
+            if not returnobj:
+                break
 
         return returnobj
 
@@ -223,13 +221,13 @@ class Bookmarks:
             return []
 
         path = []
-        path.append(start_obj.getIndexInParent())
-        p = start_obj.parent
+        path.append(AXObject.get_index_in_parent(start_obj))
+        p = AXObject.get_parent(start_obj)
         while p:
             if self._script.utilities.isDocument(p):
                 path.reverse()
                 return path
-            path.append(p.getIndexInParent())
-            p = p.parent
+            path.append(AXObject.get_index_in_parent(p))
+            p = AXObject.get_parent(p)
 
         return []

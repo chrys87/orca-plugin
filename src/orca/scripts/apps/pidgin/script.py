@@ -26,12 +26,15 @@ __date__      = "$Date$"
 __copyright__ = "Copyright (c) 2010 Joanmarie Diggs."
 __license__   = "LGPL"
 
-import pyatspi
+import gi
+gi.require_version("Atspi", "2.0")
+from gi.repository import Atspi
 
 import orca.debug as debug
 import orca.messages as messages
 import orca.scripts.toolkits.GAIL as GAIL
 import orca.settings as settings
+from orca.ax_object import AXObject
 
 from .chat import Chat
 from .script_utilities import Utilities
@@ -54,13 +57,13 @@ class Script(GAIL.Script):
 
         # So we can take an educated guess at identifying the buddy list.
         #
-        self._buddyListAncestries = [[pyatspi.ROLE_TREE_TABLE,
-                                      pyatspi.ROLE_SCROLL_PANE,
-                                      pyatspi.ROLE_FILLER,
-                                      pyatspi.ROLE_PAGE_TAB,
-                                      pyatspi.ROLE_PAGE_TAB_LIST,
-                                      pyatspi.ROLE_FILLER,
-                                      pyatspi.ROLE_FRAME]]
+        self._buddyListAncestries = [[Atspi.Role.TREE_TABLE,
+                                      Atspi.Role.SCROLL_PANE,
+                                      Atspi.Role.FILLER,
+                                      Atspi.Role.PAGE_TAB,
+                                      Atspi.Role.PAGE_TAB_LIST,
+                                      Atspi.Role.FILLER,
+                                      Atspi.Role.FRAME]]
 
         GAIL.Script.__init__(self, app)
 
@@ -75,7 +78,7 @@ class Script(GAIL.Script):
         return SpeechGenerator(self)
 
     def getUtilities(self):
-        """Returns the utilites for this script."""
+        """Returns the utilities for this script."""
 
         return Utilities(self)
 
@@ -112,9 +115,9 @@ class Script(GAIL.Script):
         # has, then announce its name. See bug #469098 for more details.
         #
         if event.type.startswith("object:children-changed:add"):
-            rolesList = [pyatspi.ROLE_PAGE_TAB_LIST,
-                         pyatspi.ROLE_FILLER,
-                         pyatspi.ROLE_FRAME]
+            rolesList = [Atspi.Role.PAGE_TAB_LIST,
+                         Atspi.Role.FILLER,
+                         Atspi.Role.FRAME]
             if self.utilities.hasMatchingHierarchy(event.source, rolesList):
                 # As it's possible to get this component hierarchy in other
                 # places than the chat room (i.e. the Preferences dialog),
@@ -124,14 +127,20 @@ class Script(GAIL.Script):
                 # last child has a name.
                 #
                 nameFound = False
-                frameName = event.source.parent.parent.name
-                for child in event.source:
-                    if frameName and (frameName == child.name):
+                frame = AXObject.find_ancestor(event.source,
+                                               lambda x: AXObject.get_role(x) == Atspi.Role.FRAME)
+                frameName = AXObject.get_name(frame)
+                if not frameName:
+                    return
+                for child in AXObject.iter_children(event.source):
+                    if frameName == AXObject.get_name(child):
                         nameFound = True
+                        break
                 if nameFound:
-                    child = event.source[-1]
-                    if child.name:
-                        line = messages.CHAT_NEW_TAB % child.name
+                    child = AXObject.get_child(event.source, -1)
+                    childName = AXObject.get_name(child)
+                    if childName:
+                        line = messages.CHAT_NEW_TAB % childName
                         voice = self.speechGenerator.voice(obj=child, string=line)
                         self.speakMessage(line, voice=voice)
 
@@ -195,8 +204,11 @@ class Script(GAIL.Script):
         # Hack to "tickle" the accessible hierarchy. Otherwise, the
         # events we need to present text added to the chatroom are
         # missing.
-        hasRole = lambda x: x and x.getRole() == pyatspi.ROLE_PAGE_TAB
-        allPageTabs = pyatspi.findAllDescendants(event.source, hasRole)
+
+        def hasRole(x):
+            return AXObject.get_role(x) == Atspi.Role.PAGE_TAB
+
+        self.utilities.findAllDescendants(event.source, hasRole)
         msg = "PIDGIN: Hack to work around missing events complete"
         debug.println(debug.LEVEL_INFO, msg, True)
         GAIL.Script.onWindowActivated(self, event)
@@ -207,8 +219,8 @@ class Script(GAIL.Script):
         # Overridden here because the event.source is in a hidden column.
         obj = event.source
         if self.chat.isInBuddyList(obj):
-            obj = obj.parent[obj.getIndexInParent() + 1]
+            obj = AXObject.get_next_sibling(obj)
             self.presentObject(obj, alreadyFocused=True)
             return
-            
+
         GAIL.Script.onExpandedChanged(self, event)

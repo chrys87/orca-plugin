@@ -25,11 +25,15 @@ __date__      = "$Date$"
 __copyright__ = "Copyright (c) 2005-2009 Sun Microsystems Inc."
 __license__   = "LGPL"
 
-import pyatspi
+import gi
+gi.require_version("Atspi", "2.0")
+from gi.repository import Atspi
 
 import orca.messages as messages
 import orca.settings_manager as settings_manager
 import orca.speech_generator as speech_generator
+from orca.ax_object import AXObject
+from orca.ax_object import AXUtilities
 
 _settingsManager = settings_manager.getManager()
 
@@ -41,19 +45,19 @@ class SpeechGenerator(speech_generator.SpeechGenerator):
         # Treat a paragraph which is serving as a text entry in a dialog
         # as a text object.
         #
-        role = args.get('role', obj.getRole())
-        override = \
-            role == "text frame" \
-            or (role == pyatspi.ROLE_PARAGRAPH \
-                and self._script.utilities.ancestorWithRole(
-                      obj, [pyatspi.ROLE_DIALOG], [pyatspi.ROLE_APPLICATION]))
-        return override
+        role = args.get('role', AXObject.get_role(obj))
+        if role == "text frame":
+            return True
+        if role != Atspi.Role.PARAGRAPH:
+            return False
+        pred = lambda x: AXObject.get_role(x) == Atspi.Role.DIALOG
+        return AXObject.find_ancestor(obj, pred) is not None
 
     def _generateRoleName(self, obj, **args):
         result = []
-        role = args.get('role', obj.getRole())
-        if role == pyatspi.ROLE_TOGGLE_BUTTON \
-           and obj.parent.getRole() == pyatspi.ROLE_TOOL_BAR:
+        role = args.get('role', AXObject.get_role(obj))
+        if role == Atspi.Role.TOGGLE_BUTTON \
+           and AXObject.get_role(AXObject.get_parent(obj)) == Atspi.Role.TOOL_BAR:
             pass
         else:
             # Treat a paragraph which is serving as a text entry in a dialog
@@ -61,12 +65,12 @@ class SpeechGenerator(speech_generator.SpeechGenerator):
             #
             override = self.__overrideParagraph(obj, **args)
             if override:
-                oldRole = self._overrideRole(pyatspi.ROLE_TEXT, args)
+                oldRole = self._overrideRole(Atspi.Role.TEXT, args)
             # Treat a paragraph which is inside of a spreadsheet cell as
             # a spreadsheet cell.
             #
             elif role == 'ROLE_SPREADSHEET_CELL':
-                oldRole = self._overrideRole(pyatspi.ROLE_TABLE_CELL, args)
+                oldRole = self._overrideRole(Atspi.Role.TABLE_CELL, args)
                 override = True
             result.extend(speech_generator.SpeechGenerator._generateRoleName(
                           self, obj, **args))
@@ -76,11 +80,12 @@ class SpeechGenerator(speech_generator.SpeechGenerator):
 
     def _generateTextRole(self, obj, **args):
         result = []
-        role = args.get('role', obj.getRole())
-        if role == pyatspi.ROLE_TEXT and obj.parent.getRole() == pyatspi.ROLE_COMBO_BOX:
+        role = args.get('role', AXObject.get_role(obj))
+        if role == Atspi.Role.TEXT \
+            and AXObject.get_role(AXObject.get_parent(obj)) == Atspi.Role.COMBO_BOX:
             return []
 
-        if role != pyatspi.ROLE_PARAGRAPH \
+        if role != Atspi.Role.PARAGRAPH \
            or self.__overrideParagraph(obj, **args):
             result.extend(self._generateRoleName(obj, **args))
         return result
@@ -95,7 +100,7 @@ class SpeechGenerator(speech_generator.SpeechGenerator):
         override = self.__overrideParagraph(obj, **args)
         label = self._script.utilities.displayedLabel(obj) or ""
         if not label and override:
-            label = self._script.utilities.displayedLabel(obj.parent) or ""
+            label = self._script.utilities.displayedLabel(AXObject.get_parent(obj)) or ""
         if label:
             result.append(label.strip())
             result.extend(self.voice(speech_generator.DEFAULT, obj=obj, **args))
@@ -114,30 +119,30 @@ class SpeechGenerator(speech_generator.SpeechGenerator):
         # TODO - JD: This should be the behavior by default. But the default
         # generators call displayedText(). Once that is corrected, this method
         # can be removed.
-        if obj.name:
-            result = [obj.name]
+        if AXObject.get_name(obj):
+            result = [AXObject.get_name(obj)]
             result.extend(self.voice(speech_generator.DEFAULT, obj=obj, **args))
             return result
 
         return super()._generateName(obj, **args)
 
     def _generateLabelAndName(self, obj, **args):
-        if obj.getRole() != pyatspi.ROLE_COMBO_BOX:
+        if AXObject.get_role(obj) != Atspi.Role.COMBO_BOX:
             return super()._generateLabelAndName(obj, **args)
 
         # TODO - JD: This should be the behavior by default because many
         # toolkits use the label for the name.
         result = []
-        label = self._script.utilities.displayedLabel(obj) or obj.name
+        label = self._script.utilities.displayedLabel(obj) or AXObject.get_name(obj)
         if label:
             result.append(label)
             result.extend(self.voice(speech_generator.DEFAULT, obj=obj, **args))
 
-        name = obj.name
+        name = AXObject.get_name(obj)
         if label == name or not name:
             selected = self._script.utilities.selectedChildren(obj)
             if selected:
-                name = selected[0].name
+                name = AXObject.get_name(selected[0])
 
         if name:
             result.append(name)
@@ -155,8 +160,8 @@ class SpeechGenerator(speech_generator.SpeechGenerator):
         #
         if override:
             result.extend(self._generateLabel(obj, **args))
-            if len(result) == 0 and obj.parent:
-                parentLabel = self._generateLabel(obj.parent, **args)
+            if len(result) == 0 and AXObject.get_parent(obj):
+                parentLabel = self._generateLabel(AXObject.get_parent(obj), **args)
                 # If we aren't already focused, we will have spoken the
                 # parent as part of the speech context and do not want
                 # to repeat it.
@@ -166,8 +171,10 @@ class SpeechGenerator(speech_generator.SpeechGenerator):
                     result.extend(parentLabel)
                 # If we still don't have a label, look to the name.
                 #
-                if not parentLabel and obj.name and len(obj.name):
-                    result.append(obj.name)
+                if not parentLabel:
+                    name = AXObject.get_name(obj)
+                    if name:
+                        result.append(name)
                 if result:
                     result.extend(self.voice(speech_generator.DEFAULT, obj=obj, **args))
         else:
@@ -212,18 +219,19 @@ class SpeechGenerator(speech_generator.SpeechGenerator):
             return []
 
         result = []
-        if obj.description:
+        description = AXObject.get_description(obj)
+        if description:
             # The description of some OOo paragraphs consists of the name
             # and the displayed text, with punctuation added. Try to spot
             # this and, if found, ignore the description.
             #
             text = self._script.utilities.displayedText(obj) or ""
-            desc = obj.description.replace(text, "")
-            for item in obj.name.split():
+            desc = description.replace(text, "")
+            for item in AXObject.get_name(obj).split():
                 desc = desc.replace(item, "")
             for char in desc.strip():
                 if char.isalnum():
-                    result.append(obj.description)
+                    result.append(description)
                     break
 
         if result:
@@ -231,12 +239,12 @@ class SpeechGenerator(speech_generator.SpeechGenerator):
         return result
 
     def _generateCurrentLineText(self, obj, **args):
-        if self._script.utilities.isTextDocumentCell(obj.parent):
+        if self._script.utilities.isTextDocumentCell(AXObject.get_parent(obj)):
             priorObj = args.get('priorObj', None)
-            if priorObj and priorObj.parent != obj.parent:
+            if priorObj and AXObject.get_parent(priorObj) != AXObject.get_parent(obj):
                 return []
 
-        if obj.getRole() == pyatspi.ROLE_COMBO_BOX:
+        if AXObject.get_role(obj) == Atspi.Role.COMBO_BOX:
             entry = self._script.utilities.getEntryForEditableComboBox(obj)
             if entry:
                 return super()._generateCurrentLineText(entry)
@@ -257,15 +265,15 @@ class SpeechGenerator(speech_generator.SpeechGenerator):
         """Treat toggle buttons in the toolbar specially. This is so we can
         have more natural sounding speech such as "bold on", "bold off", etc."""
         result = []
-        role = args.get('role', obj.getRole())
-        if role == pyatspi.ROLE_TOGGLE_BUTTON \
-           and obj.parent.getRole() == pyatspi.ROLE_TOOL_BAR:
-            if obj.getState().contains(pyatspi.STATE_CHECKED):
+        role = args.get('role', AXObject.get_role(obj))
+        if role == Atspi.Role.TOGGLE_BUTTON \
+           and AXObject.get_role(AXObject.get_parent(obj)) == Atspi.Role.TOOL_BAR:
+            if AXUtilities.is_checked(obj):
                 result.append(messages.ON)
             else:
                 result.append(messages.OFF)
             result.extend(self.voice(speech_generator.SYSTEM, obj=obj, **args))
-        elif role == pyatspi.ROLE_TOGGLE_BUTTON:
+        elif role == Atspi.Role.TOGGLE_BUTTON:
             result.extend(speech_generator.SpeechGenerator._generateToggleState(
                 self, obj, **args))
         return result
@@ -333,7 +341,7 @@ class SpeechGenerator(speech_generator.SpeechGenerator):
             text = obj.queryText()
             objectText = \
                 self._script.utilities.substring(obj, 0, -1)
-            extents = obj.queryComponent().getExtents(pyatspi.DESKTOP_COORDS)
+            extents = obj.queryComponent().getExtents(Atspi.CoordType.SCREEN)
         except NotImplementedError:
             pass
         else:
@@ -385,7 +393,7 @@ class SpeechGenerator(speech_generator.SpeechGenerator):
                 return result
 
             if _settingsManager.getSetting('speakCellCoordinates'):
-                result.append(obj.name)
+                result.append(AXObject.get_name(obj))
             return result
 
         isBasicWhereAmI = args.get('formatType') == 'basicWhereAmI'
@@ -440,18 +448,18 @@ class SpeechGenerator(speech_generator.SpeechGenerator):
             return []
 
         topLevel = self._script.utilities.topLevelObject(obj)
-        if topLevel and topLevel.getRole() == pyatspi.ROLE_DIALOG:
+        if topLevel and AXObject.get_role(topLevel) == Atspi.Role.DIALOG:
             return []
 
         return super()._generateEndOfTableIndicator(obj, **args)
 
     def _generateNewAncestors(self, obj, **args):
         priorObj = args.get('priorObj', None)
-        if not priorObj or priorObj.getRoleName() == 'text frame':
+        if not priorObj or AXObject.get_role_name(priorObj) == 'text frame':
             return []
 
         if self._script.utilities.isSpreadSheetCell(obj) \
-           and self._script.utilities.isDocumentPanel(priorObj.parent):
+           and self._script.utilities.isDocumentPanel(AXObject.get_parent(priorObj)):
             return []
 
         return super()._generateNewAncestors(obj, **args)
@@ -461,7 +469,7 @@ class SpeechGenerator(speech_generator.SpeechGenerator):
         specifications) that represent the text of the ancestors for
         the object being left."""
 
-        if obj.getRoleName() == 'text frame':
+        if AXObject.get_role_name(obj) == 'text frame':
             return []
 
         priorObj = args.get('priorObj', None)
@@ -492,7 +500,7 @@ class SpeechGenerator(speech_generator.SpeechGenerator):
             # which we are editing, we have some pointOfReference info
             # we can use to guess the coordinates.
             #
-            args['guessCoordinates'] = obj.getRole() == pyatspi.ROLE_PARAGRAPH
+            args['guessCoordinates'] = AXObject.get_role(obj) == Atspi.Role.PARAGRAPH
             result.extend(super().generateSpeech(obj, **args))
             del args['guessCoordinates']
             self._restoreRole(oldRole, args)

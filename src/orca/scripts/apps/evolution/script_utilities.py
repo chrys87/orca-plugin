@@ -25,10 +25,11 @@ __date__      = "$Date$"
 __copyright__ = "Copyright (c) 2015 Igalia, S.L."
 __license__   = "LGPL"
 
-import pyatspi
-
 import orca.scripts.toolkits.gtk as gtk
 import orca.scripts.toolkits.WebKitGtk as WebKitGtk
+from orca.ax_object import AXObject
+from orca.ax_utilities import AXUtilities
+
 
 class Utilities(WebKitGtk.Utilities, gtk.Utilities):
 
@@ -36,41 +37,40 @@ class Utilities(WebKitGtk.Utilities, gtk.Utilities):
         super().__init__(script)
 
     def isComposeMessageBody(self, obj):
-        if not obj.getState().contains(pyatspi.STATE_EDITABLE):
+        if not AXUtilities.is_editable(obj):
             return False
 
         return self.isEmbeddedDocument(obj)
 
     def isReceivedMessage(self, obj):
-        if obj.getState().contains(pyatspi.STATE_EDITABLE):
+        if AXUtilities.is_editable(obj):
             return False
 
         return self.isEmbeddedDocument(obj)
 
     def isReceivedMessageHeader(self, obj):
-        if not (obj and obj.getRole() == pyatspi.ROLE_TABLE):
+        if not AXUtilities.is_table(obj):
             return False
 
-        return self.isReceivedMessage(obj.parent)
+        return self.isReceivedMessage(AXObject.get_parent(obj))
 
     def isReceivedMessageContent(self, obj):
-        if not (obj and obj.getRole() == pyatspi.ROLE_SECTION):
+        if not AXUtilities.is_section(obj):
             return False
 
-        return self.isReceivedMessage(obj.parent)
+        return self.isReceivedMessage(AXObject.get_parent(obj))
 
     def isComposeAutocomplete(self, obj):
-        if not (obj and obj.getRole() == pyatspi.ROLE_TABLE):
+        if not AXUtilities.is_table(obj):
             return False
 
-        if not obj.getState().contains(pyatspi.STATE_MANAGES_DESCENDANTS):
+        if not AXUtilities.manages_descendants(obj):
             return False
 
-        topLevel = self.topLevelObject(obj)
-        return topLevel and topLevel.getRole() == pyatspi.ROLE_WINDOW
+        return AXUtilities.is_window(self.topLevelObject(obj))
 
     def findMessageBodyChild(self, root):
-        candidate = pyatspi.findDescendant(root, self.isDocument)
+        candidate = AXObject.find_descendant(root, self.isDocument)
         if self.isEmbeddedDocument(candidate):
             return self.findMessageBodyChild(candidate)
 
@@ -81,7 +81,7 @@ class Utilities(WebKitGtk.Utilities, gtk.Utilities):
             return False
 
         header = self.columnHeaderForCell(obj)
-        return header and header.name != obj.name
+        return header and AXObject.get_name(header) != AXObject.get_name(obj)
 
     def isMessageListToggleCell(self, obj):
         if self.isWebKitGtk(obj):
@@ -90,7 +90,7 @@ class Utilities(WebKitGtk.Utilities, gtk.Utilities):
         if not gtk.Utilities.hasMeaningfulToggleAction(self, obj):
             return False
 
-        if not obj.name:
+        if not AXObject.get_name(obj):
             return False
 
         return True
@@ -101,9 +101,8 @@ class Utilities(WebKitGtk.Utilities, gtk.Utilities):
 
         # This is some mystery child of the 'Messages' panel which fails to show
         # up in the hierarchy or emit object:state-changed:focused events.
-        if obj.getRole() == pyatspi.ROLE_LAYERED_PANE:
-            isTreeTable = lambda x: x and x.getRole() == pyatspi.ROLE_TREE_TABLE
-            return pyatspi.utils.findDescendant(obj, isTreeTable) or obj
+        if AXUtilities.is_layered_pane(obj):
+            return AXObject.find_descendant(obj, AXUtilities.is_tree_table) or obj
 
         return gtk.Utilities.realActiveDescendant(self, obj)
 
@@ -121,8 +120,7 @@ class Utilities(WebKitGtk.Utilities, gtk.Utilities):
         if not self.isEmbeddedDocument(obj):
             return False
 
-        isSplitPane = lambda x: x and x.getRole() == pyatspi.ROLE_SPLIT_PANE
-        if pyatspi.utils.findAncestor(obj, isSplitPane):
+        if AXObject.find_ancestor(obj, AXUtilities.is_split_pane) is not None:
             return False
 
         return True

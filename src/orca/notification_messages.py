@@ -25,7 +25,9 @@ __date__      = "$Date$"
 __copyright__ = "Copyright (c) 2010 Informal Informatica LTDA."
 __license__   = "LGPL"
 
-import pyatspi
+import gi
+gi.require_version("Atspi", "2.0")
+from gi.repository import Atspi
 
 from . import cmdnames
 from . import debug
@@ -163,7 +165,7 @@ def listNotificationMessages(script, event):
     consumed = True
     speak = True
 
-    if event.type != pyatspi.KEY_PRESSED_EVENT:
+    if event.type != Atspi.EventType.KEY_PRESSED_EVENT:
         return False
     script.presentationInterrupt()
     if event.event_string == "Escape":

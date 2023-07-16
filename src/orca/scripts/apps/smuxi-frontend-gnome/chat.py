@@ -27,23 +27,22 @@ __date__      = "$Date$"
 __copyright__ = "Copyright (c) 2018 Igalia, S.L."
 __license__   = "LGPL"
 
-import pyatspi
 
 import orca.chat as chat
+from orca.ax_object import AXObject
+from orca.ax_utilities import AXUtilities
 
 
 class Chat(chat.Chat):
 
     def __init__(self, script, buddyListAncestries):
-
         super().__init__(script, buddyListAncestries)
 
     def isFocusedChat(self, obj):
         """Returns True if we plan to treat this chat as focused."""
 
-        isPageTab = lambda x: x and x.getRole() == pyatspi.ROLE_PAGE_TAB
-        pageTab = pyatspi.findAncestor(obj, isPageTab)
+        pageTab = AXObject.find_ancestor(obj, AXUtilities.is_page_tab)
         if pageTab is None:
             return super().isFocusedChat(obj)
 
-        return pageTab.getState().contains(pyatspi.STATE_SHOWING)
+        return AXUtilities.is_showing(pageTab)

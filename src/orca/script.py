@@ -39,7 +39,9 @@ __date__      = "$Date$"
 __copyright__ = "Copyright (c) 2005-2009 Sun Microsystems Inc."
 __license__   = "LGPL"
 
-import pyatspi
+import gi
+gi.require_version("Atspi", "2.0")
+from gi.repository import Atspi
 
 from . import braille_generator
 from . import debug
@@ -57,6 +59,7 @@ from . import speech_generator
 from . import structural_navigation
 from . import bookmarks
 from . import tutorialgenerator
+from .ax_object import AXObject
 
 _eventManager = event_manager.getManager()
 _scriptManager = script_manager.getManager()
@@ -77,12 +80,7 @@ class Script:
         self.app = app
 
         if app:
-            try:
-                self.name = self.app.name
-            except (LookupError, RuntimeError):
-                msg = 'ERROR: Could not get name of script app %s'
-                debug.println(debug.LEVEL_INFO, msg, True)
-                self.name = "default"
+            self.name = AXObject.get_name(self.app) or "default"
         else:
             self.name = "default"
 
@@ -198,8 +196,7 @@ class Script:
         return None
 
     def getUtilities(self):
-        """Returns the utilites for this script.
-        """
+        """Returns the utilities for this script."""
         return script_utilities.Utilities(self)
 
     def getLabelInference(self):
@@ -222,7 +219,7 @@ class Script:
         """Returns the live region support for this script."""
         return None
 
-    def useStructuralNavigationModel(self):
+    def useStructuralNavigationModel(self, debugOutput=True):
         """Returns True if we should use structural navigation. Most
         scripts will have no need to override this.  Gecko does however
         because within an HTML document there are times when we do want
@@ -293,10 +290,9 @@ class Script:
         - event: the Event
         """
 
-        try:
-            role = event.source.getRole()
-        except (LookupError, RuntimeError):
-            msg = 'ERROR: Exception getting role for %s' % event.source
+        role = AXObject.get_role(event.source)
+        if role == Atspi.Role.INVALID:
+            msg = 'ERROR: Not processing object event for invalid object'
             debug.println(debug.LEVEL_INFO, msg, True)
             return
 
@@ -304,7 +300,7 @@ class Script:
         #
         processEvent = (orca_state.activeScript == self \
                         or self.presentIfInactive)
-        if role == pyatspi.ROLE_PROGRESS_BAR \
+        if role == Atspi.Role.PROGRESS_BAR \
            and not processEvent \
            and settings.progressBarVerbosity == settings.PROGRESS_BAR_ALL:
             processEvent = True

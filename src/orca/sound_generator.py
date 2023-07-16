@@ -32,10 +32,11 @@ gi.require_version('Atspi', '2.0')
 from gi.repository import Atspi
 
 import os
-import pyatspi
 
 from . import generator
 from . import settings_manager
+from .ax_object import AXObject
+from .ax_utilities import AXUtilities
 
 _settingsManager = settings_manager.getManager()
 
@@ -272,7 +273,7 @@ class SoundGenerator(generator.Generator):
             args['mode'] = self._mode
 
         args['stringType'] = 'visited'
-        if obj.getState().contains(pyatspi.STATE_VISITED):
+        if AXUtilities.is_visited(obj):
             filenames = [self._script.formatting.getString(**args)]
             result = list(map(self._convertFilenameToIcon, filenames))
             if result:
@@ -353,8 +354,9 @@ class SoundGenerator(generator.Generator):
         if not _settingsManager.getSetting('playSoundForPositionInSet'):
             return []
 
-        position, setSize = self._script.utilities.getPositionAndSetSize(obj)
-        percent = int((position / setSize) * 100)
+        # TODO: Implement the result.
+        # position, setSize = self._script.utilities.getPositionAndSetSize(obj)
+        # percent = int((position / setSize) * 100)
 
         return []
 
@@ -364,7 +366,7 @@ class SoundGenerator(generator.Generator):
         if not _settingsManager.getSetting('playSoundForRole'):
             return []
 
-        role = args.get('role', obj.getRole())
+        role = args.get('role', AXObject.get_role(obj))
         filename = Atspi.role_get_name(role).replace(' ', '_')
         result = self._convertFilenameToIcon(filename)
         if result:

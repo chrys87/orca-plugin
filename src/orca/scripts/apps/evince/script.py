@@ -27,13 +27,13 @@ __date__      = "$Date$"
 __copyright__ = "Copyright (c) 2013 The Orca Team."
 __license__   = "LGPL"
 
-import pyatspi
-
 import orca.keybindings as keybindings
 import orca.orca as orca
 import orca.orca_state as orca_state
 import orca.scripts.toolkits.gtk as gtk
+from orca.ax_utilities import AXUtilities
 from orca.structural_navigation import StructuralNavigation
+
 
 ########################################################################
 #                                                                      #
@@ -98,14 +98,13 @@ class Script(gtk.Script):
 
         return enabledTypes
 
-    def useStructuralNavigationModel(self):
+    def useStructuralNavigationModel(self, debugOutput=True):
         """Returns True if we should do our own structural navigation."""
 
         if not self.structuralNavigation.enabled:
             return False
 
-        states = orca_state.locusOfFocus.getState()
-        if states.contains(pyatspi.STATE_EDITABLE):
+        if AXUtilities.is_editable(orca_state.locusOfFocus):
             return False
 
         return True
@@ -114,7 +113,7 @@ class Script(gtk.Script):
         """Callback for object:text-caret-moved accessibility events."""
 
         obj = event.source
-        if obj.getState().contains(pyatspi.STATE_FOCUSED):
+        if AXUtilities.is_focused(obj):
             orca.setLocusOfFocus(event, event.source, False)
 
         gtk.Script.onCaretMoved(self, event)

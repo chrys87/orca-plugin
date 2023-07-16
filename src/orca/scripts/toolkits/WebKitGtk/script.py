@@ -27,8 +27,9 @@ __copyright__ = "Copyright (C) 2010-2011 The Orca Team" \
                 "Copyright (C) 2011-2012 Igalia, S.L."
 __license__   = "LGPL"
 
-import pyatspi
-import pyatspi.utils as utils
+import gi
+gi.require_version("Atspi", "2.0")
+from gi.repository import Atspi
 
 import orca.scripts.default as default
 import orca.cmdnames as cmdnames
@@ -44,6 +45,8 @@ import orca.speechserver as speechserver
 import orca.orca_state as orca_state
 import orca.speech as speech
 import orca.structural_navigation as structural_navigation
+from orca.ax_object import AXObject
+from orca.ax_utilities import AXUtilities
 
 from .braille_generator import BrailleGenerator
 from .speech_generator import SpeechGenerator
@@ -168,7 +171,7 @@ class Script(default.Script):
                 structural_navigation.StructuralNavigation.VISITED_LINK]
 
     def getUtilities(self):
-        """Returns the utilites for this script."""
+        """Returns the utilities for this script."""
 
         return Utilities(self)
 
@@ -187,9 +190,9 @@ class Script(default.Script):
             return
 
         if lastKey == 'Down' \
-           and orca_state.locusOfFocus == event.source.parent \
-           and event.source.getIndexInParent() == 0 \
-           and orca_state.locusOfFocus.getRole() == pyatspi.ROLE_LINK:
+           and orca_state.locusOfFocus == AXObject.get_parent(event.source) \
+           and AXObject.get_index_in_parent(event.source) == 0 \
+           and AXUtilities.is_link(orca_state.locusOfFocus):
             self.updateBraille(event.source)
             return
 
@@ -242,14 +245,14 @@ class Script(default.Script):
             return
 
         obj = event.source
-        role = obj.getRole()
-        textRoles = [pyatspi.ROLE_HEADING,
-                     pyatspi.ROLE_PANEL,
-                     pyatspi.ROLE_PARAGRAPH,
-                     pyatspi.ROLE_SECTION,
-                     pyatspi.ROLE_TABLE_CELL]
+        role = AXObject.get_role(obj)
+        textRoles = [Atspi.Role.HEADING,
+                     Atspi.Role.PANEL,
+                     Atspi.Role.PARAGRAPH,
+                     Atspi.Role.SECTION,
+                     Atspi.Role.TABLE_CELL]
         if role in textRoles \
-           or (role == pyatspi.ROLE_LIST_ITEM and obj.childCount):
+           or (role == Atspi.Role.LIST_ITEM and AXObject.get_child_count(obj)):
             return
 
         super().onFocusedChanged(event)
@@ -257,19 +260,15 @@ class Script(default.Script):
     def onBusyChanged(self, event):
         """Callback for object:state-changed:busy accessibility events."""
 
-        obj = event.source
-        try:
-            role = obj.getRole()
-            name = obj.name
-        except:
-            return
-
-        if not self.utilities.treatAsBrowser(obj):
+        if not self.utilities.treatAsBrowser(event.source):
             return
 
         if event.detail1:
             self.presentMessage(messages.PAGE_LOADING_START)
-        elif name:
+            return
+
+        name = AXObject.get_name(event.source)
+        if name:
             self.presentMessage(messages.PAGE_LOADING_END_NAMED % name)
         else:
             self.presentMessage(messages.PAGE_LOADING_END)
@@ -281,11 +280,11 @@ class Script(default.Script):
         - obj: an Accessible object that implements the AccessibleText interface
         """
 
-        if obj.getRole() == pyatspi.ROLE_ENTRY:
+        if AXUtilities.is_entry(obj):
             default.Script.sayCharacter(self, obj)
             return
 
-        boundary = pyatspi.TEXT_BOUNDARY_CHAR
+        boundary = Atspi.TextBoundaryType.CHAR
         objects = self.utilities.getObjectsFromEOCs(obj, boundary=boundary)
         for (obj, start, end, string) in objects:
             if string:
@@ -302,11 +301,11 @@ class Script(default.Script):
         - obj: an Accessible object that implements the AccessibleText interface
         """
 
-        if obj.getRole() == pyatspi.ROLE_ENTRY:
+        if AXUtilities.is_entry(obj):
             default.Script.sayWord(self, obj)
             return
 
-        boundary = pyatspi.TEXT_BOUNDARY_WORD_START
+        boundary = Atspi.TextBoundaryType.WORD_START
         objects = self.utilities.getObjectsFromEOCs(obj, boundary=boundary)
         for (obj, start, end, string) in objects:
             self.sayPhrase(obj, start, end)
@@ -320,22 +319,21 @@ class Script(default.Script):
         - obj: an Accessible object that implements the AccessibleText interface
         """
 
-        if obj.getRole() == pyatspi.ROLE_ENTRY:
+        if AXUtilities.is_entry(obj):
             default.Script.sayLine(self, obj)
             return
 
-        boundary = pyatspi.TEXT_BOUNDARY_LINE_START
+        boundary = Atspi.TextBoundaryType.LINE_START
         objects = self.utilities.getObjectsFromEOCs(obj, boundary=boundary)
         for (obj, start, end, string) in objects:
             self.sayPhrase(obj, start, end)
 
             # TODO: Move these next items into the speech generator.
-            if obj.getRole() == pyatspi.ROLE_PANEL \
-               and obj.getIndexInParent() == 0:
-                obj = obj.parent
+            if AXUtilities.is_panel(obj) and AXObject.get_index_in_parent(obj) == 0:
+                obj = AXObject.get_parent(obj)
 
-            rolesToSpeak = [pyatspi.ROLE_HEADING, pyatspi.ROLE_LINK]
-            if obj.getRole() in rolesToSpeak:
+            rolesToSpeak = [Atspi.Role.HEADING, Atspi.Role.LINK]
+            if AXObject.get_role(obj) in rolesToSpeak:
                 speech.speak(self.speechGenerator.getRoleName(obj))
 
         self.pointOfReference["lastTextUnitSpoken"] = "line"
@@ -349,7 +347,7 @@ class Script(default.Script):
         - endOffset: the end text offset.
         """
 
-        if obj.getRole() == pyatspi.ROLE_ENTRY:
+        if AXUtilities.is_entry(obj):
             default.Script.sayPhrase(self, obj, startOffset, endOffset)
             return
 
@@ -357,7 +355,7 @@ class Script(default.Script):
         if len(phrase) and phrase != "\n":
             voice = self.speechGenerator.voice(obj=obj, string=phrase)
             phrase = self.utilities.adjustForRepeats(phrase)
-            links = [x for x in obj if x.getRole() == pyatspi.ROLE_LINK]
+            links = [x for x in AXObject.iter_children(obj, AXUtilities.is_link)]
             if links:
                 phrase = self.utilities.adjustForLinks(obj, phrase, startOffset)
             speech.speak(phrase, voice)
@@ -378,25 +376,24 @@ class Script(default.Script):
         Returns True if we shouldn't bother processing this object event.
         """
 
-        if event.type.startswith('object:state-changed:focused') \
-           and event.detail1:
-            if event.source.getRole() == pyatspi.ROLE_LINK:
+        if event.type.startswith('object:state-changed:focused') and event.detail1 \
+           and AXUtilities.is_link(event.source):
                 return False
 
         return default.Script.skipObjectEvent(self, event)
 
-    def useStructuralNavigationModel(self):
+    def useStructuralNavigationModel(self, debugOutput=True):
         """Returns True if we should do our own structural navigation.
         This should return False if we're in a form field, or not in
         document content.
         """
 
-        doNotHandleRoles = [pyatspi.ROLE_ENTRY,
-                            pyatspi.ROLE_TEXT,
-                            pyatspi.ROLE_PASSWORD_TEXT,
-                            pyatspi.ROLE_LIST,
-                            pyatspi.ROLE_LIST_ITEM,
-                            pyatspi.ROLE_MENU_ITEM]
+        doNotHandleRoles = [Atspi.Role.ENTRY,
+                            Atspi.Role.TEXT,
+                            Atspi.Role.PASSWORD_TEXT,
+                            Atspi.Role.LIST,
+                            Atspi.Role.LIST_ITEM,
+                            Atspi.Role.MENU_ITEM]
 
         if not self.structuralNavigation.enabled:
             return False
@@ -404,16 +401,15 @@ class Script(default.Script):
         if not self.utilities.isWebKitGtk(orca_state.locusOfFocus):
             return False
 
-        states = orca_state.locusOfFocus.getState()
-        if states.contains(pyatspi.STATE_EDITABLE):
+        if AXUtilities.is_editable(orca_state.locusOfFocus):
             return False
 
-        role = orca_state.locusOfFocus.getRole()
+        role = AXObject.get_role(orca_state.locusOfFocus)
         if role in doNotHandleRoles:
-            if role == pyatspi.ROLE_LIST_ITEM:
-                return not states.contains(pyatspi.STATE_SELECTABLE)
+            if role == Atspi.Role.LIST_ITEM:
+                return not AXUtilities.is_selectable(orca_state.locusOfFocus)
 
-            if states.contains(pyatspi.STATE_FOCUSED):
+            if AXUtilities.is_focused(orca_state.locusOfFocus):
                 return False
 
         return True
@@ -517,24 +513,24 @@ class Script(default.Script):
         if not obj:
             return
 
-        if obj.getRole() == pyatspi.ROLE_LINK:
-            obj = obj.parent
+        if AXObject.get_role(obj) == Atspi.Role.LINK:
+            obj = AXObject.get_parent(obj)
 
         document = self.utilities.getDocumentForObject(obj)
-        if not document or document.getState().contains(pyatspi.STATE_BUSY):
+        if not document or AXUtilities.is_busy(document):
             return
 
-        allTextObjs = utils.findAllDescendants(
-            document, lambda x: x and 'Text' in utils.listInterfaces(x))
+        allTextObjs = self.utilities.findAllDescendants(
+            document, lambda x: AXObject.supports_text(x))
         allTextObjs = allTextObjs[allTextObjs.index(obj):len(allTextObjs)]
-        textObjs = [x for x in allTextObjs if x.parent not in allTextObjs]
+        textObjs = [x for x in allTextObjs if AXObject.get_parent(x) not in allTextObjs]
         if not textObjs:
             return
 
-        boundary = pyatspi.TEXT_BOUNDARY_LINE_START
+        boundary = Atspi.TextBoundaryType.LINE_START
         sayAllStyle = _settingsManager.getSetting('sayAllStyle')
         if sayAllStyle == settings.SAYALL_STYLE_SENTENCE:
-            boundary = pyatspi.TEXT_BOUNDARY_SENTENCE_START
+            boundary = Atspi.TextBoundaryType.SENTENCE_START
 
         voices = _settingsManager.getSetting('voices')
         systemVoice = voices.get(settings.SYSTEM_VOICE)
@@ -597,7 +593,7 @@ class Script(default.Script):
         else:
             linkCount = hypertext.getNLinks()
             links = [hypertext.getLink(x) for x in range(linkCount)]
-            if [l for l in links if l.startIndex <= offset <= l.endIndex]:
+            if [link for link in links if link.startIndex <= offset <= link.endIndex]:
                 return
 
         orca.emitRegionChanged(obj, offset, mode=orca.SAY_ALL)
@@ -609,13 +605,13 @@ class Script(default.Script):
         textLine = super().getTextLineAtCaret(obj, offset, startOffset, endOffset)
         string = textLine[0]
         if string and string.find(self.EMBEDDED_OBJECT_CHARACTER) == -1 \
-           and obj.getState().contains(pyatspi.STATE_FOCUSED):
+           and AXUtilities.is_focused(obj):
             return textLine
 
         textLine[0] = self.utilities.displayedText(obj)
         try:
             text = obj.queryText()
-        except:
+        except Exception:
             pass
         else:
             textLine[1] = min(textLine[1], text.characterCount)
@@ -644,15 +640,15 @@ class Script(default.Script):
             return
 
         brailleLine = self.getNewBrailleLine(clearBraille=True, addLine=True)
-        for child in obj:
-            if not self.utilities.onSameLine(child, obj[0]):
+        for child in AXObject.iter_children(obj):
+            if not self.utilities.onSameLine(child, AXObject.get_child(obj, 0)):
                 break
             [regions, fRegion] = self.brailleGenerator.generateBraille(child)
             self.addBrailleRegionsToLine(regions, brailleLine)
 
         if not brailleLine.regions:
             [regions, fRegion] = self.brailleGenerator.generateBraille(
-                obj, role=pyatspi.ROLE_PARAGRAPH)
+                obj, role=Atspi.Role.PARAGRAPH)
             self.addBrailleRegionsToLine(regions, brailleLine)
             self.setBrailleFocus(fRegion)
 

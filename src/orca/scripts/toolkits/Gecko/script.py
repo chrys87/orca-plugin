@@ -27,11 +27,14 @@ __copyright__ = "Copyright (c) 2005-2009 Sun Microsystems Inc." \
                 "Copyright (c) 2014-2015 Igalia, S.L."
 __license__   = "LGPL"
 
-import pyatspi
+import gi
+gi.require_version("Atspi", "2.0")
+from gi.repository import Atspi
 
 from orca import debug
 from orca import orca
 from orca import orca_state
+from orca.ax_object import AXObject
 from orca.scripts import default
 from orca.scripts import web
 from .script_utilities import Utilities
@@ -42,8 +45,10 @@ class Script(web.Script):
     def __init__(self, app):
         super().__init__(app)
 
+        self.presentIfInactive = False
+
     def getUtilities(self):
-        """Returns the utilites for this script."""
+        """Returns the utilities for this script."""
 
         return Utilities(self)
 
@@ -69,7 +74,7 @@ class Script(web.Script):
         if super().onActiveChanged(event):
             return
 
-        if event.detail1 and event.source.getRole() == pyatspi.ROLE_FRAME \
+        if event.detail1 and AXObject.get_role(event.source) == Atspi.Role.FRAME \
            and not self.utilities.canBeActiveWindow(event.source):
             return
 
@@ -226,7 +231,7 @@ class Script(web.Script):
         if super().onFocusedChanged(event):
             return
 
-        if event.source.getRole() == pyatspi.ROLE_PANEL:
+        if AXObject.get_role(event.source) == Atspi.Role.PANEL:
             if orca_state.locusOfFocus == orca_state.activeWindow:
                 msg = "GECKO: Ignoring event believed to be noise."
                 debug.println(debug.LEVEL_INFO, msg, True)

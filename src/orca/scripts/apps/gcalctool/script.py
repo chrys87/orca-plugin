@@ -25,10 +25,14 @@ __date__      = "$Date$"
 __copyright__ = "Copyright (c) 2005-2008 Sun Microsystems Inc."
 __license__   = "LGPL"
 
-import pyatspi
+import gi
+gi.require_version("Atspi", "2.0")
+from gi.repository import Atspi
 
 import orca.scripts.toolkits.gtk as gtk
 import orca.messages as messages
+from orca.ax_object import AXObject
+from orca.ax_utilities import AXUtilities
 
 ########################################################################
 #                                                                      #
@@ -63,20 +67,18 @@ class Script(gtk.Script):
             gtk.Script.onWindowActivated(self, event)
             return
 
-        obj = event.source
-        role = obj.getRole()
-        if role != pyatspi.ROLE_FRAME:
+        if AXObject.get_role(event.source) != Atspi.Role.FRAME:
             gtk.Script.onWindowActivated(self, event)
             return
 
-        isEditbar = lambda x: x and x.getRole() == pyatspi.ROLE_EDITBAR
-        self._resultsDisplay = pyatspi.findDescendant(obj, isEditbar)
+        isEditbar = lambda x: AXObject.get_role(x) == Atspi.Role.EDITBAR
+        self._resultsDisplay = AXObject.find_descendant(event.source, isEditbar)
         if not self._resultsDisplay:
             self.presentMessage(messages.CALCULATOR_DISPLAY_NOT_FOUND)
 
-        isStatusLine = lambda x: x and x.getRole() == pyatspi.ROLE_TEXT \
-                       and not x.getState().contains(pyatspi.STATE_EDITABLE)
-        self._statusLine = pyatspi.findDescendant(obj, isStatusLine)
+        isStatusLine = lambda x: AXObject.get_role(x) == Atspi.Role.TEXT \
+                       and not AXUtilities.is_editable(x)
+        self._statusLine = AXObject.find_descendant(event.source, isStatusLine)
 
         gtk.Script.onWindowActivated(self, event)
 

@@ -25,12 +25,17 @@ __copyright__ = "Copyright (c) 2005-2009 Sun Microsystems Inc., "  \
                 "Copyright (c) 2010 Joanmarie Diggs"
 __license__   = "LGPL"
 
-import pyatspi
+import gi
+gi.require_version("Atspi", "2.0")
+from gi.repository import Atspi
 
 import orca.scripts.default as default
 import orca.input_event as input_event
 import orca.orca as orca
 import orca.orca_state as orca_state
+from orca.ax_object import AXObject
+from orca.ax_selection import AXSelection
+from orca.ax_utilities import AXUtilities
 
 from .script_utilities import Utilities
 from .speech_generator import SpeechGenerator
@@ -70,7 +75,7 @@ class Script(default.Script):
         return Formatting(self)
 
     def getUtilities(self):
-        """Returns the utilites for this script."""
+        """Returns the utilities for this script."""
         return Utilities(self)
 
     def onCaretMoved(self, event):
@@ -84,9 +89,9 @@ class Script(default.Script):
         # just process the single value changed event.
         #
         isSpinBox = self.utilities.hasMatchingHierarchy(
-            event.source, [pyatspi.ROLE_TEXT,
-                           pyatspi.ROLE_PANEL,
-                           pyatspi.ROLE_SPIN_BUTTON])
+            event.source, [Atspi.Role.TEXT,
+                           Atspi.Role.PANEL,
+                           Atspi.Role.SPIN_BUTTON])
         if isSpinBox:
             eventStr, mods = self.utilities.lastKeyAndModifiers()
             if eventStr in ["Up", "Down"] or isinstance(
@@ -116,15 +121,11 @@ class Script(default.Script):
         # focus. If there is no selection, we default the locus of
         # focus to the containing object.
         #
-        if (event.source.getRole() in [pyatspi.ROLE_LIST,
-                                       pyatspi.ROLE_PAGE_TAB_LIST,
-                                       pyatspi.ROLE_TREE]) \
-            and event.source.getState().contains(pyatspi.STATE_FOCUSED):
-            newFocus = event.source
-            if event.source.childCount:
-                selection = event.source.querySelection()
-                if selection.nSelectedChildren > 0:
-                    newFocus = selection.getSelectedChild(0)
+        if (AXUtilities.is_list(event.source) \
+           or AXUtilities.is_page_tab_list(event.source) \
+           or AXUtilities.is_tree(event.source)) \
+           and AXUtilities.is_focused(event.source):
+            newFocus = AXSelection.get_selected_child(event.source, 0) or event.source
             orca.setLocusOfFocus(event, newFocus)
         else:
             default.Script.onSelectionChanged(self, event)
@@ -135,31 +136,18 @@ class Script(default.Script):
         if not event.detail1:
             return
 
-        obj = event.source
-        role = obj.getRole()
-
         # Accessibility support for menus in Java is badly broken: Missing
         # events, missing states, bogus events from other objects, etc.
         # Therefore if we get an event, however broken, for menus or their
         # their items that suggests they are selected, we'll just cross our
         # fingers and hope that's true.
-        menuRoles = [pyatspi.ROLE_MENU,
-                     pyatspi.ROLE_MENU_BAR,
-                     pyatspi.ROLE_MENU_ITEM,
-                     pyatspi.ROLE_CHECK_MENU_ITEM,
-                     pyatspi.ROLE_RADIO_MENU_ITEM,
-                     pyatspi.ROLE_POPUP_MENU]
-
-        if role in menuRoles or obj.parent.getRole() in menuRoles:
-            orca.setLocusOfFocus(event, obj)
+        if AXUtilities.is_menu_related(event.source) \
+           or AXUtilities.is_menu_related(AXObject.get_parent(event.source)):
+            orca.setLocusOfFocus(event, event.source)
             return
 
-        try:
-            focusRole = orca_state.locusOfFocus.getRole()
-        except:
-            focusRole = None
-
-        if focusRole in menuRoles and role == pyatspi.ROLE_ROOT_PANE:
+        if AXUtilities.is_root_pane(event.source) \
+           and AXUtilities.is_menu_related(orca_state.locusOfFocus):
             return
 
         default.Script.onFocusedChanged(self, event)
@@ -173,11 +161,9 @@ class Script(default.Script):
 
         # We'll ignore value changed events for Java's toggle buttons since
         # they also send a redundant object:state-changed:checked event.
-        #
-        ignoreRoles = [pyatspi.ROLE_TOGGLE_BUTTON,
-                       pyatspi.ROLE_RADIO_BUTTON,
-                       pyatspi.ROLE_CHECK_BOX]
-        if event.source.getRole() in ignoreRoles:
+        if AXUtilities.is_toggle_button(event.source) \
+           or AXUtilities.is_radio_button(event.source) \
+           or AXUtilities.is_check_box(event.source):
             return
 
         # Java's SpinButtons are the most caret movement happy thing
@@ -189,14 +175,11 @@ class Script(default.Script):
         # ignore caret movement events caused by value changes and
         # just process the single value changed event.
         #
-        if event.source.getRole() == pyatspi.ROLE_SPIN_BUTTON:
-            try:
-                thisBox = orca_state.locusOfFocus.parent.parent == event.source
-            except:
-                thisBox = False
-            if thisBox:
-                self._presentTextAtNewCaretPosition(event,
-                                                    orca_state.locusOfFocus)
+        if AXUtilities.is_spin_button(event.source):
+            parent = AXObject.get_parent(orca_state.locusOfFocus)
+            grandparent = AXObject.get_parent(parent)
+            if grandparent == event.source:
+                self._presentTextAtNewCaretPosition(event, orca_state.locusOfFocus)
                 return
 
         default.Script.onValueChanged(self, event)
@@ -206,15 +189,7 @@ class Script(default.Script):
         # Accessibility support for menus in Java is badly broken. One problem
         # is bogus focus claims following menu-related focus claims. Therefore
         # in this particular toolkit, we mustn't skip events for menus.
-
-        menuRoles = [pyatspi.ROLE_MENU,
-                     pyatspi.ROLE_MENU_BAR,
-                     pyatspi.ROLE_MENU_ITEM,
-                     pyatspi.ROLE_CHECK_MENU_ITEM,
-                     pyatspi.ROLE_RADIO_MENU_ITEM,
-                     pyatspi.ROLE_POPUP_MENU]
-
-        if event.source.getRole() in menuRoles:
+        if AXUtilities.is_menu_related(event.source):
             return False
 
         return default.Script.skipObjectEvent(self, event)

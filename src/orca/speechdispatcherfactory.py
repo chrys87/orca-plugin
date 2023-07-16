@@ -54,7 +54,7 @@ _settingsManager = settings_manager.getManager()
 
 try:
     import speechd
-except:
+except Exception:
     _speechd_available = False
 else:    
     _speechd_available = True
@@ -140,7 +140,7 @@ class SpeechServer(speechserver.SpeechServer):
         # depend on the speechd module being available.
         try:
             most = speechd.PunctuationMode.MOST
-        except:
+        except Exception:
             most = speechd.PunctuationMode.SOME
         self._PUNCTUATION_MODE_MAP = {
             settings.PUNCTUATION_STYLE_ALL:  speechd.PunctuationMode.ALL,
@@ -159,7 +159,7 @@ class SpeechServer(speechserver.SpeechServer):
         
         try:
             self._init()
-        except:
+        except Exception:
             debug.printException(debug.LEVEL_WARNING)
             msg = 'ERROR: Speech Dispatcher service failed to connect'
             debug.println(debug.LEVEL_WARNING, msg, True)
@@ -195,7 +195,7 @@ class SpeechServer(speechserver.SpeechServer):
             debug.println(debug.LEVEL_INFO, msg, True)
             self.reset()
             self._client.set_cap_let_recogn(style)
-        except:
+        except Exception:
             pass
 
     def updatePunctuationLevel(self):
@@ -211,7 +211,7 @@ class SpeechServer(speechserver.SpeechServer):
             debug.println(debug.LEVEL_INFO, msg, True)
             self.reset()
             return command(*args, **kwargs)
-        except:
+        except Exception:
             pass
 
     def _set_rate(self, acss_rate):
@@ -273,7 +273,7 @@ class SpeechServer(speechserver.SpeechServer):
             sd_pitch = self._send_command(self._client.get_pitch)
             sd_volume = self._send_command(self._client.get_volume)
             sd_language = self._send_command(self._client.get_language)
-        except:
+        except Exception:
             sd_rate = sd_pitch = sd_volume = sd_language = "(exception occurred)"
 
         family = self._current_voice_properties.get(ACSS.FAMILY)
@@ -283,7 +283,6 @@ class SpeechServer(speechserver.SpeechServer):
                   settings.PUNCTUATION_STYLE_MOST: "MOST",
                   settings.PUNCTUATION_STYLE_ALL: "ALL"}
 
-        current = self._current_voice_properties
         msg = "SPEECH DISPATCHER: %s\n" \
               "ORCA rate %s, pitch %s, volume %s, language %s, punctuation: %s \n" \
               "SD rate %s, pitch %s, volume %s, language %s" % \
@@ -345,7 +344,7 @@ class SpeechServer(speechserver.SpeechServer):
         for symbol in symbols:
             try:
                 level, action = punctuation_settings.getPunctuationInfo(symbol)
-            except:
+            except Exception:
                 continue
 
             if level != punctuation_settings.LEVEL_NONE:
@@ -372,7 +371,6 @@ class SpeechServer(speechserver.SpeechServer):
         # Note: we need to do this before disturbing the text offsets
         # Note2: we assume that text mangling below leave U+E000 untouched
         last_begin = None
-        last_end = None
         is_numeric = None
         marks_offsets = []
         marks_endoffsets = []
@@ -385,13 +383,13 @@ class SpeechServer(speechserver.SpeechServer):
                 # know what to do of it anyway, so discard it
                 continue
 
-            if not c.isspace() and last_begin == None:
+            if not c.isspace() and last_begin is None:
                 # Word begin
                 marked_text += '\ue000'
                 last_begin = i
                 is_numeric = c.isnumeric()
 
-            elif c.isspace() and last_begin != None:
+            elif c.isspace() and last_begin is not None:
                 # Word end
                 if is_numeric:
                     # We had a wholy numeric word, possibly next word is as well.
@@ -419,7 +417,7 @@ class SpeechServer(speechserver.SpeechServer):
 
             marked_text += c
 
-        if last_begin != None:
+        if last_begin is not None:
             # Finished with a word
             marks_offsets.append(last_begin)
             marks_endoffsets.append(i + 1)
@@ -564,7 +562,7 @@ class SpeechServer(speechserver.SpeechServer):
         # set according to the current locale.
         from locale import getlocale, LC_MESSAGES
         locale = getlocale(LC_MESSAGES)[0]
-        if locale is None or not '_' in locale:
+        if locale is None or '_' not in locale:
             locale_language = None
         else:
             locale_lang, locale_dialect = locale.split('_')
@@ -578,7 +576,7 @@ class SpeechServer(speechserver.SpeechServer):
         else:
             try:
                 voices += self._send_command(list_synthesis_voices)
-            except:
+            except Exception:
                 pass
 
         default_lang = ""
@@ -610,6 +608,9 @@ class SpeechServer(speechserver.SpeechServer):
         return families
 
     def speak(self, text=None, acss=None, interrupt=True):
+        if not text:
+            return
+
         # In order to re-enable this, a potentially non-trivial amount of work
         # will be needed to ensure multiple utterances sent to speech.speak
         # do not result in the intial utterances getting cut off before they
@@ -626,7 +627,14 @@ class SpeechServer(speechserver.SpeechServer):
         if self._lastKeyEchoTime:
             interrupt = interrupt and (time.time() - self._lastKeyEchoTime) > 0.5
 
-        if text:
+        if len(text) == 1:
+            msg = "SPEECH DISPATCHER: Speaking '%s' as char" % text.replace("\n", "\\n")
+            debug.println(debug.LEVEL_INFO, msg, True)
+            self._apply_acss(acss)
+            self._send_command(self._client.char, text)
+        else:
+            msg = "SPEECH DISPATCHER: Speaking '%s' as string" % text
+            debug.println(debug.LEVEL_INFO, msg, True)
             self._speak(text, acss)
 
     def sayAll(self, utteranceIterator, progressCallback):
@@ -636,6 +644,8 @@ class SpeechServer(speechserver.SpeechServer):
         self._apply_acss(acss)
         name = chnames.getCharacterName(character)
         if not name or name == character:
+            msg = "SPEECH DISPATCHER: Speaking '%s' as char" % character.replace("\n", "\\n")
+            debug.println(debug.LEVEL_INFO, msg, True)
             self._send_command(self._client.char, character)
             return
 
@@ -646,13 +656,17 @@ class SpeechServer(speechserver.SpeechServer):
 
     def speakKeyEvent(self, event, acss=None):
         event_string = event.getKeyName()
-        if orca_state.activeScript:
-            event_string = orca_state.activeScript.\
-                utilities.adjustForPronunciation(event_string)
-
         lockingStateString = event.getLockingStateString()
-        event_string = "%s %s" % (event_string, lockingStateString)
-        self.speak(event_string, acss=acss)
+        event_string = ("%s %s" % (event_string, lockingStateString)).strip()
+        if len(event_string) == 1:
+            msg = "SPEECH DISPATCHER: Speaking '%s' as key" % event_string
+            debug.println(debug.LEVEL_INFO, msg, True)
+            self._apply_acss(acss)
+            self._send_command(self._client.key, event_string)
+        else:
+            msg = "SPEECH DISPATCHER: Speaking '%s' as string" % event_string
+            debug.println(debug.LEVEL_INFO, msg, True)
+            self.speak(event_string, acss=acss)
         self._lastKeyEchoTime = time.time()
 
     def increaseSpeechRate(self, step=5):

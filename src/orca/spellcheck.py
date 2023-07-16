@@ -27,14 +27,20 @@ __date__      = "$Date$"
 __copyright__ = "Copyright (c) 2014 Igalia, S.L."
 __license__   = "LGPL"
 
-import pyatspi
+import gi
+gi.require_version("Atspi", "2.0")
+from gi.repository import Atspi
+
 import re
 
+from orca import debug
 from orca import guilabels
 from orca import messages
 from orca import object_properties
 from orca import orca_state
 from orca import settings_manager
+from orca.ax_object import AXObject
+from orca.ax_utilities import AXUtilities
 
 _settingsManager = settings_manager.getManager()
 
@@ -55,24 +61,36 @@ class SpellCheck:
         self.presentContextCheckButton = None
 
     def activate(self, window):
+        msg = 'SPELL CHECK: Attempting activation for %s' % window
+        debug.println(debug.LEVEL_INFO, msg, True)
         if not self._isCandidateWindow(window):
+            msg = 'SPELL CHECK: %s is not spellcheck window' % window
+            debug.println(debug.LEVEL_INFO, msg, True)
             return False
 
         if self._hasChangeToEntry:
             self._changeToEntry = self._findChangeToEntry(window)
             if not self._changeToEntry:
+                msg = 'SPELL CHECK: Change-to entry not found'
+                debug.println(debug.LEVEL_INFO, msg, True)
                 return False
 
         self._errorWidget = self._findErrorWidget(window)
         if not self._errorWidget:
+            msg = 'SPELL CHECK: Error widget not found'
+            debug.println(debug.LEVEL_INFO, msg, True)
             return False
 
         self._suggestionsList = self._findSuggestionsList(window)
         if not self._suggestionsList:
+            msg = 'SPELL CHECK: Suggestions list not found'
+            debug.println(debug.LEVEL_INFO, msg, True)
             return False
 
         self._window = window
         self._activated = True
+        msg = 'SPELL CHECK: Activation complete'
+        debug.println(debug.LEVEL_INFO, msg, True)
         return True
 
     def deactivate(self):
@@ -115,11 +133,7 @@ class SpellCheck:
         return self.activate(window)
 
     def isComplete(self):
-        try:
-            state = self._changeToEntry.getState()
-        except:
-            return False
-        return not state.contains(pyatspi.STATE_SENSITIVE)
+        return not AXUtilities.is_sensitive(self._changeToEntry)
 
     def isAutoFocusEvent(self, event):
         return False
@@ -128,7 +142,7 @@ class SpellCheck:
         if not self._suggestionsList:
             return False
 
-        return obj and obj.parent == self._suggestionsList
+        return obj and AXObject.get_parent(obj) == self._suggestionsList
 
     def presentContext(self):
         if not self.isActive():
@@ -140,15 +154,15 @@ class SpellCheck:
 
         try:
             text = obj.queryText()
-        except:
+        except Exception:
             return False
 
         # This should work, but some toolkits are broken.
-        boundary = pyatspi.TEXT_BOUNDARY_SENTENCE_START
+        boundary = Atspi.TextBoundaryType.SENTENCE_START
         string, start, end = text.getTextAtOffset(offset, boundary)
 
         if not string:
-            boundary = pyatspi.TEXT_BOUNDARY_LINE_START
+            boundary = Atspi.TextBoundaryType.LINE_START
             string, start, end = text.getTextAtOffset(offset, boundary)
             sentences = re.split(r'(?:\.|\!|\?)', string)
             word = self.getMisspelledWord()
@@ -213,7 +227,7 @@ class SpellCheck:
         if not entry:
             return False
 
-        label = self._script.utilities.displayedLabel(entry) or entry.name
+        label = self._script.utilities.displayedLabel(entry) or AXObject.get_name(entry)
         string = self._script.utilities.substring(entry, 0, -1)
         msg = "%s %s" % (label, string)
         voice = self._script.speechGenerator.voice(string=msg)
@@ -236,10 +250,10 @@ class SpellCheck:
             return False
 
         if includeLabel:
-            label = self._script.utilities.displayedLabel(suggestions) or suggestions.name
+            label = self._script.utilities.displayedLabel(suggestions) or AXObject.get_name(suggestions)
         else:
             label = ""
-        string = items[0].name
+        string = AXObject.get_name(items[0])
 
         msg = "%s %s" % (label, string)
         voice = self._script.speechGenerator.voice(string=msg)

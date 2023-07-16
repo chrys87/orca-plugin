@@ -1,7 +1,7 @@
-m4_define([orca_version], [44.0])
+m4_define([orca_version], [46.alpha])
 
 m4_define(pygobject_required_version, 3.18)
-m4_define(atspi_required_version, 2.26)
+m4_define(atspi_required_version, 2.48)
 m4_define(atkbridge_required_version, 2.26)
 
 AC_INIT([orca],[orca_version],[https://gitlab.gnome.org/GNOME/orca/-/issues/],[orca])
@@ -93,8 +93,6 @@ src/orca/scripts/Makefile
 src/orca/scripts/apps/Makefile
 src/orca/scripts/apps/Banshee/Makefile
 src/orca/scripts/apps/Eclipse/Makefile
-src/orca/scripts/apps/ekiga/Makefile
-src/orca/scripts/apps/empathy/Makefile
 src/orca/scripts/apps/epiphany/Makefile
 src/orca/scripts/apps/evince/Makefile
 src/orca/scripts/apps/evolution/Makefile
@@ -102,17 +100,11 @@ src/orca/scripts/apps/gajim/Makefile
 src/orca/scripts/apps/gcalctool/Makefile
 src/orca/scripts/apps/gedit/Makefile
 src/orca/scripts/apps/gnome-documents/Makefile
-src/orca/scripts/apps/gnome-keyring-ask/Makefile
-src/orca/scripts/apps/gnome-panel/Makefile
-src/orca/scripts/apps/gnome-screensaver-dialog/Makefile
 src/orca/scripts/apps/gnome-search-tool/Makefile
 src/orca/scripts/apps/gnome-shell/Makefile
-src/orca/scripts/apps/gnome-window-properties/Makefile
 src/orca/scripts/apps/kwin/Makefile
-src/orca/scripts/apps/Instantbird/Makefile
 src/orca/scripts/apps/notification-daemon/Makefile
 src/orca/scripts/apps/notify-osd/Makefile
-src/orca/scripts/apps/Mozilla/Makefile
 src/orca/scripts/apps/pidgin/Makefile
 src/orca/scripts/apps/rhythmbox/Makefile
 src/orca/scripts/apps/soffice/Makefile
