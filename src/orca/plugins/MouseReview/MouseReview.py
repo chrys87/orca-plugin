@@ -45,7 +45,6 @@ try:
 except Exception:
     _mouseReviewCapable = False
 
-<<<<<<< HEAD:src/orca/plugins/MouseReview/MouseReview.py
 # compatibility layer
 debug = None
 event_manager = None

@@ -63,10 +63,10 @@ except Exception:
 from . import braille
 from . import debug
 from . import event_manager
+from . import keybindings
 from . import logger
 from . import messages
 from . import notification_messages
-from . import mouse_review
 from . import orca_state
 from . import orca_platform
 from . import script_manager
@@ -480,69 +480,16 @@ def loadUserSettings(script=None, inputEvent=None, skipReloadMessage=False):
     _createOrcaXmodmap()
 
     _eventManager.activate()
-<<<<<<< HEAD
     orcaApp.getSignalManager().emitSignal('load-setting-completed')
-=======
+
     _scriptManager.activate()
->>>>>>> master
+
 
     debug.println(debug.LEVEL_INFO, 'ORCA: User Settings Loaded', True)
 
     return True
 
-<<<<<<< HEAD
-=======
-def _showPreferencesUI(script, prefs):
-    if orca_state.orcaOS:
-        orca_state.orcaOS.showGUI()
-        return
 
-    try:
-        module = importlib.import_module('.orca_gui_prefs', 'orca')
-    except Exception:
-        debug.printException(debug.LEVEL_SEVERE)
-        return
-
-    uiFile = os.path.join(orca_platform.datadir,
-                          orca_platform.package,
-                          "ui",
-                          "orca-setup.ui")
-
-    orca_state.orcaOS = module.OrcaSetupGUI(uiFile, "orcaSetupWindow", prefs)
-    orca_state.orcaOS.init(script)
-    orca_state.orcaOS.showGUI()
-
-def showAppPreferencesGUI(script=None, inputEvent=None):
-    """Displays the user interface to configure the settings for a
-    specific applications within Orca and set up those app-specific
-    user preferences using a GUI.
-
-    Returns True to indicate the input event has been consumed.
-    """
-
-    prefs = {}
-    for key in settings.userCustomizableSettings:
-        prefs[key] = _settingsManager.getSetting(key)
-
-    script = script or orca_state.activeScript
-    _showPreferencesUI(script, prefs)
-
-    return True
-
-def showPreferencesGUI(script=None, inputEvent=None):
-    """Displays the user interface to configure Orca and set up
-    user preferences using a GUI.
-
-    Returns True to indicate the input event has been consumed.
-    """
-
-    prefs = _settingsManager.getGeneralSettings(_settingsManager.profile)
-    script = _scriptManager.getDefaultScript()
-    _showPreferencesUI(script, prefs)
-
-    return True
-
->>>>>>> master
 def helpForOrca(script=None, inputEvent=None, page=""):
     """Show Orca Help window (part of the GNOME Access Guide).
 
@@ -836,12 +783,8 @@ def main():
 
     try:
         script = _scriptManager.getDefaultScript()
-<<<<<<< HEAD
-    except:
-=======
-        script.presentMessage(message)
     except Exception:
->>>>>>> master
+        script.presentMessage(message)
         debug.printException(debug.LEVEL_SEVERE)
 
     script = orca_state.activeScript
