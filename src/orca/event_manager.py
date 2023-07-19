@@ -127,10 +127,11 @@ class EventManager:
         if len(source) > 100:
             source = "%s (...) ]" % source[0:100]
 
+        app = AXObject.get_application(event.source)
+
         debug.println(debug.LEVEL_INFO, '')
         msg = 'EVENT MANAGER: %s for %s in %s (%s, %s, %s)' % \
-              (event.type, source, event.host_application,
-               event.detail1,event.detail2, anydata)
+              (event.type, source, app, event.detail1,event.detail2, anydata)
         debug.println(debug.LEVEL_INFO, msg, True)
 
         if not self._active:
@@ -143,7 +144,7 @@ class EventManager:
             debug.println(debug.LEVEL_INFO, msg, True)
             return True
 
-        if AXObject.get_name(event.host_application) == 'gnome-shell':
+        if AXObject.get_name(app) == 'gnome-shell':
             if event.type.startswith('object:children-changed:remove'):
                 msg = 'EVENT MANAGER: Ignoring event based on type and app'
                 debug.println(debug.LEVEL_INFO, msg, True)
@@ -164,6 +165,15 @@ class EventManager:
             debug.println(debug.LEVEL_INFO, msg, True)
             return True
 
+        # Thunderbird spams us with these when a message list thread is expanded or collapsed.
+        if event.type.endswith('system'):
+            if AXUtilities.is_table_related(event.source) \
+              or AXUtilities.is_tree_related(event.source) \
+              or AXUtilities.is_section(event.source):
+                msg = 'EVENT MANAGER: Ignoring system event based on role'
+                debug.println(debug.LEVEL_INFO, msg, True)
+                return True
+
         if self._inDeluge() and self._ignoreDuringDeluge(event):
             msg = 'EVENT MANAGER: Ignoring event type due to deluge'
             debug.println(debug.LEVEL_INFO, msg, True)
@@ -176,7 +186,7 @@ class EventManager:
                 msg = 'EVENT MANAGER: Ignoring because there is no active script'
                 debug.println(debug.LEVEL_INFO, msg, True)
                 return True
-            if script.app != event.host_application:
+            if script.app != app:
                 msg = 'EVENT MANAGER: Ignoring because event is not from active app'
                 debug.println(debug.LEVEL_INFO, msg, True)
                 return True
@@ -217,6 +227,8 @@ class EventManager:
                         Atspi.Role.SECTION,    # Web app spam
                         Atspi.Role.TABLE_ROW,  # Thunderbird spam
                         Atspi.Role.TABLE_CELL, # Thunderbird spam
+                        Atspi.Role.TREE_ITEM,  # Thunderbird spam
+                        Atspi.Role.IMAGE,      # Thunderbird spam
                         Atspi.Role.MENU,
                         Atspi.Role.MENU_ITEM]:
                 msg = 'EVENT MANAGER: Ignoring event type due to role'
@@ -293,8 +305,8 @@ class EventManager:
                 msg = 'EVENT MANAGER: Ignoring event type due to role'
                 debug.println(debug.LEVEL_INFO, msg, True)
                 return True
-            if not event.any_data:
-                msg = 'ERROR: Event any_data lacks child/descendant'
+            if event.any_data is None:
+                msg = 'EVENT_MANAGER: Ignoring due to lack of event.any_data'
                 debug.println(debug.LEVEL_INFO, msg, True)
                 return True
             if event.type.endswith('remove'):
@@ -313,7 +325,7 @@ class EventManager:
 
             defunct = AXObject.is_dead(event.any_data) or AXUtilities.is_defunct(event.any_data)
             if defunct:
-                msg = 'ERROR: Event any_data contains potentially-defunct child/descendant'
+                msg = 'EVENT MANAGER: Ignoring event for potentially-defunct child/descendant'
                 debug.println(debug.LEVEL_INFO, msg, True)
                 if AXUtilities.manages_descendants(event.source) \
                    and event.source not in self._parentsOfDefunctDescendants:
@@ -380,11 +392,11 @@ class EventManager:
         elif isinstance(e, input_event.BrailleEvent):
             data = "'%s'" % repr(e.event)
         elif not debug.eventDebugFilter or debug.eventDebugFilter.match(e.type):
+            app = AXObject.get_application(e.source)
             anydata = e.any_data
             if isinstance(anydata, str) and len(anydata) > 100:
                 anydata = "%s (...)" % anydata[0:100]
-            data = "%s (%s,%s,%s) from %s" % \
-                   (e.source, e.detail1, e.detail2, anydata, e.host_application)
+            data = "%s (%s,%s,%s) from %s" %  (e.source, e.detail1, e.detail2, anydata, app)
         else:
             return
 
@@ -640,7 +652,7 @@ class EventManager:
             return _scriptManager.getScriptForMouseButtonEvent(event)
 
         script = None
-        app = event.host_application or AXObject.get_application(event.source)
+        app = AXObject.get_application(event.source)
         if AXUtilities.is_defunct(app):
             msg = 'WARNING: %s is defunct. Cannot get script for event.' % app
             debug.println(debug.LEVEL_WARNING, msg, True)

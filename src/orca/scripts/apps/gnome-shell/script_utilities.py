@@ -25,10 +25,6 @@ __date__      = "$Date$"
 __copyright__ = "Copyright (c) 2014 Igalia, S.L."
 __license__   = "LGPL"
 
-import gi
-gi.require_version("Atspi", "2.0")
-from gi.repository import Atspi
-
 import orca.debug as debug
 import orca.script_utilities as script_utilities
 from orca.ax_object import AXObject
@@ -97,9 +93,11 @@ class Utilities(script_utilities.Utilities):
         if not root:
             return []
 
-        roles = [Atspi.Role.DIALOG, Atspi.Role.NOTIFICATION, Atspi.Role.MENU_ITEM]
+        def hasRole(x):
+            return AXUtilities.is_dialog(x) \
+                or AXUtilities.is_notification(x) \
+                or AXUtilities.is_menu_item(x)
 
-        hasRole = lambda x: x and AXObject.get_role(x) in roles
         if not hasRole(root) and AXObject.find_ancestor(root, hasRole) is None:
             msg = "GNOME SHELL: Not seeking unrelated labels for %s" % root
             debug.println(debug.LEVEL_INFO, msg, True)
@@ -113,10 +111,10 @@ class Utilities(script_utilities.Utilities):
             return rv
 
         rv = super().isLayoutOnly(obj)
-        if not rv and AXObject.get_role(obj) == Atspi.Role.PANEL and AXObject.get_child_count(obj) == 1:
+        if not rv and AXUtilities.is_panel(obj) and AXObject.get_child_count(obj) == 1:
             child = AXObject.get_child(obj, 0)
             if self.displayedLabel(obj) == AXObject.get_name(child) \
-                and AXObject.get_role(child) != Atspi.Role.LABEL:
+               and not AXUtilities.is_label(child):
                 rv = True
                 msg = "GNOME SHELL: %s is deemed to be layout only" % obj
                 debug.println(debug.LEVEL_INFO, msg, True)
@@ -127,7 +125,7 @@ class Utilities(script_utilities.Utilities):
 
     def isBogusWindowFocusClaim(self, event):
         if event.type.startswith('object:state-changed:focused') and event.detail1 \
-           and AXObject.get_role(event.source) == Atspi.Role.WINDOW \
+           and AXUtilities.is_window(event.source) \
            and not self.canBeActiveWindow(event.source):
             msg = "GNOME SHELL: Event is believed to be bogus window focus claim"
             debug.println(debug.LEVEL_INFO, msg, True)

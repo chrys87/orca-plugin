@@ -857,7 +857,7 @@ class Script(script.Script):
 
         topLevel = self.utilities.topLevelObject(newLocusOfFocus)
         if orca_state.activeWindow != topLevel:
-            orca_state.activeWindow = topLevel
+            orca.setActiveWindow(topLevel)
 
         self.updateBraille(newLocusOfFocus)
 
@@ -1157,7 +1157,8 @@ class Script(script.Script):
         if self.flatReviewContext:
             if self.isBrailleEndShowing():
                 self.flatReviewContext.goEnd(flat_review.Context.LINE)
-                # Reviewing the next character also updates the braille output and refreshes the display.
+                # Reviewing the next character also updates the braille output
+                # and refreshes the display.
                 self.reviewNextCharacter(inputEvent)
                 return
             self.panBrailleInDirection(panAmount, panToLeft=False)
@@ -1935,7 +1936,9 @@ class Script(script.Script):
             self.presentMessage(messages.PROFILE_NOT_FOUND)
             return True
 
-        isMatch = lambda x: x[1] == _settingsManager.getProfile()
+        def isMatch(x):
+            return x is not None and x[1] == _settingsManager.getProfile()
+
         current = list(filter(isMatch, profiles))[0]
         try:
             name, profileID = profiles[profiles.index(current) + 1]
@@ -2189,13 +2192,15 @@ class Script(script.Script):
     def onActiveChanged(self, event):
         """Callback for object:state-changed:active accessibility events."""
 
-        if AXUtilities.is_dialog_or_alert(event.source) or AXUtilities.is_frame(event.source):
-            if event.detail1 and not self.utilities.canBeActiveWindow(event.source):
+        window = event.source
+        if AXUtilities.is_application(AXObject.get_parent(event.source)):
+            window = AXObject.find_real_app_and_window_for(event.source)[1]
+
+        if AXUtilities.is_dialog_or_alert(window) or AXUtilities.is_frame(window):
+            if event.detail1 and not self.utilities.canBeActiveWindow(window):
                 return
 
-            sourceIsActiveWindow = self.utilities.isSameObject(
-                event.source, orca_state.activeWindow)
-
+            sourceIsActiveWindow = self.utilities.isSameObject(window, orca_state.activeWindow)
             if sourceIsActiveWindow and not event.detail1:
                 if self.utilities.inMenu():
                     msg = "DEFAULT: Ignoring event. In menu."
@@ -2209,14 +2214,13 @@ class Script(script.Script):
 
                 msg = "DEFAULT: Event is for active window. Clearing state."
                 debug.println(debug.LEVEL_INFO, msg, True)
-                orca_state.activeWindow = None
+                orca.setActiveWindow(None)
                 return
 
             if not sourceIsActiveWindow and event.detail1:
-                msg = "DEFAULT: Updating active window to event source."
+                msg = "DEFAULT: Updating active window."
                 debug.println(debug.LEVEL_INFO, msg, True)
-                orca.setLocusOfFocus(event, event.source)
-                orca_state.activeWindow = event.source
+                orca.setActiveWindow(window, alsoSetLocusOfFocus=True, notifyScript=True)
 
         if self.findCommandRun:
             self.findCommandRun = False
@@ -2424,8 +2428,7 @@ class Script(script.Script):
 
         windowChanged = orca_state.activeWindow != mouseEvent.window
         if windowChanged:
-            orca_state.activeWindow = mouseEvent.window
-            orca.setLocusOfFocus(None, mouseEvent.window, False)
+            orca.setActiveWindow(mouseEvent.window, alsoSetLocusOfFocus=True)
 
         self.presentationInterrupt()
         if AXUtilities.is_focused(mouseEvent.obj):
@@ -2851,7 +2854,7 @@ class Script(script.Script):
            and (currentValue == self.pointOfReference["oldValue"]):
             return
 
-        isProgressBarUpdate, msg = self.utilities.isProgressBarUpdate(obj, event)
+        isProgressBarUpdate, msg = self.utilities.isProgressBarUpdate(obj)
         msg = "DEFAULT: Is progress bar update: %s, %s" % (isProgressBarUpdate, msg)
         debug.println(debug.LEVEL_INFO, msg, True)
 
@@ -2877,25 +2880,26 @@ class Script(script.Script):
         - event: the Event
         """
 
-        if not self.utilities.canBeActiveWindow(event.source, False):
+        window = AXObject.find_real_app_and_window_for(event.source)[1]
+        if not self.utilities.canBeActiveWindow(window, False):
             return
 
-        if self.utilities.isSameObject(event.source, orca_state.activeWindow):
+        if self.utilities.isSameObject(window, orca_state.activeWindow):
             msg = "DEFAULT: Event is for active window."
             debug.println(debug.LEVEL_INFO, msg, True)
             return
 
         self.pointOfReference = {}
 
-        orca_state.activeWindow = event.source
+        orca.setActiveWindow(window)
 
-        if AXObject.get_child_count(event.source) == 1:
-            child = AXObject.get_child(event.source, 0)
+        if AXObject.get_child_count(window) == 1:
+            child = AXObject.get_child(window, 0)
             if AXObject.get_role(child) == Atspi.Role.MENU:
                 orca.setLocusOfFocus(event, child)
                 return
 
-        orca.setLocusOfFocus(event, event.source)
+        orca.setLocusOfFocus(event, orca_state.activeWindow)
 
     def onWindowCreated(self, event):
         """Callback for window:create accessibility events."""
@@ -2941,7 +2945,7 @@ class Script(script.Script):
         debug.println(debug.LEVEL_INFO, msg, True)
 
         orca.setLocusOfFocus(event, None)
-        orca_state.activeWindow = None
+        orca.setActiveWindow(None)
         orca_state.activeScript = None
         orca_state.listNotificationsModeEnabled = False
         orca_state.learnModeEnabled = False
@@ -3290,7 +3294,8 @@ class Script(script.Script):
            and eventString in ["Right", "Down"]:
             offset -= 1
 
-        character, startOffset, endOffset = text.getTextAtOffset(offset, Atspi.TextBoundaryType.CHAR)
+        character, startOffset, endOffset = text.getTextAtOffset(
+            offset, Atspi.TextBoundaryType.CHAR)
         orca.emitRegionChanged(obj, startOffset, endOffset, orca.CARET_TRACKING)
 
         if not character or character == '\r':
@@ -3411,7 +3416,8 @@ class Script(script.Script):
             self.sayCharacter(obj)
             return
 
-        word, startOffset, endOffset = self.utilities.getWordAtOffsetAdjustedForNavigation(obj, offset)
+        word, startOffset, endOffset = \
+            self.utilities.getWordAtOffsetAdjustedForNavigation(obj, offset)
 
         # Announce when we cross a hard line boundary.
         if "\n" in word:
@@ -3539,18 +3545,20 @@ class Script(script.Script):
         [regions, regionWithFocus] = context.getCurrentBrailleRegions()
 
         # The first character on the flat review line has to be in object with text.
-        isTextOrComponent = lambda x: isinstance(x, (braille.ReviewText, braille.ReviewComponent))
-        regions = list(filter(isTextOrComponent, regions))
+        def isTextOrComponent(x):
+            return isinstance(x, (braille.ReviewText, braille.ReviewComponent))
 
+        regions = list(filter(isTextOrComponent, regions))
         msg = "DEFAULT: Text/Component regions on line:\n%s" % "\n".join(map(str, regions))
         debug.println(debug.LEVEL_INFO, msg, True)
 
         # TODO - JD: The current code was stopping on the first region which met the
         # following condition. Is that definitely the right thing to do? Assume so for now.
         # Also: Should the default script be accessing things like the viewport directly??
-        isMatch = lambda x: x.brailleOffset + len(x.string) > braille.viewport[0]
-        regions = list(filter(isMatch, regions))
+        def isMatch(x):
+            return x is not None and x.brailleOffset + len(x.string) > braille.viewport[0]
 
+        regions = list(filter(isMatch, regions))
         if not regions:
             msg = "DEFAULT: Could not find review region to move to start of display"
             debug.println(debug.LEVEL_INFO, msg, True)
@@ -3933,7 +3941,8 @@ class Script(script.Script):
         self.speakKeyEvent(event)
         return True
 
-    def presentMessage(self, fullMessage, briefMessage=None, voice=None, resetStyles=True, force=False):
+    def presentMessage(self, fullMessage, briefMessage=None, voice=None, resetStyles=True,
+                       force=False):
         """Convenience method to speak a message and 'flash' it in braille.
 
         Arguments:
@@ -4392,7 +4401,8 @@ class Script(script.Script):
             speech.updateCapitalizationStyle()
 
             punctStyle = _settingsManager.getSetting('verbalizePunctuationStyle')
-            _settingsManager.setSetting('verbalizePunctuationStyle', settings.PUNCTUATION_STYLE_NONE)
+            _settingsManager.setSetting('verbalizePunctuationStyle',
+                                         settings.PUNCTUATION_STYLE_NONE)
             speech.updatePunctuationLevel()
 
         speech.speak(string, voice, interrupt)

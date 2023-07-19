@@ -41,6 +41,7 @@ from . import debug
 from . import keybindings
 from . import keynames
 from . import messages
+from . import orca
 from . import orca_state
 from . import script_manager
 from . import settings
@@ -282,12 +283,14 @@ class KeyboardEvent(InputEvent):
         if self._script:
             self._app = self._script.app
             if not self._window:
-                self._window = orca_state.activeWindow = self._script.utilities.activeWindow()
+                orca.setActiveWindow(self._script.utilities.activeWindow())
+                self._window = orca_state.activeWindow
                 msg = 'INPUT EVENT: Updated window and active window to %s' % self._window
                 debug.println(debug.LEVEL_INFO, msg, True)
 
         if self._window and self._app != AXObject.get_application(self._window):
-            self._script = script_manager.getManager().getScript(AXObject.get_application(self._window))
+            self._script = script_manager.getManager().getScript(
+                AXObject.get_application(self._window))
             self._app = self._script.app
             msg = 'INPUT EVENT: Updated script to %s' % self._script
             debug.println(debug.LEVEL_INFO, msg, True)
@@ -334,7 +337,8 @@ class KeyboardEvent(InputEvent):
                 if KeyboardEvent.lastOrcaModifierAlone:
                     if _isPressed:
                         KeyboardEvent.secondOrcaModifierTime = now
-                    if KeyboardEvent.secondOrcaModifierTime < KeyboardEvent.lastOrcaModifierAloneTime + 0.5:
+                    if (KeyboardEvent.secondOrcaModifierTime <
+                        KeyboardEvent.lastOrcaModifierAloneTime + 0.5):
                         # double-orca, let the real action happen
                         self._bypassOrca = True
                     if not _isPressed:
@@ -346,8 +350,10 @@ class KeyboardEvent(InputEvent):
                         KeyboardEvent.currentOrcaModifierAlone = True
                         KeyboardEvent.currentOrcaModifierAloneTime = now
                     else:
-                        KeyboardEvent.lastOrcaModifierAlone = KeyboardEvent.currentOrcaModifierAlone
-                        KeyboardEvent.lastOrcaModifierAloneTime = KeyboardEvent.currentOrcaModifierAloneTime
+                        KeyboardEvent.lastOrcaModifierAlone = \
+                            KeyboardEvent.currentOrcaModifierAlone
+                        KeyboardEvent.lastOrcaModifierAloneTime = \
+                            KeyboardEvent.currentOrcaModifierAloneTime
         elif self.isFunctionKey():
             self.keyType = KeyboardEvent.TYPE_FUNCTION
             self.shouldEcho = _mayEcho and settings.enableFunctionKeys

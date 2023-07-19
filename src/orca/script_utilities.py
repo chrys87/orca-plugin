@@ -176,7 +176,7 @@ class Utilities:
         candidates = []
         apps = apps or AXUtilities.get_all_applications(must_have_window=True)
         for app in apps:
-            candidates.extend([child for child in AXObject.iter_children(app, self.canBeActiveWindow)])
+            candidates.extend([c for c in AXObject.iter_children(app, self.canBeActiveWindow)])
 
         if not candidates:
             msg = "ERROR: Unable to find active window from %s" % list(map(str, apps))
@@ -275,8 +275,9 @@ class Utilities:
         # First see if this accessible implements RELATION_NODE_PARENT_OF.
         # If it does, the full target list are the nodes. If it doesn't
         # we'll do an old-school, row-by-row search for child nodes.
+        def pred(x):
+            return AXObject.get_index_in_parent(x) >= 0
 
-        pred = lambda x: AXObject.get_index_in_parent(x) >= 0
         nodes = AXObject.get_relation_targets(obj, Atspi.RelationType.NODE_PARENT_OF, pred)
         msg = "INFO: %i child nodes for %s found via node-parent-of" % (len(nodes), obj)
         debug.println(debug.LEVEL_INFO, msg, True)
@@ -909,6 +910,9 @@ class Utilities:
     def isLandmarkSearch(self, obj):
         return False
 
+    def isSVG(self, obj):
+        return False
+
     def speakMathSymbolNames(self, obj=None):
         return False
 
@@ -1064,7 +1068,7 @@ class Utilities:
 
         return True
 
-    def isProgressBarUpdate(self, obj, event):
+    def isProgressBarUpdate(self, obj):
         if not _settingsManager.getSetting('speakProgressBarUpdates') \
            and not _settingsManager.getSetting('brailleProgressBarUpdates') \
            and not _settingsManager.getSetting('beepProgressBarUpdates'):
@@ -1091,10 +1095,7 @@ class Utilities:
             return False, "Window %s is not %s" % (topLevel, orca_state.activeWindow)
 
         if verbosity == settings.PROGRESS_BAR_APPLICATION:
-            if event:
-                app = event.host_application
-            else:
-                app = AXObject.get_application(obj)
+            app = AXObject.get_application(obj)
             if app == orca_state.activeScript.app:
                 return True, "Verbosity is app"
             return False, "App %s is not %s" % (app, orca_state.activeScript.app)
@@ -1409,9 +1410,11 @@ class Utilities:
             layoutOnly = not (AXUtilities.is_focusable(obj) or AXUtilities.is_selectable(obj))
         elif role == Atspi.Role.PANEL and AXObject.get_role(firstChild) in ignorePanelParent:
             layoutOnly = True
-        elif role == Atspi.Role.PANEL and AXObject.has_same_non_empty_name(obj, AXObject.get_application(obj)):
+        elif role == Atspi.Role.PANEL \
+                and AXObject.has_same_non_empty_name(obj, AXObject.get_application(obj)):
             layoutOnly = True
-        elif AXObject.get_child_count(obj) == 1 and AXObject.has_same_non_empty_name(obj, firstChild):
+        elif AXObject.get_child_count(obj) == 1 \
+                and AXObject.has_same_non_empty_name(obj, firstChild):
             layoutOnly = True
         elif self.isHidden(obj):
             layoutOnly = True
@@ -1521,7 +1524,8 @@ class Utilities:
         if not ignoreNames and AXObject.get_name(obj1) != AXObject.get_name(obj2):
             return False
 
-        if not ignoreDescriptions and AXObject.get_description(obj1) != AXObject.get_description(obj2):
+        if not ignoreDescriptions \
+           and AXObject.get_description(obj1) != AXObject.get_description(obj2):
             return False
 
         if comparePaths and self._hasSamePath(obj1, obj2):
@@ -3707,7 +3711,9 @@ class Utilities:
             children = self.selectedChildren(children[0])
             name = AXObject.get_name(obj)
             if not children and name:
-                pred = lambda x: x and AXObject.get_name(x) == name
+                def pred(x):
+                    return AXObject.get_name(x) == name
+
                 children = self.findAllDescendants(obj, pred)
 
         return children
@@ -4298,7 +4304,8 @@ class Utilities:
             return "", 0, 0
 
         word, start, end = self.getWordAtOffset(obj, offset)
-        prevObj, prevOffset = self._script.pointOfReference.get("penultimateCursorPosition", (None, -1))
+        prevObj, prevOffset = self._script.pointOfReference.get(
+            "penultimateCursorPosition", (None, -1))
         if prevObj != obj:
             return word, start, end
 
@@ -4664,8 +4671,9 @@ class Utilities:
         if AXUtilities.is_table(root) or AXUtilities.is_embedded(root):
             return None
 
-        isSame = lambda x: x and self.isSameObject(
-            x, obj, comparePaths=True, ignoreNames=True)
+        def isSame(x):
+            return self.isSameObject(x, obj, comparePaths=True, ignoreNames=True)
+
         if isSame(root):
             replicant = root
         else:
@@ -4733,7 +4741,10 @@ class Utilities:
         siblings = self.getFunctionalChildren(parent, obj)
         if len(siblings) < 100 and not AXObject.find_ancestor(obj, AXUtilities.is_combo_box):
             layoutRoles = [Atspi.Role.SEPARATOR, Atspi.Role.TEAROFF_MENU_ITEM]
-            isNotLayoutOnly = lambda x: not (self.isZombie(x) or AXObject.get_role(x) in layoutRoles)
+
+            def isNotLayoutOnly(x):
+                return not (self.isZombie(x) or AXObject.get_role(x) in layoutRoles)
+
             siblings = list(filter(isNotLayoutOnly, siblings))
 
         if not (siblings and obj in siblings):
@@ -5509,12 +5520,16 @@ class Utilities:
             debug.println(debug.LEVEL_INFO, msg, True)
             return []
 
-        _include = lambda x: x
-        _exclude = self.isStaticTextLeaf
+        def _include(x):
+            return x is not None
+
+        def _exclude(x):
+            return self.isStaticTextLeaf(x)
 
         subtree = []
         startObjParent = AXObject.get_parent(startObj)
-        for i in range(AXObject.get_index_in_parent(startObj), AXObject.get_child_count(startObjParent)):
+        for i in range(AXObject.get_index_in_parent(startObj),
+                        AXObject.get_child_count(startObjParent)):
             child = AXObject.get_child(startObjParent, i)
             if self.isStaticTextLeaf(child):
                 continue
@@ -5691,14 +5706,20 @@ class Utilities:
             msg = "INFO: Not interrupting for locusOfFocus change, oldLocusOfFocus is ancestor of new"
             debug.println(debug.LEVEL_INFO, msg, True)
             return False
-       
-        isOld = lambda target: target == oldLocusOfFocus
-        isNew = lambda target: target == newLocusOfFocus
-        if AXObject.get_relation_targets(newLocusOfFocus, Atspi.RelationType.CONTROLLER_FOR, isOld):
+
+        def isOld(target):
+            return target == oldLocusOfFocus
+
+        def isNew(target):
+            return target == newLocusOfFocus
+
+        if AXObject.get_relation_targets(newLocusOfFocus,
+                                         Atspi.RelationType.CONTROLLER_FOR, isOld):
             msg = "INFO: Not interrupting for locusOfFocus change, newLocusOfFocus controls old"
             debug.println(debug.LEVEL_INFO, msg, True)
             return False
-        if AXObject.get_relation_targets(oldLocusOfFocus, Atspi.RelationType.CONTROLLER_FOR, isNew):
+        if AXObject.get_relation_targets(oldLocusOfFocus,
+                                         Atspi.RelationType.CONTROLLER_FOR, isNew):
             msg = "INFO: Not interrupting for locusOfFocus change, oldLocusOfFocus controls new"
             debug.println(debug.LEVEL_INFO, msg, True)
             return False

@@ -168,6 +168,29 @@ def emitRegionChanged(obj, startOffset=None, endOffset=None, mode=None):
         msg = "ORCA: Exception emitting region-changed notification"
         debug.println(debug.LEVEL_INFO, msg, True)
 
+def setActiveWindow(frame, app=None, alsoSetLocusOfFocus=False, notifyScript=False):
+    msg = "ORCA: Request to set active window to %s" % frame
+    if app is not None:
+        msg += " in %s" % app
+    debug.println(debug.LEVEL_INFO, msg, True)
+
+    if frame == orca_state.activeWindow:
+        msg = "ORCA: Setting activeWindow to existing activeWindow"
+        debug.println(debug.LEVEL_INFO, msg, True)
+    elif frame is None:
+        orca_state.activeWindow = None
+    else:
+        real_app, real_frame = AXObject.find_real_app_and_window_for(frame, app)
+        if real_frame != frame:
+            msg = "ORCA: Correcting active window to %s in %s" % (real_frame, real_app)
+            debug.println(debug.LEVEL_INFO, msg, True)
+            orca_state.activeWindow = real_frame
+        else:
+            orca_state.activeWindow = frame
+
+    if alsoSetLocusOfFocus:
+        setLocusOfFocus(None, orca_state.activeWindow, notifyScript=notifyScript)
+
 def setLocusOfFocus(event, obj, notifyScript=True, force=False):
     """Sets the locus of focus (i.e., the object with visual focus) and
     notifies the script of the change should the script wish to present
@@ -187,18 +210,15 @@ def setLocusOfFocus(event, obj, notifyScript=True, force=False):
         return
 
     if event and (orca_state.activeScript and not orca_state.activeScript.app):
-        script = _scriptManager.getScript(event.host_application, event.source)
+        app = AXObject.get_application(event.source)
+        script = _scriptManager.getScript(app, event.source)
         _scriptManager.setActiveScript(script, "Setting locusOfFocus")
 
     oldFocus = orca_state.locusOfFocus
-    try:
-        oldFocus.name
-    except Exception:
-        msg = "ORCA: Old locusOfFocus is null or defunct"
-        debug.println(debug.LEVEL_INFO, msg, True)
+    if AXObject.is_dead(oldFocus):
         oldFocus = None
 
-    if not obj:
+    if obj is None:
         msg = "ORCA: New locusOfFocus is null (being cleared)"
         debug.println(debug.LEVEL_INFO, msg, True)
         orca_state.locusOfFocus = None
@@ -271,7 +291,8 @@ def _processBrailleEvent(event):
 ########################################################################
 
 def deviceChangeHandler(deviceManager, device):
-    """New keyboards being plugged in stomp on our changes to the keymappings, so we have to re-apply"""
+    """New keyboards being plugged in stomp on our changes to the keymappings,
+       so we have to re-apply"""
     source = device.get_source()
     if source == Gdk.InputSource.KEYBOARD:
         msg = "ORCA: Keyboard change detected, re-creating the xmodmap"
@@ -505,17 +526,28 @@ def helpForOrca(script=None, inputEvent=None, page=""):
     return True
 
 def addKeyGrab(binding):
-    """ Add a key grab for the given key binding. """
+    """ Add a key grab for the given key binding."""
+
+    if orca_state.device is None:
+        return []
+
     ret = []
     for kd in binding.keyDefs():
         ret.append(orca_state.device.add_key_grab(kd, None))
     return ret
 
 def removeKeyGrab(id):
-    """ Remove the key grab for the given key binding. """
+    """ Remove the key grab for the given key binding."""
+
+    if orca_state.device is None:
+        return
+
     orca_state.device.remove_key_grab(id)
 
 def mapModifier(keycode):
+    if orca_state.device is None:
+        return
+
     return orca_state.device.map_modifier(keycode)
 
 def quitOrca(script=None, inputEvent=None):
@@ -801,14 +833,17 @@ def main():
             focusedObject = script.utilities.focusedObject(window)
             if focusedObject:
                 setLocusOfFocus(None, focusedObject)
-                script = _scriptManager.getScript(AXObject.get_application(focusedObject), focusedObject)
+                script = _scriptManager.getScript(
+                    AXObject.get_application(focusedObject), focusedObject)
                 _scriptManager.setActiveScript(script, "Found focused object.")
 
     try:
-        debug.println(debug.LEVEL_INFO, "ORCA: Starting ATSPI registry.", True)
+        msg = "ORCA: Starting ATSPI registry."
+        debug.println(debug.LEVEL_INFO, msg, True)
         start() # waits until we stop the registry
     except Exception:
-        debug.println(debug.LEVEL_SEVERE, "ORCA: Exception starting ATSPI registry.", True)
+        msg = "ORCA: Exception starting ATSPI registry."
+        debug.println(debug.LEVEL_SEVERE, msg, True)
         die(EXIT_CODE_HANG)
     return 0
 

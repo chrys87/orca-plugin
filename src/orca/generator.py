@@ -91,7 +91,9 @@ class Generator:
         self._activeProgressBars = {}
         self._methodsDict = {}
         for method in \
-            [z for z in [getattr(self, y).__get__(self, self.__class__) for y in [x for x in dir(self) if x.startswith(METHOD_PREFIX)]] if isinstance(z, collections_abc.Callable)]:
+            [z for z in [getattr(self, y).__get__(self, self.__class__) \
+                         for y in [x for x in dir(self) if x.startswith(METHOD_PREFIX)]] \
+                            if isinstance(z, collections_abc.Callable)]:
             name = method.__name__[len(METHOD_PREFIX):]
             name = name[0].lower() + name[1:]
             self._methodsDict[name] = method
@@ -251,7 +253,9 @@ class Generator:
             self._script.pointOfReference['usedDescriptionForUnrelatedLabels'] = False
             self._script.pointOfReference['usedDescriptionForAlert'] = False
 
-            debuginfo = lambda x: self._resultElementToString(x, False)
+            def debuginfo(x):
+                return self._resultElementToString(x, False)
+
             assert(formatting)
             while True:
                 currentTime = time.time()
@@ -270,7 +274,8 @@ class Generator:
                     globalsDict[arg] = self._methodsDict[arg](obj, **args)
                     duration = "%.4f" % (time.time() - currentTime)
                     if isinstance(globalsDict[arg], list):
-                        stringResult = " ".join(filter(lambda x: x, map(debuginfo, globalsDict[arg])))
+                        stringResult = " ".join(filter(lambda x: x,
+                                                        map(debuginfo, globalsDict[arg])))
                         debug.println(debug.LEVEL_ALL,
                                       "%sGENERATION TIME: %s  ---->  %s=[%s]" \
                                       % (" " * 18, duration, arg, stringResult))
@@ -966,6 +971,9 @@ class Generator:
         the size of a table."""
 
         if self._script.utilities.isLayoutOnly(obj):
+            return []
+
+        if self._script.utilities.isSpreadSheetTable(obj):
             return []
 
         rows, cols = self._script.utilities.rowAndColumnCount(obj)
