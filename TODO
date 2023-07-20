@@ -120,6 +120,11 @@ Known Bugs:
 - (DONE) Profile selector does not open at preferences page
 - (DONE) ByeOrca is not announced
 
+Build:
+NOCONFIGURE=1 ./autogen.sh
+./configure --prefix=/usr --sysconfdir=/etc --localstatedir=/var
+make
+sudo make install
 
 Plguin readme:
 Translation
@@ -129,4 +134,4 @@ xgettext -d orca-plugin -o orca-plugin.pot ../HelloWorld.py
 msgfmt -o orca-plugin.mo orca-plugin
 
 gsettings
-$ glib-compile-schemas /path/to/schema/files/
+glib-compile-schemas /path/to/schema/files/
