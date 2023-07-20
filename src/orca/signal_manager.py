@@ -53,6 +53,6 @@ class SignalManager():
         # emit an signal
         try:
             self.app.emit(signalName)
-            #print('after Emit Signal: {}'.format(signalName))
+            print('after Emit Signal: {}'.format(signalName))
         except:
             print('Signal "{}" does not exist.'.format(signalName))

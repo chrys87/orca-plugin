@@ -1,3 +1,5 @@
+import traceback
+
 class TryFunction():
     def __init__(self, function):
         self.function = function
@@ -5,12 +7,12 @@ class TryFunction():
         try:
             return self.function(app)
         except Exception as e:
-            print('try',e)
+            print('try signal',e , traceback.print_exc())
     def runInputEvent(self, script, inputEvent):
         try:
             return self.function(script, inputEvent)
         except Exception as e:
-            print('try',e)
+            print('try input event',e , traceback.print_exc())
     def getFunction(self):
         return self.function
     def setFunction(self, function):
