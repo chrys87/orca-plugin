@@ -874,9 +874,6 @@ class Utilities:
     def isGridCell(self, obj):
         return False
 
-    def supportsLandmarkRole(self):
-        return False
-
     def isLandmark(self, obj):
         return False
 
@@ -2301,6 +2298,7 @@ class Utilities:
             self._findAllDescendants(child, includeIf, excludeIf, matches)
 
     def findAllDescendants(self, root, includeIf=None, excludeIf=None):
+        # TODO - JD: Can we use collection for this?
         matches = []
         self._findAllDescendants(root, includeIf, excludeIf, matches)
         return matches
