@@ -88,7 +88,6 @@ class Utilities(script_utilities.Utilities):
         self._hasDetails = {}
         self._isDetails = {}
         self._isNonInteractiveDescendantOfControl = {}
-        self._hasUselessCanvasDescendant = {}
         self._isClickableElement = {}
         self._isAnchor = {}
         self._isEditableComboBox = {}
@@ -127,7 +126,6 @@ class Utilities(script_utilities.Utilities):
         self._currentCharacterContents = None
         self._lastQueuedLiveRegionEvent = None
         self._findContainer = None
-        self._statusBar = None
         self._validChildRoles = {Atspi.Role.LIST: [Atspi.Role.LIST_ITEM]}
 
     def _cleanupContexts(self):
@@ -186,7 +184,6 @@ class Utilities(script_utilities.Utilities):
         self._hasVisibleCaption = {}
         self._hasDetails = {}
         self._isDetails = {}
-        self._hasUselessCanvasDescendant = {}
         self._isNonInteractiveDescendantOfControl = {}
         self._isClickableElement = {}
         self._isAnchor = {}
@@ -226,7 +223,6 @@ class Utilities(script_utilities.Utilities):
         self._priorContexts = {}
         self._lastQueuedLiveRegionEvent = None
         self._findContainer = None
-        self._statusBar = None
 
     def clearContentCache(self):
         self._currentObjectContents = None
@@ -1969,6 +1965,93 @@ class Utilities(script_utilities.Utilities):
         if self.hasPresentableText(obj):
             super().updateCachedTextSelection(obj)
 
+    def _findSelectionBoundaryObject(self, root, findStart=True):
+        try:
+            text = root.queryText()
+        except Exception:
+            msg = "ERROR: Exception querying text for %s" % root
+            debug.println(debug.LEVEL_INFO, msg, True)
+            return None
+
+        if not text.getNSelections():
+            return None
+
+        start, end = text.getSelection(0)
+        string = text.getText(start, end)
+        if not string:
+            return None
+
+        if findStart and not string.startswith(self.EMBEDDED_OBJECT_CHARACTER):
+            return root
+
+        if not findStart and not string.endswith(self.EMBEDDED_OBJECT_CHARACTER):
+            return root
+
+        indices = list(range(AXObject.get_child_count(root)))
+        if not findStart:
+            indices.reverse()
+
+        for i in indices:
+            result = self._findSelectionBoundaryObject(root[i], findStart)
+            if result:
+                return result
+
+        return None
+
+    def _getSelectionAnchorAndFocus(self, root):
+        obj1 = self._findSelectionBoundaryObject(root, True)
+        obj2 = self._findSelectionBoundaryObject(root, False)
+        return obj1, obj2
+
+    def _getSubtree(self, startObj, endObj):
+        if not (startObj and endObj):
+            return []
+
+        if self.isDead(startObj):
+            msg = "INFO: Cannot get subtree: Start object is dead."
+            debug.println(debug.LEVEL_INFO, msg, True)
+            return []
+
+        def _include(x):
+            return x is not None
+
+        def _exclude(x):
+            return self.isStaticTextLeaf(x)
+
+        subtree = []
+        startObjParent = AXObject.get_parent(startObj)
+        for i in range(AXObject.get_index_in_parent(startObj),
+                        AXObject.get_child_count(startObjParent)):
+            child = AXObject.get_child(startObjParent, i)
+            if self.isStaticTextLeaf(child):
+                continue
+            subtree.append(child)
+            subtree.extend(self.findAllDescendants(child, _include, _exclude))
+            if endObj in subtree:
+                break
+
+        if endObj == startObj:
+            return subtree
+
+        if endObj not in subtree:
+            subtree.append(endObj)
+            subtree.extend(self.findAllDescendants(endObj, _include, _exclude))
+
+        endObjParent = AXObject.get_parent(endObj)
+        endObjIndex = AXObject.get_index_in_parent(endObj)
+        lastObj = AXObject.get_child(endObjParent, endObjIndex + 1) or endObj
+
+        try:
+            endIndex = subtree.index(lastObj)
+        except ValueError:
+            pass
+        else:
+            if lastObj == endObj:
+                endIndex += 1
+            subtree = subtree[:endIndex]
+
+        return subtree
+
     def handleTextSelectionChange(self, obj, speakMessage=True):
         if not self.inDocumentContent(obj):
             return super().handleTextSelectionChange(obj)
@@ -3216,7 +3299,7 @@ class Utilities(script_utilities.Utilities):
 
     def iframeForDetachedDocument(self, obj, root=None):
         root = root or self.documentFrame()
-        for iframe in self.findAllDescendants(root, AXUtilities.is_internal_frame):
+        for iframe in AXUtilities.find_all_internal_frames(root):
             if AXObject.get_parent(obj) == iframe:
                 msg = "WEB: Returning %s as iframe parent of detached %s" % (iframe, obj)
                 debug.println(debug.LEVEL_INFO, msg, True)
@@ -3828,18 +3911,7 @@ class Utilities(script_utilities.Utilities):
         return rv
 
     def hasUselessCanvasDescendant(self, obj):
-        if not (obj and self.inDocumentContent(obj)):
-            return False
-
-        rv = self._hasUselessCanvasDescendant.get(hash(obj))
-        if rv is not None:
-            return rv
-
-        canvases = self.findAllDescendants(obj, AXUtilities.is_canvas)
-        rv = len(list(filter(self.isUselessImage, canvases))) > 0
-
-        self._hasUselessCanvasDescendant[hash(obj)] = rv
-        return rv
+        return len(AXUtilities.find_all_canvases(obj, self.isUselessImage)) > 0
 
     def isTextSubscriptOrSuperscript(self, obj):
         if self.isMath(obj):
@@ -4198,7 +4270,7 @@ class Utilities(script_utilities.Utilities):
         if not AXUtilities.is_editable(obj):
             return False
 
-        if AXUtilities.is_spin_button(obj) or AXUtilities.is_spin_button(AXObject.get_parent):
+        if AXUtilities.is_spin_button(obj) or AXUtilities.is_spin_button(AXObject.get_parent(obj)):
             return True
 
         return False
@@ -4794,7 +4866,7 @@ class Utilities(script_utilities.Utilities):
         debug.println(debug.LEVEL_INFO, msg, True)
 
         AXObject.clear_cache(listBox)
-        item = self.focusedObject(listBox)
+        item = AXUtilities.get_focused_object(listBox)
         if not AXUtilities.is_list_item(item):
             msg = "WEB: Could not find focused list item to recover from removed child."
             debug.println(debug.LEVEL_INFO, msg, True)
@@ -4874,7 +4946,7 @@ class Utilities(script_utilities.Utilities):
             AXObject.clear_cache(event.source)
             obj, offset = self.searchForCaretContext(event.source)
             if obj is None:
-                obj = self.focusedObject(event.source)
+                obj = AXUtilities.get_focused_object(event.source)
 
             # Risk "chattiness" if the locusOfFocus is dead and the object we've found is
             # focused and has a different name than the last known focused object.
@@ -5212,7 +5284,7 @@ class Utilities(script_utilities.Utilities):
 
         if event.type.startswith("object:text-changed:insert"):
             alert = AXObject.find_ancestor(event.source, self.isAriaAlert)
-            if alert and self.focusedObject(alert) == event.source:
+            if alert and AXUtilities.get_focused_object(alert) == event.source:
                 msg = "WEB: Focused source will be presented as part of alert"
                 debug.println(debug.LEVEL_INFO, msg, True)
                 return False
@@ -5239,15 +5311,6 @@ class Utilities(script_utilities.Utilities):
 
         self._lastQueuedLiveRegionEvent = event
         return True
-
-    def statusBar(self, obj):
-        if self._statusBar and not self.isZombie(self._statusBar):
-            msg = "WEB: Returning cached status bar: %s" % self._statusBar
-            debug.println(debug.LEVEL_INFO, msg, True)
-            return self._statusBar
-
-        self._statusBar = super().statusBar(obj)
-        return self._statusBar
 
     def getPageObjectCount(self, obj):
         result = {'landmarks': 0,

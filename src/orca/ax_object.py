@@ -553,7 +553,7 @@ class AXObject:
         return real_child
 
     @staticmethod
-    def find_descendant(obj, pred):
+    def _find_descendant(obj, pred):
         """Returns the descendant of obj if the function pred is true"""
 
         if not AXObject.is_valid(obj):
@@ -564,11 +564,49 @@ class AXObject:
             if child and pred(child):
                 return child
 
-            child = AXObject.find_descendant(child, pred)
+            child = AXObject._find_descendant(child, pred)
             if child and pred(child):
                 return child
 
         return None
+
+    @staticmethod
+    def find_descendant(obj, pred):
+        """Returns the descendant of obj if the function pred is true"""
+
+        start = time.time()
+        result = AXObject._find_descendant(obj, pred)
+        msg = "AXObject: find_descendant: found %s in %.4fs" % (result, time.time() - start)
+        debug.println(debug.LEVEL_INFO, msg, True)
+        return result
+
+    @staticmethod
+    def _find_all_descendants(obj, include_if, exclude_if, matches):
+        """Returns all descendants which match the specified inclusion and exclusion"""
+
+        if not AXObject.is_valid(obj):
+            return
+
+        childCount = AXObject.get_child_count(obj)
+        for i in range(childCount):
+            child = AXObject.get_child(obj, i)
+            if exclude_if and exclude_if(child):
+                continue
+            if include_if and include_if(child):
+                matches.append(child)
+            AXObject._find_all_descendants(child, include_if, exclude_if, matches)
+
+    @staticmethod
+    def find_all_descendants(root, include_if=None, exclude_if=None):
+        """Returns all descendants which match the specified inclusion and exclusion"""
+
+        start = time.time()
+        matches = []
+        AXObject._find_all_descendants(root, include_if, exclude_if, matches)
+        msg = "AXObject: find_all_descendants: %i matches found in %.4fs" \
+            % (len(matches), time.time() - start)
+        debug.println(debug.LEVEL_INFO, msg, True)
+        return matches
 
     @staticmethod
     def get_role(obj):

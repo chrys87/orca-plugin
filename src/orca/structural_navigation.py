@@ -64,7 +64,7 @@ class StructuralNavigationObject:
     such as character counts, text attributes, and other object attributes.
     """
     def __init__(self, structuralNavigation, objType, bindings, predicate,
-                 criteria, presentation, dialogData):
+                 criteria, presentation, dialogData, getter):
         """Creates a new structural navigation object.
 
         Arguments:
@@ -87,6 +87,8 @@ class StructuralNavigationObject:
         - dialogData: the method which returns the title, column headers,
           and row data which should be included in the "list of" dialog for
           the structural navigation object.
+        - getter: The function which should be used instead of the criteria
+          and predicate.
         """
 
         self.structuralNavigation = structuralNavigation
@@ -96,6 +98,7 @@ class StructuralNavigationObject:
         self.criteria = criteria
         self.present = presentation
         self._dialogData = dialogData
+        self.getter = getter
 
         self.inputEventHandlers = {}
         self.keyBindings = keybindings.KeyBindings()
@@ -292,9 +295,6 @@ class StructuralNavigationObject:
         """Show a list of all the items with this object type."""
 
         objects = self.structuralNavigation._getAll(self)
-        if not objects:
-            script.presentMessage(messages.NAVIGATION_DIALOG_ERROR)
-            return
 
         def _isValidMatch(x):
             if script.utilities.isDead(x):
@@ -368,9 +368,6 @@ class StructuralNavigationObject:
 
         def showListAtLevel(script, inputEvent):
             objects = self.structuralNavigation._getAll(self, arg=level)
-            if not objects:
-                script.presentMessage(messages.NAVIGATION_DIALOG_ERROR)
-                return
 
             def _isValidMatch(x):
                 return not (script.utilities.isHidden(x) or script.utilities.isEmpty(x))
@@ -499,6 +496,7 @@ class StructuralNavigation:
     FORM_FIELD      = "formField"
     HEADING         = "heading"
     IMAGE           = "image"
+    IFRAME          = "iframe"
     LANDMARK        = "landmark"
     LINK            = "link"
     LIST            = "list"        # Bulleted/numbered lists
@@ -511,21 +509,6 @@ class StructuralNavigation:
     TABLE_CELL      = "tableCell"
     UNVISITED_LINK  = "unvisitedLink"
     VISITED_LINK    = "visitedLink"
-
-    # Roles which are recognized as being a form field. Note that this
-    # is for the purpose of match rules and predicates and refers to
-    # AT-SPI roles. 
-    #
-    FORM_ROLES = [Atspi.Role.CHECK_BOX,
-                  Atspi.Role.RADIO_BUTTON,
-                  Atspi.Role.COMBO_BOX,
-                  Atspi.Role.DOCUMENT_FRAME, # rich text editing
-                  Atspi.Role.LIST_BOX,
-                  Atspi.Role.ENTRY,
-                  Atspi.Role.PASSWORD_TEXT,
-                  Atspi.Role.PUSH_BUTTON,
-                  Atspi.Role.SPIN_BUTTON,
-                  Atspi.Role.TEXT]
 
     # Roles which are recognized as being potential "large objects"
     # or "chunks." Note that this refers to AT-SPI roles.
@@ -565,9 +548,6 @@ class StructuralNavigation:
                        Atspi.Role.TABLE,
                        Atspi.Role.TREE,
                        Atspi.Role.TREE_TABLE]
-
-    IMAGE_ROLES = [Atspi.Role.IMAGE,
-                   Atspi.Role.IMAGE_MAP]
 
     def __init__(self, script, enabledTypes, enabled=False):
         """Creates an instance of the StructuralNavigation class.
@@ -629,9 +609,8 @@ class StructuralNavigation:
         - name: the name/objType associated with this object.
         """
 
-        # Bindings, criteria, and presentation are mandatory.
+        # Bindings and presentation are mandatory.
         bindings = eval("self._%sBindings()" % name)
-        criteria = eval("self._%sCriteria" % name)
         presentation = eval("self._%sPresentation" % name)
 
         # Predicates should be the exception; not the rule.
@@ -646,8 +625,20 @@ class StructuralNavigation:
         except Exception:
             dialogData = None
 
+        # Criteria is the present, but being phased out.
+        try:
+            criteria = eval("self._%sCriteria" % name)
+        except Exception:
+            criteria = None
+
+        # Getters are the future!
+        try:
+            getter = eval("self._%sGetter" % name)
+        except Exception:
+            getter = None
+
         return StructuralNavigationObject(self, name, bindings, predicate,
-                                          criteria, presentation, dialogData)
+                                          criteria, presentation, dialogData, getter)
 
     def addObject(self, objType, structuralNavigationObject):
         """Adds structuralNavigationObject to the dictionary of enabled
@@ -796,6 +787,11 @@ class StructuralNavigation:
 
     def _getAll(self, structuralNavigationObject, arg=None):
         """Returns all the instances of structuralNavigationObject."""
+
+        if structuralNavigationObject.getter:
+            result = structuralNavigationObject.getter(self._script.utilities.documentFrame(), arg)
+            return result
+
         if not structuralNavigationObject.criteria:
             return []
 
@@ -1361,8 +1357,8 @@ class StructuralNavigation:
         bindings["list"] = ["q", keybindings.SHIFT_ALT_MODIFIER_MASK, listDesc]
         return bindings
 
-    def _blockquoteCriteria(self, arg=None):
-        return AXCollection.create_match_rule(roles=[Atspi.Role.BLOCKQUOTE])
+    def _blockquoteGetter(self, document, arg=None):
+        return AXUtilities.find_all_block_quotes(document)
 
     def _blockquotePresentation(self, obj, arg=None):
         if obj is not None:
@@ -1400,10 +1396,8 @@ class StructuralNavigation:
         bindings["list"] = ["b", keybindings.SHIFT_ALT_MODIFIER_MASK, listDesc]
         return bindings
 
-    def _buttonCriteria(self, arg=None):
-        return AXCollection.create_match_rule(
-            states=[Atspi.StateType.SENSITIVE],
-            roles=[Atspi.Role.PUSH_BUTTON, Atspi.Role.TOGGLE_BUTTON])
+    def _buttonGetter(self, document, arg=None):
+        return AXUtilities.find_all_buttons(document)
 
     def _buttonPresentation(self, obj, arg=None):
         if obj is not None:
@@ -1441,10 +1435,8 @@ class StructuralNavigation:
         bindings["list"] = ["x", keybindings.SHIFT_ALT_MODIFIER_MASK, listDesc]
         return bindings
 
-    def _checkBoxCriteria(self, arg=None):
-        return AXCollection.create_match_rule(
-            states=[Atspi.StateType.FOCUSABLE, Atspi.StateType.SENSITIVE],
-            roles=[Atspi.Role.CHECK_BOX])
+    def _checkBoxGetter(self, document, arg=None):
+        return AXUtilities.find_all_check_boxes(document)
 
     def _checkBoxPresentation(self, obj, arg=None):
         if obj is not None:
@@ -1538,10 +1530,8 @@ class StructuralNavigation:
         bindings["list"] = ["c", keybindings.SHIFT_ALT_MODIFIER_MASK, listDesc]
         return bindings
 
-    def _comboBoxCriteria(self, arg=None):
-        return AXCollection.create_match_rule(
-            states=[Atspi.StateType.FOCUSABLE, Atspi.StateType.SENSITIVE],
-            roles=[Atspi.Role.COMBO_BOX])
+    def _comboBoxGetter(self, document, arg=None):
+        return AXUtilities.find_all_combo_boxes(document)
 
     def _comboBoxPresentation(self, obj, arg=None):
         if obj is not None:
@@ -1580,18 +1570,11 @@ class StructuralNavigation:
         bindings["list"] = ["e", keybindings.SHIFT_ALT_MODIFIER_MASK, listDesc]
         return bindings
 
-    def _entryCriteria(self, arg=None):
-        state = [Atspi.StateType.FOCUSABLE,
-                  Atspi.StateType.SENSITIVE,
-                  Atspi.StateType.EDITABLE]
-        return AXCollection.create_match_rule(states=state)
-
-    def _entryPredicate(self, obj, arg=None):
-        parent = AXObject.get_parent(obj)
-        if parent is None:
-            return False
-
-        return not AXUtilities.is_editable(parent)
+    def _entryGetter(self, document, arg=None):
+        def parent_is_not_editable(obj):
+            parent = AXObject.get_parent(obj)
+            return parent is not None and not AXUtilities.is_editable(parent)
+        return AXUtilities.find_all_editable_objects(document, pred=parent_is_not_editable)
 
     def _entryPresentation(self, obj, arg=None):
         if obj is not None:
@@ -1632,15 +1615,12 @@ class StructuralNavigation:
         bindings["list"] = ["f", keybindings.SHIFT_ALT_MODIFIER_MASK, listDesc]
         return bindings
 
-    def _formFieldCriteria(self, arg=None):
-        return AXCollection.create_match_rule(
-            states=[Atspi.StateType.FOCUSABLE, Atspi.StateType.SENSITIVE],
-            roles=self.FORM_ROLES)
-
-    def _formFieldPredicate(self, obj, arg=None):
-        if AXUtilities.is_document_frame(obj):
-            return AXUtilities.is_editable(obj)
-        return True
+    def _formFieldGetter(self, document, arg=None):
+        def is_not_noneditable_doc_frame(obj):
+            if AXUtilities.is_document_frame(obj):
+                return AXUtilities.is_editable(obj)
+            return True
+        return AXUtilities.find_all_form_fields(document, pred=is_not_noneditable_doc_frame)
 
     def _formFieldPresentation(self, obj, arg=None):
         if obj is not None:
@@ -1712,14 +1692,10 @@ class StructuralNavigation:
     def _headingLevels(self):
         return [1, 6]
 
-    def _headingCriteria(self, arg=None):
-        attrs = []
+    def _headingGetter(self, document, arg=None):
         if arg is not None:
-            attrs.append('level:%d' % arg)
-
-        return AXCollection.create_match_rule(
-            roles=[Atspi.Role.HEADING],
-            attributes=attrs)
+            return AXUtilities.find_all_headings_at_level(document, level=arg)
+        return AXUtilities.find_all_headings(document)
 
     def _headingPresentation(self, obj, arg=None):
         if obj is not None:
@@ -1756,6 +1732,48 @@ class StructuralNavigation:
 
     ########################
     #                      #
+    # Iframes              #
+    #                      #
+    ########################
+
+    def _iframeBindings(self):
+        bindings = {}
+        prevDesc = cmdnames.IFRAME_PREV
+        bindings["previous"] = ["", keybindings.SHIFT_MODIFIER_MASK, prevDesc]
+
+        nextDesc = cmdnames.IFRAME_NEXT
+        bindings["next"] = ["", keybindings.NO_MODIFIER_MASK, nextDesc]
+
+        listDesc = cmdnames.IFRAME_LIST
+        bindings["list"] = ["", keybindings.SHIFT_ALT_MODIFIER_MASK, listDesc]
+        return bindings
+
+    def _iframeGetter(self, document, arg=None):
+        return AXUtilities.find_all_internal_frames(document)
+
+    def _iframePresentation(self, obj, arg=None):
+        if obj is not None:
+            [newObj, characterOffset] = self._getCaretPosition(obj)
+            self._setCaretPosition(newObj, characterOffset)
+            self._presentObject(obj, 0)
+        else:
+            full = messages.NO_MORE_IFRAMES
+            brief = messages.STRUCTURAL_NAVIGATION_NOT_FOUND
+            self._script.presentMessage(full, brief)
+
+    def _iframeDialogData(self):
+        columnHeaders = [guilabels.SN_HEADER_IFRAME]
+
+        def rowData(obj):
+            name = AXObject.get_name(obj)
+            if not name and AXObject.get_child_count(obj):
+                name = AXObject.get_name(AXObject.get_child(obj, 0))
+            return [name or self._getRoleName(obj)]
+
+        return guilabels.SN_TITLE_IFRAME, columnHeaders, rowData
+
+    ########################
+    #                      #
     # Images               #
     #                      #
     ########################
@@ -1772,8 +1790,8 @@ class StructuralNavigation:
         bindings["list"] = ["g", keybindings.SHIFT_ALT_MODIFIER_MASK, listDesc]
         return bindings
 
-    def _imageCriteria(self, arg=None):
-        return AXCollection.create_match_rule(roles=self.IMAGE_ROLES)
+    def _imageGetter(self, document, arg=None):
+        return AXUtilities.find_all_images_and_image_maps(document)
 
     def _imagePresentation(self, obj, arg=None):
         if obj is not None:
@@ -1811,8 +1829,8 @@ class StructuralNavigation:
         bindings["list"] = ["m", keybindings.SHIFT_ALT_MODIFIER_MASK, listDesc]
         return bindings
 
-    def _landmarkCriteria(self, arg=None):
-        return AXCollection.create_match_rule(roles=[Atspi.Role.LANDMARK])
+    def _landmarkGetter(self, document, arg=None):
+        return AXUtilities.find_all_landmarks(document)
 
     def _landmarkPresentation(self, obj, arg=None):
         if obj is not None:
@@ -1852,11 +1870,8 @@ class StructuralNavigation:
         bindings["list"] = ["l", keybindings.SHIFT_ALT_MODIFIER_MASK, listDesc]
         return bindings
 
-    def _listCriteria(self, arg=None):
-        return AXCollection.create_match_rule(
-            states=[Atspi.StateType.FOCUSABLE],
-            state_match_type=Atspi.CollectionMatchType.NONE,
-            roles=[Atspi.Role.LIST])
+    def _listGetter(self, document, arg=None):
+        return AXUtilities.find_all_lists(document)
 
     def _listPresentation(self, obj, arg=None):
         if obj is not None:
@@ -1895,11 +1910,8 @@ class StructuralNavigation:
         bindings["list"] = ["i", keybindings.SHIFT_ALT_MODIFIER_MASK, listDesc]
         return bindings
 
-    def _listItemCriteria(self, arg=None):
-        return AXCollection.create_match_rule(
-            states=[Atspi.StateType.FOCUSABLE],
-            state_match_type=Atspi.CollectionMatchType.NONE,
-            roles=[Atspi.Role.LIST_ITEM])
+    def _listItemGetter(self, document, arg=None):
+        return AXUtilities.find_all_list_items(document)
 
     def _listItemPresentation(self, obj, arg=None):
         if obj is not None:
@@ -1937,13 +1949,8 @@ class StructuralNavigation:
         bindings["last"] = ["y", keybindings.NO_MODIFIER_MASK, desc]
         return bindings
 
-    def _liveRegionCriteria(self, arg=None):
-        attrs = []
-        levels = ["off", "polite", "assertive"]
-        for level in levels:
-            attrs.append('container-live:' + level)
-
-        return AXCollection.create_match_rule(attributes=attrs)
+    def _liveRegionGetter(self, document, arg=None):
+        return AXUtilities.find_all_live_regions(document)
 
     def _liveRegionPresentation(self, obj, arg=None):
         if obj is not None:
@@ -1973,30 +1980,22 @@ class StructuralNavigation:
         bindings["list"] = ["p", keybindings.SHIFT_ALT_MODIFIER_MASK, listDesc]
         return bindings
 
-    def _paragraphCriteria(self, arg=None):
-        return AXCollection.create_match_rule(
-            roles=[Atspi.Role.PARAGRAPH, Atspi.Role.HEADING])
+    def _paragraphGetter(self, document, arg=None):
+        def has_at_least_three_characters(obj):
+            if AXUtilities.is_heading(obj):
+                return True
 
-    def _paragraphPredicate(self, obj, arg=None):
-        if obj is None:
-            return False
+            try:
+                text = obj.queryText()
+                # We're choosing 3 characters as the minimum because some
+                # paragraphs contain a single image or link and a text
+                # of length 2: An embedded object character and a space.
+                # We want to skip these.
+                return text.characterCount > 2
+            except Exception:
+                return False
 
-        if AXUtilities.is_heading(obj):
-            return True
-
-        isMatch = False
-        try:
-            text = obj.queryText()
-            # We're choosing 3 characters as the minimum because some
-            # paragraphs contain a single image or link and a text
-            # of length 2: An embedded object character and a space.
-            # We want to skip these.
-            #
-            isMatch = text.characterCount > 2
-        except Exception:
-            pass
-
-        return isMatch
+        return AXUtilities.find_all_paragraphs(document, True, has_at_least_three_characters)
 
     def _paragraphPresentation(self, obj, arg=None):
         if obj is not None:
@@ -2034,10 +2033,8 @@ class StructuralNavigation:
         bindings["list"] = ["r", keybindings.SHIFT_ALT_MODIFIER_MASK, listDesc]
         return bindings
 
-    def _radioButtonCriteria(self, arg=None):
-        return AXCollection.create_match_rule(
-            states=[Atspi.StateType.FOCUSABLE, Atspi.StateType.SENSITIVE],
-            roles=[Atspi.Role.RADIO_BUTTON])
+    def _radioButtonGetter(self, document, arg=None):
+        return AXUtilities.find_all_radio_buttons(document)
 
     def _radioButtonPresentation(self, obj, arg=None):
         if obj is not None:
@@ -2073,8 +2070,8 @@ class StructuralNavigation:
         bindings["next"] = ["s", keybindings.NO_MODIFIER_MASK, nextDesc]
         return bindings
 
-    def _separatorCriteria(self, arg=None):
-        return AXCollection.create_match_rule(roles=[Atspi.Role.SEPARATOR])
+    def _separatorGetter(self, document, arg=None):
+        return AXUtilities.find_all_separators(document)
 
     def _separatorPresentation(self, obj, arg=None):
         if obj is not None:
@@ -2104,24 +2101,22 @@ class StructuralNavigation:
         bindings["list"] = ["t", keybindings.SHIFT_ALT_MODIFIER_MASK, listDesc]
         return bindings
 
-    def _tableCriteria(self, arg=None):
-        return AXCollection.create_match_rule(roles=[Atspi.Role.TABLE])
+    def _tableGetter(self, document, arg=None):
+        def is_not_layout_or_empty(obj):
+            if not AXObject.get_child_count(obj):
+                return False
 
-    def _tablePredicate(self, obj, arg=None):
-        if not AXObject.get_child_count(obj):
-            return False
+            # This should no longer be needed once Atspi 2.8.4 is released.
+            attrs = self._script.utilities.objectAttributes(obj)
+            if attrs.get('layout-guess') == 'true':
+                return False
 
-        # This should no longer be needed once Atspi 2.8.4 is released.
-        attrs = self._script.utilities.objectAttributes(obj)
-        if attrs.get('layout-guess') == 'true':
-            return False
+            try:
+                return obj.queryTable().nRows > 0
+            except Exception:
+                return False
 
-        try:
-            return obj.queryTable().nRows > 0
-        except Exception:
-            pass
-
-        return False
+        return AXUtilities.find_all_tables(document, is_not_layout_or_empty)
 
     def _tablePresentation(self, obj, arg=None):
         if obj is not None:
@@ -2184,11 +2179,10 @@ class StructuralNavigation:
         bindings["last"] = ["End", keybindings.SHIFT_ALT_MODIFIER_MASK, desc]
         return bindings
 
-    def _tableCellCriteria(self, arg=None):
-        role = [Atspi.Role.TABLE_CELL,
-                Atspi.Role.COLUMN_HEADER,
-                Atspi.Role.ROW_HEADER]
-        return AXCollection.create_match_rule(roles=role)
+    def _tableCellGetter(self, document, arg=None):
+        # TODO - JD: It would be more performant to set the root to the table.
+        # Actually, this doesn't seem to be getting used. Either use it or delete it.
+        return AXUtilities.find_all_table_cells_and_headers(document)
 
     def _tableCellPresentation(self, cell, arg):
         if cell is None:
@@ -2236,14 +2230,8 @@ class StructuralNavigation:
 
         return bindings
 
-    def _unvisitedLinkCriteria(self, arg=None):
-        return AXCollection.create_match_rule(
-            states=[Atspi.StateType.VISITED],
-            state_match_type=Atspi.CollectionMatchType.NONE,
-            roles=[Atspi.Role.LINK])
-
-    def _unvisitedLinkPredicate(self, obj, arg=None):
-        return AXUtilities.is_focusable(obj)
+    def _unvisitedLinkGetter(self, document, arg=None):
+        return AXUtilities.find_all_unvisited_links(document)
 
     def _unvisitedLinkPresentation(self, obj, arg=None):
         if obj is not None:
@@ -2283,10 +2271,8 @@ class StructuralNavigation:
 
         return bindings
 
-    def _visitedLinkCriteria(self, arg=None):
-        return AXCollection.create_match_rule(
-            states=[Atspi.StateType.VISITED, Atspi.StateType.FOCUSABLE],
-            roles=[Atspi.Role.LINK])
+    def _visitedLinkGetter(self, document, arg=None):
+        return AXUtilities.find_all_visited_links(document)
 
     def _visitedLinkPresentation(self, obj, arg=None):
         if obj is not None:
@@ -2325,10 +2311,8 @@ class StructuralNavigation:
         bindings["list"] = ["k", keybindings.SHIFT_ALT_MODIFIER_MASK, listDesc]
         return bindings
 
-    def _linkCriteria(self, arg=None):
-        return AXCollection.create_match_rule(
-            states=[Atspi.StateType.FOCUSABLE],
-            roles=[Atspi.Role.LINK])
+    def _linkGetter(self, document, arg=None):
+        return AXUtilities.find_all_links(document)
 
     def _linkPresentation(self, obj, arg=None):
         if obj is not None:

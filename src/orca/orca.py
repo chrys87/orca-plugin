@@ -830,7 +830,7 @@ def main():
             _scriptManager.setActiveScript(script, "Launching.")
 
             setLocusOfFocus(None, window)
-            focusedObject = script.utilities.focusedObject(window)
+            focusedObject = AXUtilities.get_focused_object(window)
             if focusedObject:
                 setLocusOfFocus(None, focusedObject)
                 script = _scriptManager.getScript(

@@ -35,6 +35,7 @@ __copyright__ = "Copyright (c) 2023 Igalia, S.L."
 __license__   = "LGPL"
 
 import gi
+import time
 
 gi.require_version("Atspi", "2.0")
 from gi.repository import Atspi
@@ -83,7 +84,7 @@ class AXCollection:
                                        interface_match_type,
                                        invert)
         except Exception as e:
-            msg = "ERROR: Exception in create_match_rule: %s" % e
+            msg = "AXCollection: Exception in create_match_rule: %s" % e
             debug.println(debug.LEVEL_INFO, msg, True)
             return None
 
@@ -99,15 +100,44 @@ class AXCollection:
         if rule is None:
             return []
 
+        start = time.time()
         try:
             # 0 means no limit on the number of results
             # The final argument, traverse, is not supported but is expected.
             matches = Atspi.Collection.get_matches(obj, rule, order, 0, True)
         except Exception as e:
-            msg = "ERROR: Exception in get_all_matches: %s" % e
+            msg = "AXCollection: Exception in get_all_matches: %s" % e
             debug.println(debug.LEVEL_INFO, msg, True)
             return []
 
-        msg = "AXCollection: %i matches found for %s" % (len(matches), obj)
+        msg = "AXCollection: %i match(es) found in %.4fs" % (len(matches), time.time() - start)
         debug.println(debug.LEVEL_INFO, msg, True)
         return matches
+
+    @staticmethod
+    def get_first_match(obj, rule, order=Atspi.CollectionSortOrder.CANONICAL):
+        """Returns the first object matching the specified rule."""
+
+        if not AXObject.supports_collection(obj):
+            return None
+
+        if rule is None:
+            return None
+
+        start = time.time()
+        try:
+            # 1 means limit the number of results to 1
+            # The final argument, traverse, is not supported but is expected.
+            matches = Atspi.Collection.get_matches(obj, rule, order, 1, True)
+        except Exception as e:
+            msg = "AXCollection: Exception in get_first_match: %s" % e
+            debug.println(debug.LEVEL_INFO, msg, True)
+            return None
+
+        match = None
+        if matches:
+            match = matches[0]
+
+        msg = "AXCollection: found %s in %.4fs" % (match, time.time() - start)
+        debug.println(debug.LEVEL_INFO, msg, True)
+        return match

@@ -1758,7 +1758,7 @@ class SpeechGenerator(generator.Generator):
         if AXObject.supports_selection(obj):
             items = self._script.utilities.selectedChildren(obj)
         else:
-            items = [self._script.utilities.focusedChild(obj)]
+            items = [AXUtilities.get_focused_object(obj)]
         if not (items and items[0]):
             return result
 
@@ -2389,7 +2389,7 @@ class SpeechGenerator(generator.Generator):
         This method should initially be called with a top-level window.
         """
         result = []
-        button = self._script.utilities.defaultButton(obj)
+        button = AXUtilities.get_default_button(obj)
         if AXUtilities.is_sensitive(button):
             name = self._generateName(button)
             if name:
@@ -2410,17 +2410,16 @@ class SpeechGenerator(generator.Generator):
         specifications) that represent the status bar of a window.
         """
 
-        statusBar = self._script.utilities.statusBar(obj)
-        if not statusBar:
+        if not AXUtilities.is_status_bar(obj):
             return []
 
-        items = self._script.utilities.statusBarItems(statusBar)
-        if not items or items == [statusBar]:
+        items = self._script.utilities.statusBarItems(obj)
+        if not items or items == [obj]:
             return []
 
         result = []
         for child in items:
-            if child == statusBar:
+            if child == obj:
                 continue
 
             childResult = self.generate(child, includeContext=False)
@@ -2456,23 +2455,13 @@ class SpeechGenerator(generator.Generator):
         return result
 
     def _generateListBoxItemWidgets(self, obj, **args):
-        widgetRoles = [Atspi.Role.CHECK_BOX,
-                       Atspi.Role.COMBO_BOX,
-                       Atspi.Role.PUSH_BUTTON,
-                       Atspi.Role.RADIO_BUTTON,
-                       Atspi.Role.SLIDER,
-                       Atspi.Role.TEXT,
-                       Atspi.Role.TOGGLE_BUTTON]
-        def isWidget(x):
-            return AXObject.get_role(x) in widgetRoles
+        if not AXUtilities.is_list_box(AXObject.get_parent(obj)):
+            return []
 
         result = []
-        if AXUtilities.is_list_box(AXObject.get_parent(obj)):
-            widgets = self._script.utilities.findAllDescendants(obj, isWidget)
-            for widget in widgets:
-                if self._script.utilities.isShowingAndVisible(widget):
-                    result.append(self.generate(widget, includeContext=False))
-
+        widgets = AXUtilities.get_all_widgets(obj)
+        for widget in widgets:
+            result.append(self.generate(widget, includeContext=False))
         return result
 
     #####################################################################

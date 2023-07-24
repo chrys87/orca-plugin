@@ -42,11 +42,14 @@ from gi.repository import Atspi
 
 from . import debug
 from .ax_object import AXObject
+from .ax_utilities_collection import AXUtilitiesCollection
 from .ax_utilities_role import AXUtilitiesRole
 from .ax_utilities_state import AXUtilitiesState
 
 
 class AXUtilities:
+
+    COMPARE_COLLECTION_PERFORMANCE = False
 
     @staticmethod
     def get_desktop():
@@ -93,7 +96,6 @@ class AXUtilities:
         debug.println(debug.LEVEL_INFO, msg, True)
         return False
 
-
     @staticmethod
     def get_application_with_pid(pid):
         """Returns the accessible application with the specified pid"""
@@ -110,8 +112,74 @@ class AXUtilities:
         debug.println(debug.LEVEL_INFO, msg, True)
         return None
 
+    @staticmethod
+    def get_all_widgets(obj, must_be_showing_and_visible=True):
+        """Returns all the descendants of obj with a widget role"""
+
+        roles = AXUtilitiesRole.get_widget_roles()
+        result = None
+        if AXObject.supports_collection(obj):
+            if not must_be_showing_and_visible:
+                result = AXUtilitiesCollection.find_all_with_role(obj, roles)
+            else:
+                states = [Atspi.StateType.SHOWING, Atspi.StateType.VISIBLE]
+                result = AXUtilitiesCollection.find_all_with_role_and_all_states(
+                    obj, roles, states)
+
+            if not AXUtilities.COMPARE_COLLECTION_PERFORMANCE:
+                return result
+
+        def is_match(x):
+            if AXObject.get_role(x) not in roles:
+                return False
+            if must_be_showing_and_visible:
+                return AXUtilitiesState.is_showing(x) and AXUtilitiesState.is_visible(x)
+
+        return AXObject.find_all_descendants(obj, is_match)
+
+    @staticmethod
+    def get_default_button(obj):
+        """Returns the default button descendant of obj"""
+
+        result = None
+        if AXObject.supports_collection(obj):
+            result = AXUtilitiesCollection.find_default_button(obj)
+            if not AXUtilities.COMPARE_COLLECTION_PERFORMANCE:
+                return result
+
+        return AXObject.find_descendant(obj, AXUtilitiesRole.is_default_button)
+
+    @staticmethod
+    def get_focused_object(obj):
+        """Returns the focused descendant of obj"""
+
+        result = None
+        if AXObject.supports_collection(obj):
+            result = AXUtilitiesCollection.find_focused_object(obj)
+            if not AXUtilities.COMPARE_COLLECTION_PERFORMANCE:
+                return result
+
+        return AXObject.find_descendant(obj, AXUtilitiesState.is_focused)
+
+    @staticmethod
+    def get_status_bar(obj):
+        """Returns the status bar descendant of obj"""
+
+        result = None
+        if AXObject.supports_collection(obj):
+            result = AXUtilitiesCollection.find_status_bar(obj)
+            if not AXUtilities.COMPARE_COLLECTION_PERFORMANCE:
+                return result
+
+        return AXObject.find_descendant(obj, AXUtilitiesRole.is_status_bar)
+
+
 for name, method in inspect.getmembers(AXUtilitiesRole, predicate=inspect.isfunction):
     setattr(AXUtilities, name, method)
 
 for name, method in inspect.getmembers(AXUtilitiesState, predicate=inspect.isfunction):
     setattr(AXUtilities, name, method)
+
+for name, method in inspect.getmembers(AXUtilitiesCollection, predicate=inspect.isfunction):
+    if name.startswith("find"):
+        setattr(AXUtilities, name, method)

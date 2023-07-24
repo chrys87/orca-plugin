@@ -354,36 +354,6 @@ class Utilities:
         debug.println(debug.LEVEL_INFO, msg, True)
         return commonAncestor
 
-    def defaultButton(self, obj):
-        """Returns the default button in the dialog which contains obj.
-
-        Arguments:
-        - obj: the top-level object (e.g. window, frame, dialog) for
-          which the status bar is sought.
-        """
-
-        # TODO - JD: Consider using findAllDescendants
-
-        # There are some objects which are not worth descending.
-        if AXUtilities.manages_descendants(obj) \
-           or AXUtilities.is_table(obj) or AXUtilities.is_tree_or_tree_table(obj):
-            return
-
-        defaultButton = None
-        # The default button is likely near the bottom of the window.
-        for i in range(AXObject.get_child_count(obj) - 1, -1, -1):
-            child = AXObject.get_child(obj, i)
-            if AXUtilities.is_push_button(child) \
-                and AXUtilities.is_default(child):
-                defaultButton = child
-            elif not (AXUtilities.is_table(child) or AXUtilities.is_tree_or_tree_table(child)):
-                defaultButton = self.defaultButton(child)
-
-            if defaultButton:
-                break
-
-        return defaultButton
-
     def displayedLabel(self, obj):
         """If there is an object labelling the given object, return the
         text being displayed for the object labelling this object.
@@ -525,39 +495,6 @@ class Utilities:
 
     def documentFrameURI(self, documentFrame=None):
         """Returns the URI of the document frame that is active."""
-
-        return None
-
-    @staticmethod
-    def focusedObject(root):
-        """Returns the accessible that has focus under or including the
-        given root.
-
-        TODO: This will currently traverse all children, whether they are
-        visible or not and/or whether they are children of parents that
-        manage their descendants.  At some point, this method should be
-        optimized to take such things into account.
-
-        Arguments:
-        - root: the root object where to start searching
-
-        Returns the object with the FOCUSED state or None if no object with
-        the FOCUSED state can be found.
-        """
-
-        if not root:
-            return None
-
-        if AXUtilities.is_focused(root):
-            return root
-
-        for child in AXObject.iter_children(root):
-            try:
-                candidate = Utilities.focusedObject(child)
-                if candidate:
-                    return candidate
-            except Exception:
-                pass
 
         return None
 
@@ -2042,44 +1979,6 @@ class Utilities:
 
         return items
 
-    def statusBar(self, obj):
-        """Returns the status bar in the window which contains obj.
-
-        Arguments:
-        - obj: the top-level object (e.g. window, frame, dialog) for which
-          the status bar is sought.
-        """
-
-        if AXUtilities.is_status_bar(obj):
-            return obj
-
-        # TODO - JD: Consider using findAllDescendants
-
-        # There are some objects which are not worth descending.
-        #
-        skipRoles = [Atspi.Role.TREE,
-                     Atspi.Role.TREE_TABLE,
-                     Atspi.Role.TABLE]
-
-        if AXUtilities.manages_descendants(obj) \
-           or AXObject.get_role(obj) in skipRoles:
-            return
-
-        statusBar = None
-        # The status bar is likely near the bottom of the window.
-        #
-        for i in range(AXObject.get_child_count(obj) - 1, -1, -1):
-            child = AXObject.get_child(obj, i)
-            role = AXObject.get_role(child)
-            if role == Atspi.Role.STATUS_BAR:
-                statusBar = child
-            elif role not in skipRoles:
-                statusBar = self.statusBar(child)
-            if statusBar and self.isShowingAndVisible(statusBar):
-                break
-
-        return statusBar
-
     def infoBar(self, root):
         return None
 
@@ -2284,24 +2183,8 @@ class Utilities:
 
         return not (extents.width and extents.height)
 
-    def _findAllDescendants(self, root, includeIf, excludeIf, matches):
-        if not root:
-            return
-
-        childCount = AXObject.get_child_count(root)
-        for i in range(childCount):
-            child = AXObject.get_child(root, i)
-            if excludeIf and excludeIf(child):
-                continue
-            if includeIf and includeIf(child):
-                matches.append(child)
-            self._findAllDescendants(child, includeIf, excludeIf, matches)
-
     def findAllDescendants(self, root, includeIf=None, excludeIf=None):
-        # TODO - JD: Can we use collection for this?
-        matches = []
-        self._findAllDescendants(root, includeIf, excludeIf, matches)
-        return matches
+        return AXObject.find_all_descendants(root, includeIf, excludeIf)
 
     def unrelatedLabels(self, root, onlyShowing=True, minimumWords=3):
         """Returns a list containing all the unrelated (i.e., have no
@@ -3769,15 +3652,6 @@ class Utilities:
 
         return AXSelection.get_selected_child_count(obj)
 
-    def focusedChild(self, obj):
-        child = AXObject.find_descendant(obj, AXUtilities.is_focused)
-        if child == obj:
-            msg = "ERROR: focused child of %s is %s" % (obj, child)
-            debug.println(debug.LEVEL_INFO, msg, True)
-            return None
-
-        return child
-
     def popupMenuFor(self, obj):
         if obj is None:
             return None
@@ -4663,9 +4537,6 @@ class Utilities:
         if not (root and obj):
             return None
 
-        # Given an broken table hierarchy, findDescendant can hang. And the
-        # reason we're here in the first place is to work around the app or
-        # toolkit killing accessibles. There's only so much we can do....
         if AXUtilities.is_table(root) or AXUtilities.is_embedded(root):
             return None
 
@@ -4675,12 +4546,7 @@ class Utilities:
         if isSame(root):
             replicant = root
         else:
-            try:
-                replicant = AXObject.find_descendant(root, isSame)
-            except Exception:
-                msg = "INFO: Exception from findDescendant for %s" % root
-                debug.println(debug.LEVEL_INFO, msg, True)
-                replicant = None
+            replicant = AXObject.find_descendant(root, isSame)
 
         msg = "HACK: Returning %s as replicant for Zombie %s" % (replicant, obj)
         debug.println(debug.LEVEL_INFO, msg, True)
@@ -5468,95 +5334,6 @@ class Utilities:
             return True
 
         return False
-
-    def _findSelectionBoundaryObject(self, root, findStart=True):
-        try:
-            text = root.queryText()
-        except Exception:
-            msg = "ERROR: Exception querying text for %s" % root
-            debug.println(debug.LEVEL_INFO, msg, True)
-            return None
-
-        if not text.getNSelections():
-            return None
-
-        start, end = text.getSelection(0)
-        string = text.getText(start, end)
-        if not string:
-            return None
-
-        if findStart and not string.startswith(self.EMBEDDED_OBJECT_CHARACTER):
-            return root
-
-        if not findStart and not string.endswith(self.EMBEDDED_OBJECT_CHARACTER):
-            return root
-
-        indices = list(range(AXObject.get_child_count(root)))
-        if not findStart:
-            indices.reverse()
-
-        for i in indices:
-            result = self._findSelectionBoundaryObject(root[i], findStart)
-            if result:
-                return result
-
-        return None
-
-    def _getSelectionAnchorAndFocus(self, root):
-        # Any scripts which need to make a distinction between the anchor and
-        # the focus should override this method.
-        obj1 = self._findSelectionBoundaryObject(root, True)
-        obj2 = self._findSelectionBoundaryObject(root, False)
-        return obj1, obj2
-
-    def _getSubtree(self, startObj, endObj):
-        if not (startObj and endObj):
-            return []
-
-        if self.isDead(startObj):
-            msg = "INFO: Cannot get subtree: Start object is dead."
-            debug.println(debug.LEVEL_INFO, msg, True)
-            return []
-
-        def _include(x):
-            return x is not None
-
-        def _exclude(x):
-            return self.isStaticTextLeaf(x)
-
-        subtree = []
-        startObjParent = AXObject.get_parent(startObj)
-        for i in range(AXObject.get_index_in_parent(startObj),
-                        AXObject.get_child_count(startObjParent)):
-            child = AXObject.get_child(startObjParent, i)
-            if self.isStaticTextLeaf(child):
-                continue
-            subtree.append(child)
-            subtree.extend(self.findAllDescendants(child, _include, _exclude))
-            if endObj in subtree:
-                break
-
-        if endObj == startObj:
-            return subtree
-
-        if endObj not in subtree:
-            subtree.append(endObj)
-            subtree.extend(self.findAllDescendants(endObj, _include, _exclude))
-
-        endObjParent = AXObject.get_parent(endObj)
-        endObjIndex = AXObject.get_index_in_parent(endObj)
-        lastObj = AXObject.get_child(endObjParent, endObjIndex + 1) or endObj
-
-        try:
-            endIndex = subtree.index(lastObj)
-        except ValueError:
-            pass
-        else:
-            if lastObj == endObj:
-                endIndex += 1
-            subtree = subtree[:endIndex]
-
-        return subtree
 
     def handleTextSelectionChange(self, obj, speakMessage=True):
         # Note: This guesswork to figure out what actually changed with respect
