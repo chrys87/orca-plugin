@@ -1376,6 +1376,12 @@ class Utilities(script_utilities.Utilities):
         return self.adjustContentsForLanguage([[obj, start, end, string]])
 
     def getSentenceContentsAtOffset(self, obj, offset, useCache=True):
+        self._canHaveCaretContextDecision = {}
+        rv = self._getSentenceContentsAtOffset(obj, offset, useCache)
+        self._canHaveCaretContextDecision = {}
+        return rv
+
+    def _getSentenceContentsAtOffset(self, obj, offset, useCache=True):
         if not obj:
             return []
 
@@ -1450,6 +1456,12 @@ class Utilities(script_utilities.Utilities):
         return objects
 
     def getCharacterContentsAtOffset(self, obj, offset, useCache=True):
+        self._canHaveCaretContextDecision = {}
+        rv = self._getCharacterContentsAtOffset(obj, offset, useCache)
+        self._canHaveCaretContextDecision = {}
+        return rv
+
+    def _getCharacterContentsAtOffset(self, obj, offset, useCache=True):
         if not obj:
             return []
 
@@ -1468,6 +1480,12 @@ class Utilities(script_utilities.Utilities):
         return objects
 
     def getWordContentsAtOffset(self, obj, offset, useCache=True):
+        self._canHaveCaretContextDecision = {}
+        rv = self._getWordContentsAtOffset(obj, offset, useCache)
+        self._canHaveCaretContextDecision = {}
+        return rv
+
+    def _getWordContentsAtOffset(self, obj, offset, useCache=True):
         if not obj:
             return []
 
@@ -1544,6 +1562,12 @@ class Utilities(script_utilities.Utilities):
         return objects
 
     def getObjectContentsAtOffset(self, obj, offset=0, useCache=True):
+        self._canHaveCaretContextDecision = {}
+        rv = self._getObjectContentsAtOffset(obj, offset, useCache)
+        self._canHaveCaretContextDecision = {}
+        return rv
+
+    def _getObjectContentsAtOffset(self, obj, offset=0, useCache=True):
         if not obj:
             return []
 
@@ -1664,6 +1688,12 @@ class Utilities(script_utilities.Utilities):
         return False
 
     def getLineContentsAtOffset(self, obj, offset, layoutMode=None, useCache=True):
+        self._canHaveCaretContextDecision = {}
+        rv = self._getLineContentsAtOffset(obj, offset, layoutMode, useCache)
+        self._canHaveCaretContextDecision = {}
+        return rv
+
+    def _getLineContentsAtOffset(self, obj, offset, layoutMode=None, useCache=True):
         startTime = time.time()
         if not obj:
             return []
@@ -1829,6 +1859,8 @@ class Utilities(script_utilities.Utilities):
         debug.println(debug.LEVEL_INFO, msg, True)
 
         self._debugContentsInfo(obj, offset, objects, "Line (layout mode)")
+
+        self._canHaveCaretContextDecision = {}
         return objects
 
     def getPreviousLineContents(self, obj=None, offset=-1, layoutMode=None, useCache=True):
@@ -4640,8 +4672,7 @@ class Utilities(script_utilities.Utilities):
         if rv is not None:
             return rv
 
-        startTime = time.time()
-        if not obj:
+        if obj is None:
             return False
         if self.isDead(obj):
             msg = "WEB: Dead object cannot have caret context %s" % obj
@@ -4651,63 +4682,85 @@ class Utilities(script_utilities.Utilities):
             msg = "WEB: Zombie object cannot have caret context %s" % obj
             debug.println(debug.LEVEL_INFO, msg, True)
             return False
-        if self.isHidden(obj):
-            msg = "WEB: Hidden object cannot have caret context %s" % obj
+
+        startTime = time.time()
+        rv = None
+        if AXUtilities.is_focusable(obj):
+            msg = "WEB: Focusable object can have caret context %s" % obj
             debug.println(debug.LEVEL_INFO, msg, True)
-            return False
-        if self.isOffScreenLabel(obj):
-            msg = "WEB: Off-screen label cannot have caret context %s" % obj
+            rv = True
+        elif AXUtilities.is_editable(obj):
+            msg = "WEB: Editable object can have caret context %s" % obj
             debug.println(debug.LEVEL_INFO, msg, True)
-            return False
-        if self.isNonNavigablePopup(obj):
-            msg = "WEB: Non-navigable popup cannot have caret context %s" % obj
+            rv = True
+        elif AXUtilities.is_landmark(obj):
+            msg = "WEB: Landmark can have caret context %s" % obj
             debug.println(debug.LEVEL_INFO, msg, True)
-            return False
-        if self.isUselessImage(obj):
-            msg = "WEB: Useless image cannot have caret context %s" % obj
-            debug.println(debug.LEVEL_INFO, msg, True)
-            return False
-        if self.isUselessEmptyElement(obj):
-            msg = "WEB: Useless empty element cannot have caret context %s" % obj
-            debug.println(debug.LEVEL_INFO, msg, True)
-            return False
-        if self.isEmptyAnchor(obj):
-            msg = "WEB: Empty anchor cannot have caret context %s" % obj
-            debug.println(debug.LEVEL_INFO, msg, True)
-            return False
-        if self.isEmptyToolTip(obj):
-            msg = "WEB: Empty tool tip cannot have caret context %s" % obj
-            debug.println(debug.LEVEL_INFO, msg, True)
-            return False
-        if self.hasNoSize(obj):
-            msg = "WEB: Allowing sizeless object to have caret context %s" % obj
-            debug.println(debug.LEVEL_INFO, msg, True)
-            return True
-        if self.isParentOfNullChild(obj):
-            msg = "WEB: Parent of null child cannot have caret context %s" % obj
-            debug.println(debug.LEVEL_INFO, msg, True)
-            return False
-        if self.isPseudoElement(obj):
-            msg = "WEB: Pseudo element cannot have caret context %s" % obj
-            debug.println(debug.LEVEL_INFO, msg, True)
-            return False
-        if self.isStaticTextLeaf(obj):
+            rv = True
+        elif self.isStaticTextLeaf(obj):
             msg = "WEB: Static text leaf cannot have caret context %s" % obj
             debug.println(debug.LEVEL_INFO, msg, True)
-            return False
-        if self.isFakePlaceholderForEntry(obj):
+            rv = False
+        elif self.isUselessEmptyElement(obj):
+            msg = "WEB: Useless empty element cannot have caret context %s" % obj
+            debug.println(debug.LEVEL_INFO, msg, True)
+            rv = False
+        elif self.isOffScreenLabel(obj):
+            msg = "WEB: Off-screen label cannot have caret context %s" % obj
+            debug.println(debug.LEVEL_INFO, msg, True)
+            rv = False
+        elif self.isNonNavigablePopup(obj):
+            msg = "WEB: Non-navigable popup cannot have caret context %s" % obj
+            debug.println(debug.LEVEL_INFO, msg, True)
+            rv = False
+        elif self.isUselessImage(obj):
+            msg = "WEB: Useless image cannot have caret context %s" % obj
+            debug.println(debug.LEVEL_INFO, msg, True)
+            rv = False
+        elif self.isEmptyAnchor(obj):
+            msg = "WEB: Empty anchor cannot have caret context %s" % obj
+            debug.println(debug.LEVEL_INFO, msg, True)
+            rv = False
+        elif self.isEmptyToolTip(obj):
+            msg = "WEB: Empty tool tip cannot have caret context %s" % obj
+            debug.println(debug.LEVEL_INFO, msg, True)
+            rv = False
+        elif self.isParentOfNullChild(obj):
+            msg = "WEB: Parent of null child cannot have caret context %s" % obj
+            debug.println(debug.LEVEL_INFO, msg, True)
+            rv = False
+        elif self.isPseudoElement(obj):
+            msg = "WEB: Pseudo element cannot have caret context %s" % obj
+            debug.println(debug.LEVEL_INFO, msg, True)
+            rv = False
+        elif self.isFakePlaceholderForEntry(obj):
             msg = "WEB: Fake placeholder for entry cannot have caret context %s" % obj
             debug.println(debug.LEVEL_INFO, msg, True)
-            return False
-        if self.isNonInteractiveDescendantOfControl(obj):
+            rv = False
+        elif self.isNonInteractiveDescendantOfControl(obj):
             msg = "WEB: Non interactive descendant of control cannot have caret context %s" % obj
             debug.println(debug.LEVEL_INFO, msg, True)
-            return False
+            rv = False
+        elif self.isHidden(obj):
+            # We try to do this check only if needed because getting object attributes is
+            # not as performant, and we cannot use the cached attribute because aria-hidden
+            # can change frequently depending on the app.
+            msg = "WEB: Hidden object cannot have caret context %s" % obj
+            debug.println(debug.LEVEL_INFO, msg, True)
+            rv = False
+        elif self.hasNoSize(obj):
+            msg = "WEB: Allowing sizeless object to have caret context %s" % obj
+            debug.println(debug.LEVEL_INFO, msg, True)
+            rv = True
+        else:
+            msg = "INFO: %s can have caret context. (%.4fs)" % (obj, time.time() - startTime)
+            debug.println(debug.LEVEL_INFO, msg, True)
+            rv = True
 
-        msg = "INFO: Verified %s can have caret context. (%.4fs)" % (obj, time.time() - startTime)
+        self._canHaveCaretContextDecision[hash(obj)] = rv
+        msg = "INFO: _canHaveCaretContext took %.4fs" % (time.time() - startTime)
         debug.println(debug.LEVEL_INFO, msg, True)
-        self._canHaveCaretContextDecision[hash(obj)] = True
-        return True
+        return rv
 
     def isPseudoElement(self, obj):
         return False
@@ -5019,6 +5072,12 @@ class Utilities(script_utilities.Utilities):
         self._contextPathsRolesAndNames[hash(parent)] = path, role, name
 
     def findFirstCaretContext(self, obj, offset):
+        self._canHaveCaretContextDecision = {}
+        rv = self._findFirstCaretContext(obj, offset)
+        self._canHaveCaretContextDecision = {}
+        return rv
+
+    def _findFirstCaretContext(self, obj, offset):
         msg = "WEB: Looking for first caret context for %s, %i" % (obj, offset)
         debug.println(debug.LEVEL_INFO, msg, True)
 
@@ -5033,7 +5092,7 @@ class Utilities(script_utilities.Utilities):
             msg = "WEB: First caret context for %s, %i will look in child %s" \
                 % (obj, offset, firstChild)
             debug.println(debug.LEVEL_INFO, msg, True)
-            return self.findFirstCaretContext(firstChild, 0)
+            return self._findFirstCaretContext(firstChild, 0)
 
         text = self.queryNonEmptyText(obj)
         if not text and self._canHaveCaretContext(obj):
@@ -5112,7 +5171,7 @@ class Utilities(script_utilities.Utilities):
 
         msg = "WEB: Looking in child %s for first caret context for %s, %i" % (child, obj, offset)
         debug.println(debug.LEVEL_INFO, msg, True)
-        return self.findFirstCaretContext(child, 0)
+        return self._findFirstCaretContext(child, 0)
 
     def findNextCaretInOrder(self, obj=None, offset=-1):
         startTime = time.time()
