@@ -46,6 +46,9 @@ class AXUtilities:
     def get_application_with_pid(pid): ...
 
     @staticmethod
+    def get_all_static_text_leaf_nodes(obj): ...
+
+    @staticmethod
     def get_all_widgets(obj, must_be_showing_and_visible=True): ...
 
     @staticmethod
@@ -706,6 +709,9 @@ class AXUtilities:
     def find_all_with_role(root, roles_list, pred=None): ...
 
     @staticmethod
+    def find_all_without_roles(root, role_list, pred=None): ...
+
+    @staticmethod
     def find_all_with_role_and_all_states(root, role_list, state_list, pred=None): ...
 
     @staticmethod
@@ -767,6 +773,9 @@ class AXUtilities:
 
     @staticmethod
     def find_all_check_menu_items(root, pred=None): ...
+
+    @staticmethod
+    def find_all_clickables(root, pred=None): ...
 
     @staticmethod
     def find_all_color_choosers(root, pred=None): ...
@@ -869,6 +878,9 @@ class AXUtilities:
 
     @staticmethod
     def find_all_focusable_objects(root, pred=None): ...
+
+    @staticmethod
+    def find_all_focusable_objects_with_click_ancestor(root, pred=None): ...
 
     @staticmethod
     def find_all_focused_objects(root, pred=None): ...
