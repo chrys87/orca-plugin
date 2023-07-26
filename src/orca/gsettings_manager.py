@@ -11,10 +11,8 @@ class GsettingsManager():
         self.profileList = []
         self.applicationList = []
         self.global_settings = self.register_setting(GLOBAL_SCHEMA_ID)
-        #self.register_setting('org.gnome.orca.GSettingsTest', profile = 'testprofile', application = 'testapp', domain = 'testdomain', source_directory = '/home/chrys/Projekte/orca-plugins/gsettingsTest/config/')
-        #self.register_setting('org.gnome.orca.GSettingsTest', profile = 'testprofile2', application = 'testapp', domain = 'testdomain', source_directory = '/home/chrys/Projekte/orca-plugins/gsettingsTest/config/')
-        #self.register_setting('org.gnome.orca.GSettingsTest', profile = 'testprofile', application = 'testapp2', domain = 'testdomain', source_directory = '/home/chrys/Projekte/orca-plugins/gsettingsTest/config/')
-        #self.register_setting('org.gnome.orca.GSettingsTest', profile = 'testprofile', application = 'testapp2', domain = 'testdomain2', source_directory = '/home/chrys/Projekte/orca-plugins/gsettingsTest/config/')
+        #s = self.register_setting('org.gnome.orca.GSettingsTest', profile_name = 'Chrys', application_name = 'thunderbird', plugin_name = 'GsettingsTest', source_directory = '/home/chrys/Projekte/orca-plugins/gsettingsTest/config/')
+        #s.set_boolean('testbool2', True)
 
         self.set_profileList(self.get_global_settings_value_list('available-profiles'))
         #self.set_applicationList(self.get_global_settings_value_list('available-applications'))
@@ -23,8 +21,13 @@ class GsettingsManager():
         self.set_active_profile(self.get_global_settings_value_string('active-profile'))
         self.global_settings.connect("changed::profiles", self.on_profiles_changed)
         self.global_settings.connect("changed::active-profile", self.on_active_profile_changed)
-    def register_setting(self, schema_id, profile_name = None, application_name =None, plugin_name = None, sub_setting_name = None, source_directory = ''):
+
+    def register_setting(self, schema_id, profile_name = None, application_name =None, plugin_name = None, sub_setting_name = None, source_directory = '', version = 0):
+        if profile_name:
+            if not profile_name in self.get_profileList():
+                profile_name = DEFAULT_PROFILE_NAME
         # get settings path
+        #if not settings_path:
         settings_path = SETTINGS_ROOT_PATH
         if profile_name:
             settings_path += 'profiles/{}/'.format(profile_name)
