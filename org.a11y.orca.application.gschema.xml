@@ -1,9 +1,0 @@
-<?xml version="1.0" encoding="UTF-8"?>
-<schemalist>
-  <schema id="org.a11y.orca.application">
-    <key name="application-version" type="i">
-      <default>-1</default>
-      <summary>The version for the application specific settings.</summary>
-    </key>
-  </schema> 
-</schemalist>

@@ -5,5 +5,9 @@
       <default>-1</default>
       <summary>The version for the profile.</summary>
     </key>
-  </schema> 
+    <key name="application-settings" type="as">
+      <default>[]</default>
+      <summary>The list of applications with specific settings.</summary>
+    </key>
+  </schema>
 </schemalist>
