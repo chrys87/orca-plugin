@@ -788,20 +788,12 @@ class StructuralNavigation:
     def _getAll(self, structuralNavigationObject, arg=None):
         """Returns all the instances of structuralNavigationObject."""
 
-        if structuralNavigationObject.getter:
-            result = structuralNavigationObject.getter(self._script.utilities.documentFrame(), arg)
-            return result
-
-        if not structuralNavigationObject.criteria:
-            return []
-
         modalDialog = self._script.utilities.getModalDialog(orca_state.locusOfFocus)
         inModalDialog = bool(modalDialog)
         if self._inModalDialog != inModalDialog:
             msg = "STRUCTURAL NAVIGATION: in modal dialog has changed from %s to %s" % \
                 (self._inModalDialog, inModalDialog)
             debug.println(debug.LEVEL_INFO, msg, True)
-
             self.clearCache()
             self._inModalDialog = inModalDialog
 
@@ -810,14 +802,21 @@ class StructuralNavigation:
         key = "%s:%s" % (structuralNavigationObject.objType, arg)
         matches = cache.get(key, [])
         if matches:
+            msg = "STRUCTURAL NAVIGATION: Returning %i matches from cache" % len(matches)
+            debug.println(debug.LEVEL_INFO, msg, True)
             return matches.copy()
 
-        if not AXObject.supports_collection(document):
-            msg = "STRUCTURAL NAVIGATION: %s does not support collection" % document
+        if structuralNavigationObject.getter:
+            matches = structuralNavigationObject.getter(document, arg)
+        elif not structuralNavigationObject.criteria:
             return []
-
-        rule = structuralNavigationObject.criteria(arg)
-        matches = AXCollection.get_all_matches(document, rule)
+        elif not AXObject.supports_collection(document):
+            msg = "STRUCTURAL NAVIGATION: %s does not support collection" % document
+            debug.println(debug.LEVEL_INFO, msg, True)
+            return []
+        else:
+            rule = structuralNavigationObject.criteria(arg)
+            matches = AXCollection.get_all_matches(document, rule)
 
         if inModalDialog:
             originalSize = len(matches)
@@ -1604,12 +1603,10 @@ class StructuralNavigation:
     def _formFieldBindings(self):
         bindings = {}
         prevDesc = cmdnames.FORM_FIELD_PREV
-        bindings["previous"] = ["Tab",
-                                keybindings.ORCA_SHIFT_MODIFIER_MASK,
-                                prevDesc]
+        bindings["previous"] = ["f", keybindings.SHIFT_MODIFIER_MASK, prevDesc]
 
         nextDesc = cmdnames.FORM_FIELD_NEXT
-        bindings["next"] = ["Tab", keybindings.ORCA_MODIFIER_MASK, nextDesc]
+        bindings["next"] = ["f", keybindings.NO_MODIFIER_MASK, nextDesc]
 
         listDesc = cmdnames.FORM_FIELD_LIST
         bindings["list"] = ["f", keybindings.SHIFT_ALT_MODIFIER_MASK, listDesc]
