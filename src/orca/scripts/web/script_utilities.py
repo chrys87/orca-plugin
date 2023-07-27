@@ -68,6 +68,7 @@ class Utilities(script_utilities.Utilities):
         self._isContentEditableWithEmbeddedObjects = {}
         self._isCodeDescendant = {}
         self._isEntryDescendant = {}
+        self._hasGridDescendant = {}
         self._isGridDescendant = {}
         self._isLabelDescendant = {}
         self._isModalDialogDescendant = {}
@@ -165,6 +166,7 @@ class Utilities(script_utilities.Utilities):
         self._isContentEditableWithEmbeddedObjects = {}
         self._isCodeDescendant = {}
         self._isEntryDescendant = {}
+        self._hasGridDescendant = {}
         self._isGridDescendant = {}
         self._isLabelDescendant = {}
         self._isMenuDescendant = {}
@@ -787,6 +789,11 @@ class Utilities(script_utilities.Utilities):
     def expandEOCs(self, obj, startOffset=0, endOffset=-1):
         if not self.inDocumentContent(obj):
             return super().expandEOCs(obj, startOffset, endOffset)
+
+        if self.hasGridDescendant(obj):
+            msg = "WEB: not expanding EOCs: %s has grid descendant" % obj
+            debug.println(debug.LEVEL_INFO, msg, True)
+            return ""
 
         text = self.queryNonEmptyText(obj)
         if not text:
@@ -2863,6 +2870,19 @@ class Utilities(script_utilities.Utilities):
     def supportsSelectionAndTable(self, obj):
         return AXObject.supports_table(obj) and AXObject.supports_selection(obj)
 
+    def hasGridDescendant(self, obj):
+        if not obj:
+            return False
+
+        rv = self._hasGridDescendant.get(hash(obj))
+        if rv is not None:
+            return rv
+
+        grids = AXUtilities.find_all_grids(obj)
+        rv = bool(grids)
+        self._hasGridDescendant[hash(obj)] = rv
+        return rv
+
     def isGridDescendant(self, obj):
         if not obj:
             return False
@@ -3493,6 +3513,11 @@ class Utilities(script_utilities.Utilities):
 
         if self.labelIsAncestorOfLabelled(obj):
             return False
+
+        if self.hasGridDescendant(obj):
+            msg = "WEB: %s is not clickable: has grid descendant" % obj
+            debug.println(debug.LEVEL_INFO, msg, True)
+            return ""
 
         rv = False
         if not self.isFocusModeWidget(obj):
@@ -4827,6 +4852,14 @@ class Utilities(script_utilities.Utilities):
             return obj, offset
 
         context = self._caretContexts.get(hash(AXObject.get_parent(documentFrame)))
+        if context is not None:
+            msg = "WEB: Cached context of %s is %s, %i." % (documentFrame, context[0], context[1])
+            debug.println(debug.LEVEL_INFO, msg, True)
+        else:
+            msg = "WEB: No cached context for %s." % (documentFrame)
+            debug.println(debug.LEVEL_INFO, msg, True)
+            obj, offset = None, -1
+
         if not context or not self.isTopLevelDocument(documentFrame):
             if not searchIfNeeded:
                 return None, -1
@@ -4844,6 +4877,8 @@ class Utilities(script_utilities.Utilities):
         else:
             obj, offset = context
 
+        msg = "WEB: Result context of %s is %s, %i." % (documentFrame, obj, offset)
+        debug.println(debug.LEVEL_INFO, msg, True)
         self.setCaretContext(obj, offset, documentFrame)
 
         return obj, offset

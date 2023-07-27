@@ -78,6 +78,9 @@ class AXUtilitiesCollection:
 
     @staticmethod
     def _apply_predicate(matches, pred):
+        if not matches:
+            return []
+
         start = time.time()
         msg = "AXUtilitiesCollection: Applying predicate %s" \
             % AXUtilitiesCollection._get_function_string(pred)
@@ -381,6 +384,8 @@ class AXUtilitiesCollection:
         state_match_type = Atspi.CollectionMatchType.NONE
         roles = AXUtilitiesRole.get_roles_to_exclude_from_clickables_list()
         roles_match_type = Atspi.CollectionMatchType.NONE
+        attributes = ["xml-roles:gridcell"]
+        attribute_match_type = Atspi.CollectionMatchType.NONE
 
         def is_match(x):
             if not AXObject.has_action(x, "click"):
@@ -389,6 +394,8 @@ class AXUtilitiesCollection:
 
         rule = AXCollection.create_match_rule(
             interfaces=interfaces,
+            attributes=attributes,
+            attribute_match_type=attribute_match_type,
             roles=roles,
             role_match_type=roles_match_type,
             states=states,
@@ -730,8 +737,8 @@ class AXUtilitiesCollection:
         return AXUtilitiesCollection.find_all_with_role(root, roles, pred)
 
     @staticmethod
-    def find_all_grid_cells(root, pred=None):
-        """Returns all descendants of root that are grid cells"""
+    def find_all_grids(root, pred=None):
+        """Returns all descendants of root that are grids"""
 
         if root is None:
             return []
@@ -744,6 +751,19 @@ class AXUtilitiesCollection:
         attributes = ["xml-roles:grid"]
         rule = AXCollection.create_match_rule(roles=roles, attributes=attributes)
         grids = AXCollection.get_all_matches(root, rule)
+        if pred is not None:
+            AXUtilitiesCollection._apply_predicate(grids, pred)
+
+        return grids
+
+    @staticmethod
+    def find_all_grid_cells(root, pred=None):
+        """Returns all descendants of root that are grid cells"""
+
+        if root is None:
+            return []
+
+        grids = AXUtilitiesCollection.find_all_grids(root, pred)
         if not grids:
             return []
 
