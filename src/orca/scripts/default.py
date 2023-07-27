@@ -57,7 +57,6 @@ import orca.settings_manager as settings_manager
 import orca.sound as sound
 import orca.speech as speech
 import orca.speechserver as speechserver
-import orca.mouse_review as mouse_review
 from orca.ax_object import AXObject
 from orca.ax_utilities import AXUtilities
 
@@ -2574,6 +2573,13 @@ class Script(script.Script):
             # any events to update the locusOfFocus. As a result, subsequent flat
             # review commands will continue to present the stale content.
             self.flatReviewContext = None
+
+        orcaApp = orca.getManager()
+        mouse_review = orcaApp.getDynamicApiManager().getAPI('MouseReview')
+
+        mouseReviewItem = None
+        if mouse_review != None:
+            mouseReviewItem = mouse_review.getCurrentItem()
 
         mouseReviewItem = mouse_review.reviewer.getCurrentItem()
         selectedChildren = self.utilities.selectedChildren(event.source)
