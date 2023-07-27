@@ -56,7 +56,6 @@ speech = None
 messages = None
 cmdnames = None
 emitRegionChanged = None
-_eventManager = None
 _scriptManager = None
 _settingsManager = None
 AXObject = None
@@ -79,7 +78,6 @@ class MouseReview(GObject.Object, Peas.Activatable, plugin.Plugin):
         global script_manager
         global settings_manager
         global speech
-        global _eventManager
         global _scriptManager
         global _settingsManager
         global emitRegionChanged
@@ -97,7 +95,6 @@ class MouseReview(GObject.Object, Peas.Activatable, plugin.Plugin):
         settings_manager = API.app.getDynamicApiManager().getAPI('SettingsManager')
         speech = API.app.getDynamicApiManager().getAPI('Speech')
         emitRegionChanged = API.app.getDynamicApiManager().getAPI('EmitRegionChanged')
-        _eventManager = event_manager.getManager()
         _scriptManager = script_manager.getManager()
         _settingsManager = settings_manager.getManager()
         AXObject = API.app.getDynamicApiManager().getAPI('AXObject')
@@ -425,7 +422,7 @@ class MouseReviewer:
         self._windows = []
         self._all_windows = []
         self._handlerIds = {}
-
+        self._eventListener = Atspi.EventListener.new(self._listener)
         self.inMouseEvent = False
 
         if not _mouseReviewCapable:
@@ -456,11 +453,6 @@ class MouseReviewer:
 
         self.activate()
 
-    def _get_listeners(self):
-        """Returns the accessible-event listeners for mouse review."""
-
-        return {"mouse:abs": self._listener}
-
     def activate(self):
         """Activates mouse review."""
 
@@ -480,7 +472,7 @@ class MouseReviewer:
             frame = script.utilities.topLevelObject(obj)
         self._currentMouseOver = _ItemContext(obj=obj, frame=frame, script=script)
 
-        _eventManager.registerModuleListeners(self._get_listeners())
+        self._eventListener.register("mouse:abs")
         screen = Wnck.Screen.get_default()
         if screen:
             # On first startup windows and workspace are likely to be None,
@@ -505,7 +497,7 @@ class MouseReviewer:
     def deactivate(self):
         """Deactivates mouse review."""
 
-        _eventManager.deregisterModuleListeners(self._get_listeners())
+        self._eventListener.deregister("mouse:abs")
         for key, value in self._handlerIds.items():
             value.disconnect(key)
         self._handlerIds = {}

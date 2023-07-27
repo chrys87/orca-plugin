@@ -99,13 +99,11 @@ src/orca/scripts/apps/gajim/Makefile
 src/orca/scripts/apps/gcalctool/Makefile
 src/orca/scripts/apps/gedit/Makefile
 src/orca/scripts/apps/gnome-documents/Makefile
-src/orca/scripts/apps/gnome-search-tool/Makefile
 src/orca/scripts/apps/gnome-shell/Makefile
 src/orca/scripts/apps/kwin/Makefile
 src/orca/scripts/apps/notification-daemon/Makefile
 src/orca/scripts/apps/notify-osd/Makefile
 src/orca/scripts/apps/pidgin/Makefile
-src/orca/scripts/apps/rhythmbox/Makefile
 src/orca/scripts/apps/soffice/Makefile
 src/orca/scripts/apps/SeaMonkey/Makefile
 src/orca/scripts/apps/smuxi-frontend-gnome/Makefile

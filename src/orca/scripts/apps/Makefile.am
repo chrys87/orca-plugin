@@ -9,12 +9,10 @@ SUBDIRS = \
 	gedit \
 	gnome-documents \
 	gnome-shell \
-	gnome-search-tool \
 	kwin \
 	notification-daemon \
 	notify-osd \
 	pidgin \
-	rhythmbox \
 	soffice \
 	SeaMonkey \
 	smuxi-frontend-gnome \
