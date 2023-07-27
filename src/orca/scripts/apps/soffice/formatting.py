@@ -25,7 +25,11 @@ __date__      = "$Date$"
 __copyright__ = "Copyright (c) 2005-2009 Sun Microsystems Inc."
 __license__   = "LGPL"
 
-# pylint: disable-msg=C0301
+# If we were to adhere to the line-length requirements of 100 characters,
+# this file would be even more cumbersome to look at than it already is.
+# We shall respect the line-length requirements for all files that are not
+# formatting.py.
+# ruff: noqa: E501
 
 import copy
 import gi

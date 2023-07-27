@@ -25,6 +25,12 @@ __date__      = "$Date:$"
 __copyright__ = "Copyright (c) 2004-2009 Sun Microsystems Inc."
 __license__   = "LGPL"
 
+# If we were to adhere to the line-length requirements of 100 characters,
+# this file would be even more cumbersome to look at than it already is.
+# We shall respect the line-length requirements for all files that are not
+# formatting.py.
+# ruff: noqa: E501
+
 import copy
 
 import gi
@@ -32,8 +38,6 @@ gi.require_version("Atspi", "2.0")
 from gi.repository import Atspi
 
 from . import object_properties
-
-# pylint: disable-msg=C0301
 
 TUTORIAL = '(tutorial and (pause + tutorial) or [])'
 MNEMONIC = '(mnemonic and (pause + mnemonic + lineBreak) or [])'

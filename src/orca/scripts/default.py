@@ -57,7 +57,7 @@ import orca.settings_manager as settings_manager
 import orca.sound as sound
 import orca.speech as speech
 import orca.speechserver as speechserver
-import orca.notification_messages as notification_messages
+import orca.mouse_review as mouse_review
 from orca.ax_object import AXObject
 from orca.ax_utilities import AXUtilities
 
@@ -498,9 +498,11 @@ class Script(script.Script):
                 Script.presentSizeAndPosition,
                 cmdnames.PRESENT_SIZE_AND_POSITION)
 
-        self.inputEventHandlers.update(notification_messages.inputEventHandlers)
         orca.getManager().getDynamicApiManager().registerAPI('inputEventHandlers',self.inputEventHandlers, overwrite=True)
         orca.getManager().getSignalManager().emitSignal('setup-inputeventhandlers-completed')
+
+        self.inputEventHandlers.update(self.notificationPresenter.get_handlers())
+
 
     def getInputEventHandlerKey(self, inputEventHandler):
         """Returns the name of the key that contains an inputEventHadler
@@ -627,6 +629,10 @@ class Script(script.Script):
             keyBindings.add(keyBinding)
 
         bindings = self.getAppKeyBindings()
+        for keyBinding in bindings.keyBindings:
+            keyBindings.add(keyBinding)
+
+        bindings = self.notificationPresenter.get_bindings()
         for keyBinding in bindings.keyBindings:
             keyBindings.add(keyBinding)
 
@@ -992,12 +998,6 @@ class Script(script.Script):
 
     def showHelp(self, inputEvent=None):
         return orca.helpForOrca()
-
-    def listNotifications(self, inputEvent=None):
-        if inputEvent is None:
-            inputEvent = orca_state.lastNonModifierKeyEvent
-
-        return notification_messages.listNotificationMessages(self, inputEvent)
 
     def listOrcaShortcuts(self, inputEvent=None):
         """Shows a simple gui listing Orca's bound commands."""
@@ -2574,17 +2574,9 @@ class Script(script.Script):
             # any events to update the locusOfFocus. As a result, subsequent flat
             # review commands will continue to present the stale content.
             self.flatReviewContext = None
-        
-        orcaApp = orca.getManager()
-        mouse_review = orcaApp.getDynamicApiManager().getAPI('MouseReview')
-        
-        mouseReviewItem = None
-        if mouse_review != None:
-            mouseReviewItem = mouse_review.getCurrentItem()
-            
+
         mouseReviewItem = mouse_review.reviewer.getCurrentItem()
         selectedChildren = self.utilities.selectedChildren(event.source)
-
         for child in selectedChildren:
             if AXObject.find_ancestor(orca_state.locusOfFocus, lambda x: x == child):
                 msg = "DEFAULT: Child %s is ancestor of locusOfFocus" % child
@@ -2650,9 +2642,9 @@ class Script(script.Script):
             speech.speak(self.speechGenerator.generateSpeech(obj))
             visibleOnly = not self.utilities.isStatusBarNotification(obj)
             labels = self.utilities.unrelatedLabels(obj, visibleOnly, 1)
-            msg = ''.join(map(self.utilities.displayedText, labels))
+            msg = ' '.join(map(self.utilities.displayedText, labels))
             self.displayBrailleMessage(msg, flashTime=settings.brailleFlashTime)
-            notification_messages.saveMessage(msg)
+            self.notificationPresenter.save_notification(msg)
             return
 
         if role == Atspi.Role.TOOL_TIP:
@@ -2966,7 +2958,6 @@ class Script(script.Script):
         orca.setLocusOfFocus(event, None)
         orca.setActiveWindow(None)
         orca_state.activeScript = None
-        orca_state.listNotificationsModeEnabled = False
         orca_state.learnModeEnabled = False
 
     def onClipboardContentsChanged(self, *args):

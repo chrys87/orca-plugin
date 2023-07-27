@@ -47,7 +47,8 @@ orca_python_PYTHON = \
 	logger.py \
 	mathsymbols.py \
 	messages.py \
-	notification_messages.py \
+	mouse_review.py \
+	notification_presenter.py \
 	object_properties.py \
 	orca.py \
 	orca_gtkbuilder.py \
