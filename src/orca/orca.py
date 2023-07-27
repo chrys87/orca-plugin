@@ -29,16 +29,24 @@ __copyright__ = "Copyright (c) 2004-2009 Sun Microsystems Inc." \
                 "Copyright (c) 2012 Igalia, S.L."
 __license__   = "LGPL"
 
+
+# This unused import keeps Orca working by making pyatspi still available.
+# It can only be removed when we have completely eliminated all uses of
+# pyatspi API.
+import pyatspi
+
 import faulthandler
 import gi
 import importlib
 import os
-import pyatspi
 import re
 import signal
 import subprocess
 import sys
 from gi.repository import GObject
+
+gi.require_version("Atspi", "2.0")
+from gi.repository import Atspi
 
 try:
     from gi.repository.Gio import Settings
@@ -646,8 +654,8 @@ def start():
     msg = 'ORCA: Startup complete notification made'
     debug.println(debug.LEVEL_INFO, msg, True)
 
-    debug.println(debug.LEVEL_INFO, 'ORCA: Starting registry', True)
-    pyatspi.Registry.start(gil=False)
+    debug.println(debug.LEVEL_INFO, 'ORCA: Starting Atspi main event loop', True)
+    Atspi.event_main()
 
 def die(exitCode=1):
     pid = os.getpid()
@@ -710,9 +718,8 @@ def shutdown(script=None, inputEvent=None):
     _initialized = False
     _restoreXmodmap(_orcaModifiers)
 
-    debug.println(debug.LEVEL_INFO, 'ORCA: Stopping registry', True)
-    pyatspi.Registry.stop()
-
+    debug.println(debug.LEVEL_INFO, 'ORCA: Quitting Atspi main event loop', True)
+    Atspi.event_quit()
     debug.println(debug.LEVEL_INFO, 'ORCA: Shutdown complete', True)
 
     return True

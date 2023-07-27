@@ -127,7 +127,8 @@ class Script(script.Script):
         self.grab_ids = []
 
         if app:
-            app.setCacheMask(Atspi.Cache.DEFAULT ^ Atspi.Cache.NAME ^ Atspi.Cache.DESCRIPTION)
+            Atspi.Accessible.set_cache_mask(
+                app, Atspi.Cache.DEFAULT ^ Atspi.Cache.NAME ^ Atspi.Cache.DESCRIPTION)
 
     def setupInputEventHandlers(self):
         """Defines InputEventHandler fields for this script that can be
@@ -1271,10 +1272,9 @@ class Script(script.Script):
             self.flatReviewContext.routeToCurrent()
             return True
 
-        if eventsynthesizer.routeToCharacter(orca_state.locusOfFocus):
-            return True
-
-        if eventsynthesizer.routeToObject(orca_state.locusOfFocus):
+        if eventsynthesizer.routeToCharacter(orca_state.locusOfFocus) \
+           or eventsynthesizer.routeToObject(orca_state.locusOfFocus):
+            self.presentMessage(messages.MOUSE_MOVED_SUCCESS)
             return True
 
         full = messages.LOCATION_NOT_FOUND_FULL
