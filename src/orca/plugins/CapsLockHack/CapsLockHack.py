@@ -56,7 +56,7 @@ class CapsLockHack(GObject.Object, Peas.Activatable, plugin.Plugin):
         API = self.object
         capsLockCleared = False
         settings = API.app.getDynamicApiManager().getAPI('Settings')
-        time.sleep(1)
+        time.sleep(5)
         while self.isActive():
             #time.sleep(0.5)
             print('drin')

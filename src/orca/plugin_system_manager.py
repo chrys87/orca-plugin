@@ -139,9 +139,15 @@ class PluginSystemManager():
     #def getPluginExternalData(self, pluginInfo):
     #    return pluginInfo.get_external_data()
     def isPluginAvailable(self, pluginInfo):
-        return pluginInfo.is_available()
+        try:
+            return pluginInfo.is_available()
+        except:
+            return False
     def isPluginLoaded(self, pluginInfo):
-        return pluginInfo.is_loaded()
+        try:
+            return pluginInfo.is_loaded()
+        except:
+            return False
     
     def getIgnoredPlugins(self):
         return self._ignorePluginModulePath
