@@ -56,12 +56,8 @@ class CapsLockHack(GObject.Object, Peas.Activatable, plugin.Plugin):
         API = self.object
         capsLockCleared = False
         settings = API.app.getDynamicApiManager().getAPI('Settings')
-        time.sleep(5)
+        time.sleep(3)
         while self.isActive():
-            #time.sleep(0.5)
-            print('drin')
-            continue
-            start = time.time()
             if "Caps_Lock" in settings.orcaModifierKeys \
               or "Shift_Lock" in settings.orcaModifierKeys:
                 self.setCapsLockAsOrcaModifier(True)
@@ -69,8 +65,7 @@ class CapsLockHack(GObject.Object, Peas.Activatable, plugin.Plugin):
             elif capsLockCleared:
                 self.setCapsLockAsOrcaModifier(False)
                 capsLockCleared = False
-            print(time.time() - start)
-
+            time.sleep(1)
 
     def setCapsLockAsOrcaModifier(self, enable):
         originalXmodmap = None

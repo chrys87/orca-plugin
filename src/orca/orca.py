@@ -74,7 +74,7 @@ from . import event_manager
 from . import keybindings
 from . import logger
 from . import messages
-from . import notification_messages
+from . import notification_presenter
 from . import orca_state
 from . import orca_platform
 from . import script_manager
@@ -920,7 +920,7 @@ class Orca(GObject.Object):
         self.getDynamicApiManager().registerAPI('Debug', debug)
         self.getDynamicApiManager().registerAPI('Messages', messages)
         self.getDynamicApiManager().registerAPI('Cmdnames', cmdnames)
-        self.getDynamicApiManager().registerAPI('NotificationMessages', notification_messages)
+        self.getDynamicApiManager().registerAPI('NotificationPresenter', notification_presenter)
         self.getDynamicApiManager().registerAPI('OrcaState', orca_state)
         self.getDynamicApiManager().registerAPI('OrcaPlatform', orca_platform)
         self.getDynamicApiManager().registerAPI('Settings', settings)
