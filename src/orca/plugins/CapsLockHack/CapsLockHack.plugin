@@ -1,0 +1,6 @@
+[Plugin]
+Module=CapsLockHack
+Loader=python3
+Name=Caps Lock Hack
+Description=Fix Capslock sometimes switch on / off when its used as modifier
+Authors=Chrys chrys@linux-a11y.org
