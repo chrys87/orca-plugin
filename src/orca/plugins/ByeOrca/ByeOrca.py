@@ -23,5 +23,5 @@ class ByeOrca(GObject.Object, Peas.Activatable, plugin.Plugin):
     def process(self, app):
         messages = app.getDynamicApiManager().getAPI('Messages')
         activeScript = app.getDynamicApiManager().getAPI('OrcaState').activeScript
-        activeScript.activeScript.presentationInterrupt()
+        activeScript.presentationInterrupt()
         activeScript.presentMessage(messages.STOP_ORCA, resetStyles=False)

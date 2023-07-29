@@ -509,10 +509,9 @@ def loadUserSettings(script=None, inputEvent=None, skipReloadMessage=False):
     _createOrcaXmodmap()
 
     _eventManager.activate()
-    orcaApp.getSignalManager().emitSignal('load-setting-completed')
-
     _scriptManager.activate()
 
+    orcaApp.getSignalManager().emitSignal('load-setting-completed')
 
     debug.println(debug.LEVEL_INFO, 'ORCA: User Settings Loaded', True)
 
