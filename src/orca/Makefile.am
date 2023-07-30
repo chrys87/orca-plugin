@@ -90,7 +90,8 @@ SUBDIRS = \
 	plugins
 
 ui_DATA = \
-	orca-find.ui
+	orca-find.ui \
+	orca-setup.ui
 
 EXTRA_DIST = \
 	$(ui_DATA) \
