@@ -8,7 +8,7 @@ class TryFunction():
             return self.function(app)
         except Exception as e:
             print('try signal',e , traceback.print_exc())
-    def runInputEvent(self, script, inputEvent):
+    def runInputEvent(self, script=None, inputEvent=None):
         try:
             return self.function(script, inputEvent)
         except Exception as e:
