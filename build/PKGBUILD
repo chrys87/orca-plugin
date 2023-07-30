@@ -1,36 +1,56 @@
 # Maintainer: alex19EP <aarnaarn2@gmail.com>
 # Contributor: Steve Holmes <steve.holmes88@gmail.com>
 # Contributor: William Rea <sillywilly@gmail.com>
+# Contributor: Chrys
 
-pkgname=orca-git
-pkgver=41.0
+pkgname=orca-plugin-based-git
+pkgver=44.0.r93.gcc26a1f6b
 pkgrel=1
-pkgdesc="Screen reader for individuals who are blind or visually impaired (development version)"
+pkgdesc="Screen reader for individuals who are blind or visually impaired (development version) - Plugin Based Version"
 arch=('any')
 license=('LGPL')
 url="https://wiki.gnome.org/Projects/Orca"
-depends=('gtk3' 'at-spi2-atk' 'python-atspi' 'python-dbus' 'python-xdg'
-         'speech-dispatcher' 'liblouis' 'brltty' 'xorg-xmodmap' 'gst-plugins-base'
-         'gst-plugins-good' 'libpeas')
-makedepends=('git' 'yelp-tools' 'itstool' 'intltool')
+
+depends=(
+	at-spi2-core
+	brltty
+	gsettings-desktop-schemas
+	gst-plugins-base # playbin, audiotestsrc, basic decoders
+	gst-plugins-good # pulsesink, more decoders
+	gtk3
+	liblouis
+	libwnck3
+	python-atspi
+	python-setproctitle
+	speech-dispatcher
+	xorg-xkbcomp
+	xorg-xmodmap
+	libpeas
+)
+makedepends=(
+	git
+	itstool
+	yelp-tools
+)
+groups=('gnome')
 provides=('orca')
 conflicts=('orca')
 source=(${pkgname%-git}::'git+https://github.com/chrys87/orca-plugin.git')
 md5sums=('SKIP')
 
 prepare() {
-	cd "${srcdir}/${pkgname%-git}"
+	cd "${pkgname%-git}"
 	git checkout plugin_system
-	./autogen.sh
+	NOCONFIGURE=1 ./autogen.sh
 }
 
 build() {
-	cd "${srcdir}/${pkgname%-git}"
+	cd "${pkgname%-git}"
 	./configure --prefix=/usr --sysconfdir=/etc --localstatedir=/var
 	make
 }
 
 package() {
-	cd "${srcdir}/${pkgname%-git}"
+	cd "${pkgname%-git}"
 	make DESTDIR="${pkgdir}" install
 }
