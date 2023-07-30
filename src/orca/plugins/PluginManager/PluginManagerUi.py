@@ -132,12 +132,12 @@ class PluginManagerUi(Gtk.ApplicationWindow):
             pluginInfo = row[0]
             isActive = row[2]
             self.app.getPluginSystemManager().setPluginActive(pluginInfo, isActive)
-        self.app.getGsettingsManager().gsettingsManager.set_settings_value_list('active-plugins', self.app.getPluginSystemManager().getActivePlugins())
+        gsettingsManager = self.app.getGsettingsManager()
+        gsettingsManager.set_settings_value_list('active-plugins', self.app.getPluginSystemManager().getActivePlugins())
+
         self.app.getPluginSystemManager().syncAllPluginsActive()
         self.refreshPluginList()
 
-        gsettingsManager = self.app.getGsettingsManager()
-        gsettingsManager.set_settings_value_list('active-plugins', self.app.getPluginSystemManager().getActivePlugins())
 
     def _rowActivated(self, tree_view, path, column):
         print('rowActivated')
