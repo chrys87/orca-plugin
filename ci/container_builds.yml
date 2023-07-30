@@ -31,6 +31,7 @@ opensuse-container@x86_64:
       gobject-introspection-devel
       gsettings-desktop-schemas
       gstreamer-devel
+      libpeas
       itstool
       libtool
       libXi-devel
@@ -43,7 +44,7 @@ opensuse-container@x86_64:
       ninja
       python3
       python3-brlapi
-      python3-louis      
+      python3-louis
       python3-pip
       python3-speechd
       python310-gobject-devel
