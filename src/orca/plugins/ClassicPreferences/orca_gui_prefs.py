@@ -3527,7 +3527,7 @@ class OrcaSetupGUI(orca_gtkbuilder.GtkBuilderWrapper):
         _settingsManager.setProfile(profile[1])
         self.prefsDict = _settingsManager.getGeneralSettings(profile[1])
 
-        self.app.getDynamicApiManager().getAPI('loadUserSettings')(skipReloadMessage=True)
+        self.app.getDynamicApiManager().getAPI('LoadUserSettings')(skipReloadMessage=True)
 
         self._initGUIState()
 
