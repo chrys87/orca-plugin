@@ -1253,7 +1253,7 @@ class Script(script.Script):
         """Performs a right mouse button click on the current item."""
 
         if self.flatReviewPresenter.is_active():
-            self.flatReviewPresenter.right_click_on_object()
+            self.flatReviewPresenter.right_click_on_object(script)
             return True
 
         if eventsynthesizer.clickCharacter(orca_state.locusOfFocus, 3):
@@ -2959,7 +2959,7 @@ class Script(script.Script):
             debug.println(debug.LEVEL_INFO, "BRAILLE: update review disabled", True)
             return
 
-        [regions, regionWithFocus] = self.flatReviewPresenter.get_braille_regions()
+        [regions, regionWithFocus] = self.flatReviewPresenter.get_braille_regions(self)
         if not regions:
             regions = []
             regionWithFocus = None
