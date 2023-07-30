@@ -116,9 +116,10 @@ Roadmap for Plugin Based Orca:
 
 Known Bugs:
 - (DONE) PluginManager is not translated on first start
-- (TODO) Plugins enable / disable state not stored without manuall add setting to user-settings.conf: "activePlugins": [],
+- (DONE) Plugins enable / disable state not stored without manuall add setting to user-settings.conf: "activePlugins": [],
 - (DONE) Profile selector does not open at preferences page
 - (DONE) ByeOrca is not announced
+- (TODO) Plugins without compatibiltiy bindings -> shortcut is not consumed
 
 Build:
 NOCONFIGURE=1 ./autogen.sh
