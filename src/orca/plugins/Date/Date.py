@@ -22,7 +22,7 @@ class Date(GObject.Object, Peas.Activatable, plugin.Plugin):
         API = self.object
         inputEventHandlers = API.app.getDynamicApiManager().getAPI('inputEventHandlers')
         del inputEventHandlers['presentDateHandler']
-    def presentDate(self, script, inputEvent):
+    def presentDate(self, script=None, inputEvent=None):
         """ Presents the current time. """
         API = self.object
         settings_manager = API.app.getDynamicApiManager().getAPI('SettingsManager')
@@ -30,4 +30,4 @@ class Date(GObject.Object, Peas.Activatable, plugin.Plugin):
         dateFormat = _settingsManager.getSetting('presentDateFormat')
         message = time.strftime(dateFormat, time.localtime())
         API.app.getDynamicApiManager().getAPI('OrcaState').activeScript.presentMessage(message, resetStyles=False)
-
+        return True

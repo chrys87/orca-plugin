@@ -48,7 +48,7 @@ class ClassicPreferences(GObject.Object, Peas.Activatable, plugin.Plugin):
 
         script = script or orca_state.activeScript
         self._showPreferencesUI(script, prefs)
-
+        return True
     def showPreferencesGUI(self, script=None, inputEvent=None):
         """Displays the user interface to configure Orca and set up
         user preferences using a GUI.
@@ -64,7 +64,7 @@ class ClassicPreferences(GObject.Object, Peas.Activatable, plugin.Plugin):
         prefs = _settingsManager.getGeneralSettings(_settingsManager.profile)
         script = _scriptManager.getDefaultScript()
         self._showPreferencesUI(script, prefs)
-
+        return True
     def _showPreferencesUI(self, script, prefs):
         API = self.object
         orca_state = API.app.getDynamicApiManager().getAPI('OrcaState')

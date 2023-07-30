@@ -23,7 +23,8 @@ class HelloWorld(GObject.Object, Peas.Activatable, plugin.Plugin):
     def do_deactivate(self):
         API = self.object
         print('deactivate hello world plugin')
-    def speakTest(self, script, inputEvent):
+    def speakTest(self, script=None, inputEvent=None):
         API = self.object
         Message = self.getTranslationContext().gettext("Hello World")
         API.app.getDynamicApiManager().getAPI('OrcaState').activeScript.presentMessage('1:' + Message, resetStyles=False)
+        return True

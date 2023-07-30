@@ -24,7 +24,7 @@ class Time(GObject.Object, Peas.Activatable, plugin.Plugin):
         del inputEventHandlers['presentTimeHandler']
     def do_update_state(self):
         API = self.object
-    def presentTime(self, script, inputEvent):
+    def presentTime(self, script=None, inputEvent=None):
         """ Presents the current time. """
         API = self.object
         settings_manager = API.app.getDynamicApiManager().getAPI('SettingsManager')
@@ -32,3 +32,4 @@ class Time(GObject.Object, Peas.Activatable, plugin.Plugin):
         timeFormat = _settingsManager.getSetting('presentTimeFormat')
         message = time.strftime(timeFormat, time.localtime())
         API.app.getDynamicApiManager().getAPI('OrcaState').activeScript.presentMessage(message, resetStyles=False)
+        return True

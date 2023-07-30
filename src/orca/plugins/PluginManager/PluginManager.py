@@ -21,8 +21,9 @@ class PluginManager(GObject.Object, Peas.Activatable, plugin.Plugin):
     def do_deactivate(self):
         API = self.object
 
-    def startPluginManagerUi(self, script, inputEvent):
+    def startPluginManagerUi(self, script=None, inputEvent=None):
         self.showUI()
+        return True
     def showUI(self):
         API = self.object
         if self.pluginManagerUi == None:

@@ -20,10 +20,11 @@ class Clipboard(GObject.Object, Peas.Activatable, plugin.Plugin):
         API = self.object
     def do_update_state(self):
         API = self.object
-    def speakClipboard(self, script, inputEvent):
+    def speakClipboard(self, script=None, inputEvent=None):
         API = self.object
         Message = self.getClipboard()
         API.app.getDynamicApiManager().getAPI('OrcaState').activeScript.presentMessage(Message, resetStyles=False)
+        return True
     def getClipboard(self):
         Message = ""
         FoundClipboardContent = False
