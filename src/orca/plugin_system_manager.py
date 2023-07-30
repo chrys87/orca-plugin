@@ -3,6 +3,7 @@
 import os, inspect, sys, pyatspi, tarfile, shutil
 
 from enum import IntEnum
+from orca import gsettings_manager
 
 version = sys.version[:3] # we only need major.minor version.
 if version in ["3.3","3.4"]:
@@ -63,7 +64,10 @@ class PluginSystemManager():
 
         self._setupPluginsDir()
         self._setupExtensionSet()
-        self.gsettingsManager = self.app.getGsettingsManager()
+        if self.app:
+            self.gsettingsManager = self.app.getGsettingsManager()
+        else:
+            self.gsettingsManager = gsettings_manager.GsettingsManager(self.app)
         self._activePlugins = []
         self._ignorePluginModulePath = []
     @property
