@@ -65,7 +65,12 @@ class EventManager:
         # Note: These must match what the scripts registered for, otherwise
         # Atspi might segfault.
         self._suspendableEvents = ['object:children-changed:add',
-                                   'object:children-changed:remove']
+                                   'object:children-changed:remove',
+                                   'object:property-change:accessible-name',
+                                   'object:state-changed:sensitive',
+                                   'object:state-changed:showing',
+                                   'object:text-changed:insert',
+                                   'object:text-changed:delete']
         self._eventsTriggeringSuspension = []
         self._ignoredEvents = ['object:bounds-changed',
                                'object:state-changed:defunct',
@@ -136,6 +141,10 @@ class EventManager:
         app = AXObject.get_application(event.source)
 
         debug.println(debug.LEVEL_INFO, '')
+        if self._eventsSuspended:
+            msg = 'EVENT MANAGER: Suspended events: %s' % ", ".join(self._suspendableEvents)
+            debug.println(debug.LEVEL_INFO, msg, True)
+
         msg = 'EVENT MANAGER: %s for %s in %s (%s, %s, %s)' % \
               (event.type, source, app, event.detail1,event.detail2, anydata)
         debug.println(debug.LEVEL_INFO, msg, True)
@@ -292,6 +301,12 @@ class EventManager:
                     msg = 'EVENT MANAGER: Ignoring event type due to role and lack of name'
                     debug.println(debug.LEVEL_INFO, msg, True)
                     return True
+
+        elif event.type.startswith('object:text-caret-moved'):
+            if role in [Atspi.Role.LABEL] and not AXUtilities.is_focused(event.source):
+                msg = 'EVENT MANAGER: Ignoring event type due to role and state'
+                debug.println(debug.LEVEL_INFO, msg, True)
+                return True
 
         elif event.type.startswith('object:selection-changed'):
             if event.source in self._parentsOfDefunctDescendants:
@@ -466,6 +481,12 @@ class EventManager:
                 msg = "EVENT MANAGER: Should suspend events for active event on window."
                 debug.println(debug.LEVEL_INFO, msg, True)
                 return True
+        if AXUtilities.is_document(event.source):
+            if event.type.endswith("busy"):
+                msg = "EVENT MANAGER: Should suspend events for busy event on document."
+                debug.println(debug.LEVEL_INFO, msg, True)
+                return True
+
         return False
 
     def _didSuspendEventsFor(self, event):
@@ -816,12 +837,14 @@ class EventManager:
                   "object:text-changed:delete:system",
                   "object:text-changed:insert:system",
                   "object:text-attributes-changed",
+                  "object:text-caret-moved",
                   "object:children-changed:add",
                   "object:children-changed:add:system",
                   "object:children-changed:remove",
                   "object:children-changed:remove:system",
                   "object:property-change:accessible-name",
                   "object:property-change:accessible-description",
+                  "object:selection-changed",
                   "object:state-changed:showing",
                   "object:state-changed:sensitive"]
 
@@ -850,12 +873,14 @@ class EventManager:
                   "object:text-changed:delete:system",
                   "object:text-changed:insert:system",
                   "object:text-attributes-changed",
+                  "object:text-caret-moved",
                   "object:children-changed:add",
                   "object:children-changed:add:system",
                   "object:children-changed:remove",
                   "object:children-changed:remove:system",
                   "object:property-change:accessible-name",
                   "object:property-change:accessible-description",
+                  "object:selection-changed",
                   "object:state-changed:showing",
                   "object:state-changed:sensitive"]
 
