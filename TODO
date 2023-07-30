@@ -53,6 +53,9 @@ Roadmap for Plugin Based Orca:
 
 # Stage 3 (TODO)
 - (TODO): Per Plugin settings: Plugins come along with its own settings (structure, defaults). We need an unify API to. The Settings are handled by Gsettings instead of JSON:
+    -- (DONE): basic gsetting handling
+    -- (DONE): profile management (global settings)
+    -- (DONE): use gsettings in plugin manager
     -- (TODO): resource manager integration
     -- (TODO): install (along with the plugin)
     -- (TODO): uninstall (along with the plugin)
