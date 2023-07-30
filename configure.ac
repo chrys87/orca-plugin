@@ -128,6 +128,7 @@ src/orca/plugins/HelloOrca/Makefile
 src/orca/plugins/PluginManager/Makefile
 src/orca/plugins/Clipboard/Makefile
 src/orca/plugins/HelloWorld/Makefile
+src/orca/plugins/CapsLockHack/Makefile
 src/orca/plugins/SelfVoice/Makefile
 src/orca/plugins/Date/Makefile
 src/orca/plugins/Time/Makefile
