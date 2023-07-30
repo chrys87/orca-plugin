@@ -79,7 +79,9 @@ class ClassicPreferences(GObject.Object, Peas.Activatable, plugin.Plugin):
                             orca_platform.package,
                             "ui",
                             "orca-setup.ui")
-
+        uiFile = os.path.join(self.getModuleDir(),
+                            "ui",
+                            "orca-setup.ui")
         orca_state.orcaOS = orca_gui_prefs.OrcaSetupGUI(uiFile, "orcaSetupWindow", prefs, API.app)
         orca_state.orcaOS.init(script)
         orca_state.orcaOS.setTranslationContext(self.getTranslationContext())
