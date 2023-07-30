@@ -494,9 +494,6 @@ def loadUserSettings(script=None, inputEvent=None, skipReloadMessage=False):
     if _settingsManager.getSetting('enableSound'):
         player.init()
 
-    activePlugins = orcaApp.getSettingsManager().getSetting('activePlugins')
-    orcaApp.getPluginSystemManager().setActivePlugins(activePlugins)
-
     global _orcaModifiers
     custom = [k for k in settings.orcaModifierKeys if k not in _orcaModifiers]
     _orcaModifiers += custom
@@ -507,6 +504,9 @@ def loadUserSettings(script=None, inputEvent=None, skipReloadMessage=False):
 
     _storeXmodmap(_orcaModifiers)
     _createOrcaXmodmap()
+
+    activePlugins = orcaApp.gsettingsManager.get_settings_value_list('active-plugins')
+    orcaApp.getPluginSystemManager().setActivePlugins(activePlugins)
 
     _eventManager.activate()
     _scriptManager.activate()
@@ -872,13 +872,13 @@ class Orca(GObject.Object):
         self.eventManager = _eventManager
         self.settingsManager = _settingsManager
         self.scriptManager = _scriptManager
-        self.pluginSystemManager = plugin_system_manager.PluginSystemManager(self)
         self.signalManager = signal_manager.SignalManager(self)
         self.dynamicApiManager = dynamic_api_manager.DynamicApiManager(self)
         self.translationManager = translation_manager.TranslationManager(self)
         self.gsettingsManager = gsettings_manager.GsettingsManager(self)
         self.debugManager = debug
         self.createCompatAPI()
+        self.pluginSystemManager = plugin_system_manager.PluginSystemManager(self)
     def getAPIHelper(self):
         return self.APIHelper
     def getPluginSystemManager(self):

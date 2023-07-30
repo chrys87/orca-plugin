@@ -14,9 +14,9 @@ class GsettingsManager():
         self.set_global_settings(self.register_setting(GLOBAL_SCHEMA_ID))
         self.current_profile_settings = None
 
-        self.set_profileList(self.get_settings_value_list(self.get_global_settings(), 'available-profiles'))
+        self.set_profileList(self.get_settings_value_list('available-profiles', settings=self.get_global_settings()))
 
-        self.set_active_profile(self.get_settings_value_string(self.get_global_settings(), 'active-profile'))
+        self.set_active_profile(self.get_settings_value_string('active-profile', settings=self.get_global_settings()))
         # try to deactivate
         #self.get_global_settings().connect("changed::profiles", self.on_profiles_changed)
         #self.get_global_settings().connect("changed::active-profile", self.on_active_profile_changed)
@@ -60,7 +60,7 @@ class GsettingsManager():
         if profile in newProfileList:
             return
         newProfileList.append(profile)
-        self.set_settings_value_list(self.get_global_settings(), 'available-profiles', newProfileList)
+        self.set_settings_value_list('available-profiles', newProfileList, settings=self.get_global_settings())
 
     def remove_profile(self, profile = ''):
         if profile in ['', DEFAULT_PROFILE_NAME]:
@@ -69,7 +69,7 @@ class GsettingsManager():
         if not profile in newProfileList:
             return
         newProfileList.remove(profile)
-        self.set_settings_value_list(self.get_global_settings(), 'available-profiles', newProfileList)
+        self.set_settings_value_list('available-profiles', newProfileList, settings=self.get_global_settings())
         # remove everything under profile folder recursive here
     def add_application(self, application = ''):
         if application == '':
@@ -78,7 +78,7 @@ class GsettingsManager():
         if application in newApplicationList:
             return
         newApplicationList.append(application)
-        self.set_settings_value_list(self.get_current_profile_settings(), 'application-settings', newApplicationList)
+        self.set_settings_value_list(self.get_current_profile_settings(), 'application-settings', newApplicationList, settings=self.get_global_settings())
 
     def remove_application(self, application = ''):
         if application == '':
@@ -87,11 +87,11 @@ class GsettingsManager():
         if not application in newApplicationList:
             return
         newApplicationList.remove(application)
-        self.set_settings_value_list(self.get_current_profile_settings(), 'application-settings', newApplicationList)
+        self.set_settings_value_list(self.get_current_profile_settings(), 'application-settings', newApplicationList, settings=self.get_global_settings())
         # remove everything under application folder recursive here
 
     def on_applications_changed(self, settings, key):
-        self.set_applicationList(self.get_settings_value_list(self.get_current_profile_settings(), key))
+        self.set_applicationList(self.get_settings_value_list(key))
 
     def set_applicationList(self, new_applicationList):
         self.applicationList = new_applicationList
@@ -100,17 +100,16 @@ class GsettingsManager():
     def get_applicationList(self):
         return self.applicationList
 
-
     def on_profiles_changed(self, settings, key):
-        self.set_profileList(self.get_settings_value_list(self.get_global_settings(), key))
-        if not DEFAULT_PROFILE_NAME in self.get_settings_value_list(self.get_global_settings(), key):
+        self.set_profileList(self.get_settings_value_list(key), settings=self.get_global_settings())
+        if not DEFAULT_PROFILE_NAME in self.get_settings_value_list(key, settings=self.get_global_settings()):
             self.add_profile(DEFAULT_PROFILE_NAME)
-        self.set_profileList(self.get_settings_value_list(self.get_global_settings(), key))
-        if not self.get_settings_value_string(self.get_global_settings(), 'active-profile') in self.get_settings_value_list(self.get_global_settings(), key):
+        self.set_profileList(self.get_settings_value_list(key, settings=self.get_global_settings()))
+        if not self.get_settings_value_string('active-profile', settings=self.get_global_settings()) in self.get_settings_value_list(key, settings=self.get_global_settings()):
             self.set_active_profile(DEFAULT_PROFILE_NAME)
-        self.set_profileList(self.get_settings_value_list(self.get_global_settings(), key))
+        self.set_profileList(self.get_settings_value_list(key, settings=self.get_global_settings()))
     def on_active_profile_changed(self, settings, key):
-        self.set_active_profile(self.get_settings_value_string(self.get_global_settings(), key))
+        self.set_active_profile(self.get_settings_value_string( key, settings=self.get_global_settings()))
         
     def set_active_profile(self, new_active_profile):
         if not DEFAULT_PROFILE_NAME in self.get_profileList():
@@ -121,9 +120,9 @@ class GsettingsManager():
         # disconnect here self.get_current_profile_settings.d("changed::application-settings", self.on_applications_changed)
         self.set_current_profile_settings( self.register_setting(PROFILE_SCHEMA_ID, profile_name = new_active_profile))
 
-        if new_active_profile != self.get_settings_value_string(self.get_global_settings(), 'active-profile'):
+        if new_active_profile != self.get_settings_value_string('active-profile', settings=self.get_global_settings()):
             print('active profile: ' + new_active_profile)
-            self.set_settings_value_string(self.get_global_settings(), 'active-profile', new_active_profile)
+            self.set_settings_value_string('active-profile', new_active_profile, settings=self.get_global_settings())
 
     def set_profileList(self, new_profileList):
         self.profileList = new_profileList
@@ -131,42 +130,68 @@ class GsettingsManager():
 
     def get_profileList(self):
         return self.profileList
+    
+    def getSettingsForScope(self, settings = None, profile_name = None, application_name =None, plugin_name = None):
+        # if a settings instance is given, force that
+        if settings:
+            return settings
+        usedSettings = None
+        # otherwhise search:
+        # 1. application scope
+        # 2. global profile settings
+
+        # TODO: search here for per application settings
+        if not usedSettings:
+            usedSettings = self.get_current_profile_settings()
+                
+        return usedSettings
 
     # value
-    def get_settings_value(self,settings, key):
+    def get_settings_value(self, key, settings = None, profile_name = None, application_name =None, plugin_name = None):
+        settings = self.getSettingsForScope(settings, profile_name, application_name, plugin_name)
         return settings.get_value(key)
-    def set_settings_value(self, settings, key, value, format = ''):
+    def set_settings_value(self, key, value, format = '', settings = None, profile_name = None, application_name =None, plugin_name = None):
+        settings = self.getSettingsForScope(settings, profile_name, application_name, plugin_name)
         if format != '':
             value = GLib.Variant(format, value)
         settings.set_value(key, value)
 
     # string
-    def get_settings_value_string(self, settings, key):
+    def get_settings_value_string(self, key, settings = None, profile_name = None, application_name =None, plugin_name = None):
+        settings = self.getSettingsForScope(settings, profile_name, application_name, plugin_name)
         return settings.get_string(key)
-    def set_settings_value_string(self, settings, key, value):
+    def set_settings_value_string(self, key, value, settings = None, profile_name = None, application_name =None, plugin_name = None):
+        settings = self.getSettingsForScope(settings, profile_name, application_name, plugin_name)
         settings.set_string(key, value)
 
     # int
-    def get_settings_value_int(self, settings, key):
+    def get_settings_value_int(self, key, settings = None, profile_name = None, application_name =None, plugin_name = None):
+        settings = self.getSettingsForScope(settings, profile_name, application_name, plugin_name)
         return settings.get_int(key)
-    def set_settings_value_int(self, settings, key, value):
+    def set_settings_value_int(self, key, value, settings = None, profile_name = None, application_name =None, plugin_name = None):
+        settings = self.getSettingsForScope(settings, profile_name, application_name, plugin_name)
         settings.set_int(key, value)
 
     # bool
-    def get_settings_value_boolean(self, settings, key):
+    def get_settings_value_boolean(self, key, settings = None, profile_name = None, application_name =None, plugin_name = None):
+        settings = self.getSettingsForScope(settings, profile_name, application_name, plugin_name)
         return settings.get_boolean(key)
-    def set_settings_value_boolean(self, settings, key, value):
+    def set_settings_value_boolean(self, key, value, settings = None, profile_name = None, application_name =None, plugin_name = None):
+        settings = self.getSettingsForScope(settings, profile_name, application_name, plugin_name)
         settings.set_boolean(key, value)
+
     # list
-    def get_settings_value_list(self, settings, key):
+    def get_settings_value_list(self, key, settings = None, profile_name = None, application_name =None, plugin_name = None):
+        settings = self.getSettingsForScope(settings, profile_name, application_name, plugin_name)
         return list(settings.get_value(key))
-    def set_settings_value_list(self, settings, key, value, format = 'as'):
+    def set_settings_value_list(self, key, value, format = 'as', settings = None, profile_name = None, application_name =None, plugin_name = None):
         '''
         as = array string
         ai = array integer
         ab = array boolean
         '''
-        self.set_settings_value(settings, key, value, format)
+        settings = self.getSettingsForScope(settings, profile_name, application_name, plugin_name)
+        self.set_settings_value(key, value, format=format, settings = settings, profile_name = profile_name, application_name =application_name, plugin_name = plugin_name)
 
     def get_global_settings(self):
         return self.global_settings
@@ -180,8 +205,8 @@ class GsettingsManager():
         self.current_profile_settings = new_profile_settings
         self.current_profile_settings.connect("changed::application-settings", self.on_applications_changed)
 
-        self.set_applicationList(self.get_settings_value_list(self.current_profile_settings, 'application-settings'))
+        self.set_applicationList(self.get_settings_value_list('application-settings', settings=self.current_profile_settings))
 
         self.current_profile_settings.set_int('profile-version', self.current_profile_settings.get_int('profile-version'))
-        self.set_settings_value_list(self.current_profile_settings, 'application-settings', self.get_applicationList())
+        self.set_settings_value_list('application-settings', self.get_applicationList(), settings=self.current_profile_settings)
 

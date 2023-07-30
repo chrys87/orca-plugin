@@ -63,7 +63,8 @@ class PluginSystemManager():
 
         self._setupPluginsDir()
         self._setupExtensionSet()
-        self._activePlugins = [plugin.get_module_name() for plugin in self.plugins]
+        self.gsettingsManager = self.app.getGsettingsManager()
+        self._activePlugins = []
         self._ignorePluginModulePath = []
     @property
     def plugins(self):
@@ -309,7 +310,8 @@ class PluginSystemManager():
             return False
         if self.isPluginActive(pluginInfo):
             self.setPluginActive(pluginInfo, False)
-
+            gsettingsManager = self.app.getGsettingsManager()
+            gsettingsManager.set_settings_value_list('active-plugins', self.getActivePlugins())
         self.callPackageTriggers(pluginFolder, 'onPreUninstall')
         
         try:

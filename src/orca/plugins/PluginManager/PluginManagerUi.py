@@ -132,21 +132,12 @@ class PluginManagerUi(Gtk.ApplicationWindow):
             pluginInfo = row[0]
             isActive = row[2]
             self.app.getPluginSystemManager().setPluginActive(pluginInfo, isActive)
-
+        self.app.getGsettingsManager().gsettingsManager.set_settings_value_list('active-plugins', self.app.getPluginSystemManager().getActivePlugins())
         self.app.getPluginSystemManager().syncAllPluginsActive()
         self.refreshPluginList()
 
-        settingsManager = self.app.getSettingsManager()
-        scriptManager = self.app.getScriptManager()
-
-        script = scriptManager.getDefaultScript()
-        general = settingsManager.getGeneralSettings(settingsManager.profile)
-        pronunciations = settingsManager.profilePronunciations
-        keybindings = settingsManager.profileKeybindings
-
-        general['activePlugins'] = self.app.getPluginSystemManager().getActivePlugins()
-
-        settingsManager.saveSettings(script, general, pronunciations, keybindings)
+        gsettingsManager = self.app.getGsettingsManager()
+        gsettingsManager.set_settings_value_list('active-plugins', self.app.getPluginSystemManager().getActivePlugins())
 
     def _rowActivated(self, tree_view, path, column):
         print('rowActivated')

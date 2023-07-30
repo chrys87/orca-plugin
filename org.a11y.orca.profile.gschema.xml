@@ -9,5 +9,9 @@
       <default>[]</default>
       <summary>The list of applications with specific settings.</summary>
     </key>
+    <key name="active-plugins" type="as">
+      <default>['ByeOrca','Clipboard','HelloOrca','Date','Time','MouseReview']</default>
+      <summary>The list enabled plugins</summary>
+    </key>
   </schema>
 </schemalist>
