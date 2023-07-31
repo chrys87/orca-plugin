@@ -122,7 +122,8 @@ Known Bugs:
 - (DONE) Plugins enable / disable state not stored without manuall add setting to user-settings.conf: "activePlugins": [],
 - (DONE) Profile selector does not open at preferences page
 - (DONE) ByeOrca is not announced
-- (TODO) Plugins without compatibiltiy bindings -> shortcut is not consumed
+- (DONE) Plugins without compatibiltiy bindings -> shortcut is not consumed | this is currently a bug in master | use plugin_system_old_keyboard branch what reverts the broken commit of master: https://github.com/chrys87/orca-plugin/tree/plugin_system_old_keyboard 
+- (TODO): compatibiltiy registered shortcuts do not unregister properly
 
 Build:
 NOCONFIGURE=1 ./autogen.sh
