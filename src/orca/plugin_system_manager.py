@@ -1,6 +1,6 @@
 #!/bin/python
 """PluginManager for loading orca plugins."""
-import os, inspect, sys, pyatspi, tarfile, shutil
+import os, inspect, sys, tarfile, shutil
 
 from enum import IntEnum
 from orca import gsettings_manager
@@ -15,6 +15,9 @@ import gi
 gi.require_version('Peas', '1.0')
 from gi.repository import GObject
 from gi.repository import Peas
+
+gi.require_version('Atspi', '2.0') 
+from gi.repository import Atspi
 
 from orca import resource_manager
 
@@ -469,11 +472,11 @@ class APIHelper():
         if orcaKey:
             currModifierMask = currModifierMask | 1 << keybindings.MODIFIER_ORCA
         if shiftKey:
-            currModifierMask = currModifierMask | 1 << pyatspi.MODIFIER_SHIFT
+            currModifierMask = currModifierMask | 1 << Atspi.ModifierType.SHIFT
         if altKey:
-            currModifierMask = currModifierMask | 1 << pyatspi.MODIFIER_ALT
+            currModifierMask = currModifierMask | 1 << Atspi.ModifierType.ALT
         if ctrlKey:
-            currModifierMask = currModifierMask | 1 << pyatspi.MODIFIER_CONTROL
+            currModifierMask = currModifierMask | 1 << Atspi.ModifierType.CONTROL
 
         newKeyBinding = keybindings.KeyBinding(key, keybindings.defaultModifierMask, currModifierMask, newInputEventHandler, clickCount)
         self.orcaKeyBindings.add(newKeyBinding)
