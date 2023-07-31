@@ -29,7 +29,7 @@ __license__   = "LGPL"
 
 from orca import plugin
 
-import gi, math, pyatspi,time
+import gi, math, time
 gi.require_version('Peas', '1.0')
 from gi.repository import GObject
 from gi.repository import Peas
