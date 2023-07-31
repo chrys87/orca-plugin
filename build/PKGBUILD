@@ -40,7 +40,7 @@ md5sums=('SKIP')
 
 prepare() {
 	cd "${pkgname%-git}"
-	git checkout plugin_system
+	git checkout plugin_system_old_keyboard
 	NOCONFIGURE=1 ./autogen.sh
 }
 
