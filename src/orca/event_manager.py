@@ -31,6 +31,7 @@ from gi.repository import GLib
 import queue
 import threading
 import time
+import pyatspi
 
 from . import debug
 from . import input_event
