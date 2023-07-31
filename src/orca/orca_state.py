@@ -78,6 +78,13 @@ learnModeEnabled = False
 #
 orcaOS = None
 
-# The AT-SPI device (needed for key grabs).
+listNotificationsModeEnabled = False
+
+# Set to True if the last key opened the preferences dialog
+#
+openingDialog = False
+
+# The AT-SPI device (needed for key grabs). Will be set to None if AT-SPI
+# is too old to support the new device API.
 #
 device = None

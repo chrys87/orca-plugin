@@ -419,6 +419,11 @@ def _restoreXmodmap(keyList=[]):
         stdin=subprocess.PIPE, stdout=None, stderr=None)
     p.communicate(_originalXmodmap)
 
+def setKeyHandling(new):
+    """Toggle use of the new vs. legacy key handling mode.
+    """
+    _eventManager.setKeyHandling(new)
+
 def loadUserSettings(script=None, inputEvent=None, skipReloadMessage=False):
     """Loads (and reloads) the user settings module, reinitializing
     things such as speech if necessary.
@@ -508,8 +513,8 @@ def loadUserSettings(script=None, inputEvent=None, skipReloadMessage=False):
     activePlugins = orcaApp.gsettingsManager.get_settings_value_list('active-plugins')
     orcaApp.getPluginSystemManager().setActivePlugins(activePlugins)
 
-    _eventManager.activate()
     _scriptManager.activate()
+    _eventManager.activate()
 
     orcaApp.getSignalManager().emitSignal('load-setting-completed')
 
