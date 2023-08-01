@@ -52,6 +52,7 @@ import orca.orca_gui_commandlist as commandlist
 import orca.orca_state as orca_state
 import orca.phonnames as phonnames
 import orca.script as script
+import orca.script_manager as script_manager
 import orca.settings as settings
 import orca.settings_manager as settings_manager
 import orca.sound as sound
@@ -60,6 +61,7 @@ import orca.speechserver as speechserver
 from orca.ax_object import AXObject
 from orca.ax_utilities import AXUtilities
 
+_scriptManager = script_manager.getManager()
 _settingsManager = settings_manager.getManager()
 
 ########################################################################
@@ -273,6 +275,7 @@ class Script(script.Script):
         self.inputEventHandlers.update(self.speechAndVerbosityManager.get_handlers())
         self.inputEventHandlers.update(self.dateAndTimePresenter.get_handlers())
         self.inputEventHandlers.update(self.bookmarks.get_handlers())
+        self.inputEventHandlers.update(self.objectNavigator.get_handlers())
 
 
     def getInputEventHandlerKey(self, inputEventHandler):
@@ -420,6 +423,10 @@ class Script(script.Script):
             keyBindings.add(keyBinding)
 
         bindings = self.dateAndTimePresenter.get_bindings()
+        for keyBinding in bindings.keyBindings:
+            keyBindings.add(keyBinding)
+
+        bindings = self.objectNavigator.get_bindings()
         for keyBinding in bindings.keyBindings:
             keyBindings.add(keyBinding)
 
@@ -2125,7 +2132,7 @@ class Script(script.Script):
 
         orca.setLocusOfFocus(event, None)
         orca.setActiveWindow(None)
-        orca_state.activeScript = None
+        _scriptManager.setActiveScript(None, "Window deactivated")
         orca_state.learnModeEnabled = False
 
     def onClipboardContentsChanged(self, *args):

@@ -50,6 +50,7 @@ orca_python_PYTHON = \
 	mathsymbols.py \
 	messages.py \
 	notification_presenter.py \
+	object_navigator.py \
 	object_properties.py \
 	orca.py \
 	orca_gtkbuilder.py \
