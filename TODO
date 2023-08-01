@@ -60,12 +60,12 @@ Roadmap for Plugin Based Orca:
     -- (TODO): install (along with the plugin)
     -- (TODO): uninstall (along with the plugin)
     -- (TODO): upgrade
-    -- (TODO): load
-    -- (TODO): save
+    -- (WIP): load
+    -- (WIP): save
     -- (TODO): reset
     -- (TODO): check compatibiltiy
-    -- (TODO): scope: profiles
-    -- (TODO): scope: per application
+    -- (WIP): scope: profiles
+    -- (WIP): scope: per application
 - (TODO): generic preferences
     -- (TODO): List based
     -- (TODO): generic
@@ -76,9 +76,7 @@ Roadmap for Plugin Based Orca:
             ---- (TODO): Integer Min / Max
             ---- (TODO): slider
         --- (TODO): custom
-            ---- (TODO): Tables 
-            ---- (TODO): Forms
-            ---- (TODO): any widget
+            ---- (TODO): any embedded widget / subform / table
         --- (TODO): # other
             ---- (TODO): dependency value for simple enable / disable
     -- (TODO): agnostic to installed plugins
@@ -106,11 +104,11 @@ Roadmap for Plugin Based Orca:
 - https://valadoc.org/gtk+-3.0/Gtk.ListBox.html
 
 # Final Stage 4 (TODO)
-- (TODO): Create an clean "orca" class and object based API
+- (WIP): Create an clean "orca" class and object based API
 - (TODO): create useful signals
 - (TODO): Remove compatibiltiy layers
 - (TODO): cleanup as much as possible
-- (TODO): move all parts into plugins
+- (WIP): move all parts into plugins
     -- (TODO): Move source into Plugins
     -- (TODO): Move Settings into Plugins
     -- (TODO): Move Translation into Plugins
@@ -122,7 +120,8 @@ Known Bugs:
 - (DONE) Plugins enable / disable state not stored without manuall add setting to user-settings.conf: "activePlugins": [],
 - (DONE) Profile selector does not open at preferences page
 - (DONE) ByeOrca is not announced
-- (TODO) Plugins without compatibiltiy bindings -> shortcut is not consumed
+- (DONE) Plugins without compatibiltiy bindings -> shortcut is not consumed | this is currently a bug in master | use plugin_system_old_keyboard branch what reverts the broken commit of master: https://github.com/chrys87/orca-plugin/tree/plugin_system_old_keyboard 
+- (TODO): compatibiltiy registered shortcuts do not unregister properly
 
 Build:
 NOCONFIGURE=1 ./autogen.sh
@@ -131,11 +130,12 @@ make
 sudo make install
 
 Plguin readme:
+
 Translation
 # read text from python file
-xgettext -d orca-plugin -o orca-plugin.pot ../HelloWorld.py
+xgettext -d TranslationTest -o TranslationTest.pot ../TranslationTest.py
 # compile to mo
-msgfmt -o orca-plugin.mo orca-plugin
+msgfmt -o TranslationTest.mo TranslationTest
 
 gsettings
 glib-compile-schemas /path/to/schema/files/

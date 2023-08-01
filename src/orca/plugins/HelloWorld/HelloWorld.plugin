@@ -1,6 +1,6 @@
 [Plugin]
 Module=HelloWorld
 Loader=python3
-Name=Python Hello World
+Name=Hello World (python3)
 Description=Test plugin for orca
 Authors=Chrys chrys@linux-a11y.org

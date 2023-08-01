@@ -281,6 +281,14 @@ KB_GROUP_DEFAULT = C_("keybindings", "Default")
 KB_GROUP_BRAILLE = _("Braille Bindings")
 
 # Translators: This string is a label for the group of Orca commands which
+# are related to saving and jumping among objects via "bookmarks".
+KB_GROUP_BOOKMARKS = _("Bookmarks")
+
+# Translators: This string is a label for the group of Orca commands which
+# are related to presenting the date and time.
+KB_GROUP_DATE_AND_TIME = _("Date and time")
+
+# Translators: This string is a label for the group of Orca commands which
 # do not currently have an associated key binding.
 KB_GROUP_UNBOUND = _("Unbound")
 
@@ -292,6 +300,13 @@ KB_GROUP_UNBOUND = _("Unbound")
 # the user to explore this text by the {previous,next} {line,word,character}.
 # Those commands are all listed under this group label.
 KB_GROUP_FLAT_REVIEW = _("Flat review")
+
+# Translators: This string is a label for the group of Orca commands which
+# are related to Orca's speech and verbosity settings. This group of commands
+# allows on-the-fly configuration of how much (or little) Orca says about a
+# particular object, as well certain aspects of the voice with which things
+# are spoken.
+KB_GROUP_SPEECH_VERBOSITY = _("Speech and verbosity")
 
 # Translators: the 'flat review' feature of Orca allows the blind user to
 # explore the text in a window in a 2D fashion.  That is, Orca treats all
