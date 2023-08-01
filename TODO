@@ -51,12 +51,23 @@ Roadmap for Plugin Based Orca:
     -- (DONE): onPostInstall
     -- (DONE): onPreUninstall
 
-# Stage 3 (TODO)
+# Stage 3 (TODO):
+- (WIP): Create an clean "orca" class and object based API
+- (TODO): create useful signals
+- (WIP): cleanup as much as possible
+- register per application shortcuts
+- register per profile shortcuts
+- (TODO): Bugfixing and hardening
+    -- Unregister bindings on unload plugin
+    -- (TODO): compatibiltiy registered shortcuts do not unregister properly
+- (TODO): keyboard / gesture duplication check (for new and old way)
+- (TODO): Release :)
+
+# Stage 4 (TODO)
 - (TODO): Per Plugin settings: Plugins come along with its own settings (structure, defaults). We need an unify API to. The Settings are handled by Gsettings instead of JSON:
     -- (DONE): basic gsetting handling
     -- (DONE): profile management (global settings)
     -- (DONE): use gsettings in plugin manager
-    -- (TODO): keyboard / gesture duplication check (for new and old way)
     -- (TODO): resource manager integration
     -- (TODO): install (along with the plugin)
     -- (TODO): uninstall (along with the plugin)
@@ -67,7 +78,7 @@ Roadmap for Plugin Based Orca:
     -- (TODO): check compatibiltiy
     -- (WIP): scope: profiles
     -- (WIP): scope: per application
-- (TODO): generic preferences
+- (TODO): generic preferences GUI
     -- (TODO): List based
     -- (TODO): generic
         --- (TODO): default
@@ -104,7 +115,7 @@ Roadmap for Plugin Based Orca:
 - https://awebablog.wordpress.com/2017/12/16/session-5-part-1-gtk_with_python/
 - https://valadoc.org/gtk+-3.0/Gtk.ListBox.html
 
-# Final Stage 4 (TODO)
+# Final Stage 5 (TODO)
 - (WIP): Create an clean "orca" class and object based API
 - (TODO): create useful signals
 - (TODO): Remove compatibiltiy layers
@@ -122,7 +133,6 @@ Known Bugs:
 - (DONE) Profile selector does not open at preferences page
 - (DONE) ByeOrca is not announced
 - (DONE) Plugins without compatibiltiy bindings -> shortcut is not consumed | this is currently a bug in master | use plugin_system_old_keyboard branch what reverts the broken commit of master: https://github.com/chrys87/orca-plugin/tree/plugin_system_old_keyboard 
-- (TODO): compatibiltiy registered shortcuts do not unregister properly
 
 Build:
 NOCONFIGURE=1 ./autogen.sh
