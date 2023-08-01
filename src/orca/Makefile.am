@@ -27,6 +27,7 @@ orca_python_PYTHON = \
 	cmdnames.py \
 	colornames.py \
 	common_keyboardmap.py \
+	date_and_time_presenter.py \
 	debug.py \
 	desktop_keyboardmap.py \
 	dynamic_api_manager.py \
@@ -72,6 +73,7 @@ orca_python_PYTHON = \
 	signal_manager.py \
 	sound.py \
 	sound_generator.py \
+	speech_and_verbosity_manager.py \
 	speech.py \
 	spellcheck.py \
 	speechdispatcherfactory.py \

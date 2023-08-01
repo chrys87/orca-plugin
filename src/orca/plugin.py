@@ -129,6 +129,9 @@ class Plugin():
     def getSetting(key):
         #self.getModuleName())
         return None
+    def setSetting(key, value):
+        #self.getModuleName())
+        pass
     def registerGestureByString(self, function, name, gestureString, learnModeEnabled = True):
         keybinding = self.getApp().getAPIHelper().registerGestureByString(function, name, gestureString, 'default', 'orca', learnModeEnabled, contextName = self.getModuleName())
         return keybinding

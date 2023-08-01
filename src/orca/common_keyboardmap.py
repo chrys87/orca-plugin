@@ -42,9 +42,6 @@ SHIFT_ALT_MODIFIER_MASK = keybindings.SHIFT_ALT_MODIFIER_MASK
 
 keymap = (
 
-    ("F11", defaultModifierMask, ORCA_MODIFIER_MASK,
-    "toggleTableCellReadModeHandler"),
-
     ("f", defaultModifierMask, ORCA_MODIFIER_MASK,
     "readCharAttributesHandler"),
 
@@ -57,69 +54,8 @@ keymap = (
     ("space", defaultModifierMask, ORCA_CTRL_MODIFIER_MASK,
     "appPreferencesSettingsHandler"),
 
-    ("s", defaultModifierMask, ORCA_MODIFIER_MASK,
-    "toggleSilenceSpeechHandler"),
-
-    ("v", defaultModifierMask, ORCA_MODIFIER_MASK,
-    "toggleSpeechVerbosityHandler"),
-
-    ("t", defaultModifierMask, ORCA_MODIFIER_MASK,
-    "presentTimeHandler", 1),
-
-    ("t", defaultModifierMask, ORCA_MODIFIER_MASK,
-    "presentDateHandler", 2),
-
     ("Up", defaultModifierMask, ORCA_SHIFT_MODIFIER_MASK,
     "whereAmISelectionHandler"),
-
-    #####################################################################
-    #                                                                   #
-    #  Bookmark key bindings                                            #
-    #                                                                   #
-    #####################################################################
-
-    # key binding to save bookmark information to disk
-    ("b", defaultModifierMask, ORCA_ALT_MODIFIER_MASK,
-    "saveBookmarks"),
-
-    # key binding to move to the previous bookmark
-    ("b", defaultModifierMask, ORCA_SHIFT_MODIFIER_MASK,
-    "goToPrevBookmark"),
-
-    # key binding to move to the next bookmark
-    ("b", defaultModifierMask, ORCA_MODIFIER_MASK,
-    "goToNextBookmark"),
-
-    # key bindings for '1' through '6' for relevant commands
-
-    # 'Add bookmark' key bindings
-    ("1", defaultModifierMask, ORCA_ALT_MODIFIER_MASK,
-    "addBookmark"),
-    ("2", defaultModifierMask, ORCA_ALT_MODIFIER_MASK,
-    "addBookmark"),
-    ("3", defaultModifierMask, ORCA_ALT_MODIFIER_MASK,
-    "addBookmark"),
-    ("4", defaultModifierMask, ORCA_ALT_MODIFIER_MASK,
-    "addBookmark"),
-    ("5", defaultModifierMask, ORCA_ALT_MODIFIER_MASK,
-    "addBookmark"),
-    ("6", defaultModifierMask, ORCA_ALT_MODIFIER_MASK,
-    "addBookmark"),
-
-    # 'Go to bookmark' key bindings
-    
-    ("1", defaultModifierMask, ORCA_MODIFIER_MASK,
-    "goToBookmark"),
-    ("2", defaultModifierMask, ORCA_MODIFIER_MASK,
-    "goToBookmark"),
-    ("3", defaultModifierMask, ORCA_MODIFIER_MASK,
-    "goToBookmark"),
-    ("4", defaultModifierMask, ORCA_MODIFIER_MASK,
-    "goToBookmark"),
-    ("5", defaultModifierMask, ORCA_MODIFIER_MASK,
-    "goToBookmark"),
-    ("6", defaultModifierMask, ORCA_MODIFIER_MASK,
-    "goToBookmark"),
 
     ("BackSpace", defaultModifierMask, ORCA_MODIFIER_MASK,
     "bypassNextCommandHandler"),
@@ -135,28 +71,7 @@ keymap = (
     "cycleSettingsProfileHandler"),
 
     ("", defaultModifierMask, NO_MODIFIER_MASK,
-    "cycleCapitalizationStyleHandler"),
-
-    ("", defaultModifierMask, NO_MODIFIER_MASK,
     "cycleDebugLevelHandler"),
-
-    ("", defaultModifierMask, NO_MODIFIER_MASK,
-    "decreaseSpeechRateHandler"),
-
-    ("", defaultModifierMask, NO_MODIFIER_MASK,
-    "increaseSpeechRateHandler"),
-
-    ("", defaultModifierMask, NO_MODIFIER_MASK,
-    "decreaseSpeechPitchHandler"),
-
-    ("", defaultModifierMask, NO_MODIFIER_MASK,
-    "increaseSpeechPitchHandler"),
-
-    ("", defaultModifierMask, NO_MODIFIER_MASK,
-    "increaseSpeechVolumeHandler"),
-
-    ("", defaultModifierMask, NO_MODIFIER_MASK,
-    "decreaseSpeechVolumeHandler"),
 
     ("", defaultModifierMask, NO_MODIFIER_MASK,
     "panBrailleLeftHandler"),
@@ -166,18 +81,6 @@ keymap = (
 
     ("", defaultModifierMask, NO_MODIFIER_MASK,
     "toggleMouseReviewHandler"),
-
-    ("", defaultModifierMask, NO_MODIFIER_MASK,
-    "toggleSpeakingIndentationJustificationHandler"),
-
-    ("", defaultModifierMask, NO_MODIFIER_MASK,
-    "cycleSpeakingPunctuationLevelHandler"),
-
-    ("", defaultModifierMask, NO_MODIFIER_MASK,
-    "cycleKeyEchoHandler"),
-
-    ("", defaultModifierMask, NO_MODIFIER_MASK,
-    "changeNumberStyleHandler"),
 
     ("", defaultModifierMask, NO_MODIFIER_MASK,
     "shutdownHandler"),
