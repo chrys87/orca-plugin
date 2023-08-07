@@ -34,9 +34,9 @@ import re
 
 from . import braille
 from . import debug
-from . import eventsynthesizer
 from . import orca_state
 from . import settings
+from .ax_event_synthesizer import AXEventSynthesizer
 from .ax_object import AXObject
 from .ax_utilities import AXUtilities
 
@@ -116,7 +116,11 @@ class Word:
         for i, char in enumerate(self.string):
             start = i + self.startOffset
             if text:
-                extents = text.getRangeExtents(start, start+1, Atspi.CoordType.SCREEN)
+                try:
+                    extents = text.getRangeExtents(start, start+1, Atspi.CoordType.SCREEN)
+                except Exception as error:
+                    msg = f"FLAT REVIEW: Exception in getRangeExtents: {error}"
+                    debug.println(debug.LEVEL_INFO, msg, True)
             chars.append(Char(self, i, start, char, *extents))
 
         return chars
@@ -240,7 +244,7 @@ class Zone:
         debug.println(debug.LEVEL_INFO, msg, True)
 
         for word in self.words:
-            msg = "FLAT REVIEW: Checking %s" % word
+            msg = f"FLAT REVIEW: Checking {word}"
             debug.println(debug.LEVEL_INFO, msg, True)
 
             offset = word.getRelativeOffset(charOffset)
@@ -356,7 +360,7 @@ class ValueZone(Zone):
         rolename = generator.getLocalizedRoleName(self.accessible)
         value = generator.getValue(self.accessible)
         if rolename and value:
-            result = "%s %s" % (rolename, value[0])
+            result = f"{rolename} {value[0]}"
 
         return result
 
@@ -472,7 +476,7 @@ class Context:
     WRAP_TOP_BOTTOM = 1 << 1
     WRAP_ALL        = (WRAP_LINE | WRAP_TOP_BOTTOM)
 
-    def __init__(self, script):
+    def __init__(self, script, root=None):
         """Create a new Context for script."""
 
         self.script = script
@@ -490,15 +494,20 @@ class Context:
         self.bounds = 0, 0, 0, 0
 
         frame, dialog = script.utilities.frameAndDialog(self.focusObj)
-        self.topLevel = dialog or frame
-        msg = "FLAT REVIEW: Frame: %s Dialog: %s. Top level: %s" % (frame, dialog, self.topLevel)
+        if root is not None:
+            self.topLevel = root
+            msg = f"FLAT REVIEW: Restricting flat review to {root}"
+            debug.println(debug.LEVEL_INFO, msg, True)
+        else:
+            self.topLevel = dialog or frame
+        msg = f"FLAT REVIEW: Frame: {frame} Dialog: {dialog}. Top level: {self.topLevel}"
         debug.println(debug.LEVEL_INFO, msg, True)
 
         try:
             component = self.topLevel.queryComponent()
             self.bounds = component.getExtents(Atspi.CoordType.SCREEN)
         except Exception:
-            msg = "ERROR: Exception getting extents of %s" % self.topLevel
+            msg = f"ERROR: Exception getting extents of {self.topLevel}"
             debug.println(debug.LEVEL_INFO, msg, True)
 
         containerRoles = [Atspi.Role.MENU]
@@ -634,7 +643,7 @@ class Context:
         debug.println(debug.LEVEL_INFO, msg, True)
 
         lines = self._getLines(accessible, upperMin, lowerMax)
-        msg = "FLAT REVIEW: %i lines found for %s" % (len(lines), accessible)
+        msg = f"FLAT REVIEW: {len(lines)} lines found for {accessible}"
         debug.println(debug.LEVEL_INFO, msg, True)
 
         for string, startOffset, endOffset in lines:
@@ -733,6 +742,68 @@ class Context:
 
         return AXObject.find_ancestor(child, lambda x: x == parent)
 
+    def setCurrentToZoneWithObject(self, obj):
+        """Attempts to set the current zone to obj, if obj is in the current context."""
+
+        def _toString(x):
+            if AXObject.get_name(x):
+                return str(x)
+            return f"{x}: '{self.script.utilities.displayedText(x)}'"
+
+        msg = "FLAT REVIEW: Current %s (line: %i, zone: %i, word: %i, char: %i)" % \
+              (_toString(self.getCurrentAccessible()),
+               self.lineIndex, self.zoneIndex, self.wordIndex, self.charIndex)
+        debug.println(debug.LEVEL_INFO, msg, True)
+
+        zone = self._findZoneWithObject(obj)
+        msg = f"FLAT REVIEW: Zone with {obj} is {zone}"
+        debug.println(debug.LEVEL_INFO, msg, True)
+        if zone is None:
+            return False
+
+        for i, line in enumerate(self.lines):
+            if zone in line.zones:
+                self.lineIndex = i
+                self.zoneIndex = line.zones.index(zone)
+                word, offset = zone.wordWithCaret()
+                if word:
+                    self.wordIndex = word.index
+                    self.charIndex = offset
+                msg = "FLAT REVIEW: Updated current zone."
+                debug.println(debug.LEVEL_INFO, msg, True)
+                break
+        else:
+            msg = "FLAT REVIEW: Failed to update current zone."
+            debug.println(debug.LEVEL_INFO, msg, True)
+            return False
+
+        msg = "FLAT REVIEW: Updated %s (line: %i, zone: %i, word: %i, char: %i)" % \
+              (_toString(self.getCurrentAccessible()),
+               self.lineIndex, self.zoneIndex, self.wordIndex, self.charIndex)
+        debug.println(debug.LEVEL_INFO, msg, True)
+        return True
+
+    def _findZoneWithObject(self, obj):
+        """Returns the existing zone which contains obj."""
+
+        if obj is None:
+            return None
+
+        for zone in self.zones:
+            if zone.accessible == obj:
+                return zone
+
+            # Some items get pruned from the flat review tree. For instance, a
+            # tree item which has a descendant section whose text is the displayed
+            # text of the tree item, that section will be in the flat review tree
+            # but the ancestor item might not.
+            if AXObject.is_ancestor(zone.accessible, obj):
+                msg = f"FLAT REVIEW: {zone.accessible} is ancestor of zone accessible {obj}"
+                debug.println(debug.LEVEL_INFO, msg, True)
+                return zone
+
+        return None
+
     def getShowingZones(self, root, boundingbox=None):
         """Returns an unsorted list of all the zones under root and the focusZone."""
 
@@ -740,7 +811,7 @@ class Context:
             boundingbox = self.bounds
 
         objs = self.script.utilities.getOnScreenObjects(root, boundingbox)
-        msg = "FLAT REVIEW: %i on-screen objects found for %s" % (len(objs), root)
+        msg = f"FLAT REVIEW: {len(objs)} on-screen objects found for {root}"
         debug.println(debug.LEVEL_INFO, msg, True)
 
         allZones, focusZone = [], None
@@ -759,7 +830,7 @@ class Context:
                 zones = list(filter(lambda z: z.hasCaret(), zones)) or zones
                 focusZone = zones[0]
 
-        msg = "FLAT REVIEW: %i zones found for %s" % (len(allZones), root)
+        msg = f"FLAT REVIEW: {len(allZones)} zones found for {root}"
         debug.println(debug.LEVEL_INFO, msg, True)
         return allZones, focusZone
 
@@ -789,7 +860,7 @@ class Context:
                 zone.line = lines[lineIndex]
                 zone.index = zoneIndex
 
-        msg = "FLAT REVIEW: Zones clustered into %i lines" % len(lines)
+        msg = f"FLAT REVIEW: Zones clustered into {len(lines)} lines"
         debug.println(debug.LEVEL_INFO, msg, True)
         return lines
 
@@ -850,16 +921,16 @@ class Context:
         if x < 0 or y < 0:
             return False
 
-        return eventsynthesizer.routeToPoint(x, y)
+        return AXEventSynthesizer.route_to_point(x, y)
 
     def clickCurrent(self, button=1):
         """Performs a mouse click on the current accessible."""
 
         x, y = self._getClickPoint()
-        if x >= 0 and y >= 0 and eventsynthesizer.clickPoint(x, y, button):
+        if x >= 0 and y >= 0 and AXEventSynthesizer.click_point(x, y, button):
             return True
 
-        if eventsynthesizer.clickObject(self.getCurrentAccessible(), button):
+        if AXEventSynthesizer.click_object(self.getCurrentAccessible(), button):
             return True
 
         return False

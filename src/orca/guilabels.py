@@ -274,6 +274,16 @@ KB_HEADER_KEY_BINDING = _("Key Binding")
 # to, for instance, web browsing.
 KB_GROUP_DEFAULT = C_("keybindings", "Default")
 
+# Translators: This string is a label for the group of Orca commands which
+# are related to its "learn mode". Please use the same translation as done
+# in cmdnames.py
+KB_GROUP_LEARN_MODE = C_("keybindings", "Learn mode")
+
+# Translators: This string is a label for the group of Orca commands which
+# are related to presenting and performing the accessible actions associated
+# with the current object.
+KB_GROUP_ACTIONS = _("Actions")
+
 # Translators: An external braille device has buttons on it that permit the
 # user to create input gestures from the braille device. The braille bindings
 # are what determine the actions Orca will take when the user presses these
@@ -289,8 +299,21 @@ KB_GROUP_BOOKMARKS = _("Bookmarks")
 KB_GROUP_DATE_AND_TIME = _("Date and time")
 
 # Translators: This string is a label for the group of Orca commands which
+# are related to presenting the object under the mouse pointer in speech
+# and/or braille. The translation should be consistent with the string
+# used in cmdnames.py.
+KB_GROUP_MOUSE_REVIEW = _("Mouse review")
+
+# Translators: This string is a label for the group of Orca commands which
 # are related to object navigation.
-KB_OBJECT_NAVIGATION = _("Object navigation")
+KB_GROUP_OBJECT_NAVIGATION = _("Object navigation")
+
+# Translators: This string is a label for the group of Orca commands which
+# are related to presenting information about the current location, such as
+# the title, status bar, and default button of the current window; the
+# name, role, and location of the currently-focused object; the selected
+# text in the currently-focused object; etc.
+KB_GROUP_WHERE_AM_I = _("Object details")
 
 # Translators: This string is a label for the group of Orca commands which
 # do not currently have an associated key binding.
@@ -347,7 +370,7 @@ NOTIFICATIONS_RECEIVED_TIME = C_("notification presenter", "Received")
 
 # Translators: This string is a label for the group of Orca commands which
 # are associated with presenting notifications.
-NOTIFICATIONS_KB_GROUP = _("Notification presenter")
+KB_GROUP_NOTIFICATIONS = _("Notification presenter")
 
 # Translators: Orca's preferences can be configured on a per-application basis,
 # allowing users to customize Orca's behavior, keybindings, etc. to work one

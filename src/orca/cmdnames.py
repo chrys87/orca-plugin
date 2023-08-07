@@ -89,17 +89,28 @@ WHERE_AM_I_SELECTION = _("Speak the current selection")
 # about a link, such as the uri and type of link.
 WHERE_AM_I_LINK = _("Speak link details")
 
-# Translators: This command will cause the window's status bar contents to be
-# spoken.
-PRESENT_STATUS_BAR = _("Speak the status bar")
+# Translators: This command will cause the dialog's default button name to be
+# spoken and displayed in braille. The "default" button in a dialog box is the
+# button that gets activated when Enter is pressed anywhere within that dialog
+# box.
+PRESENT_DEFAULT_BUTTON = _("Present the default button")
 
-# Translators: This command will cause the window's title to be spoken.
-PRESENT_TITLE = _("Speak the title bar")
+# Translators: This command will cause the window's status bar contents to be
+# spoken and displayed in braille.
+PRESENT_STATUS_BAR = _("Present the status bar")
+
+# Translators: This command will cause the window's title to be spoken and
+# displayed in braille.
+PRESENT_TITLE = _("Present the title bar")
 
 # Translators: the Orca "Find" dialog allows a user to search for text in a
 # window and then move focus to that text. For example, they may want to find
 # the "OK" button.
 SHOW_FIND_GUI = _("Open the Find dialog")
+
+# Translators: Orca has a command which presents a menu with accessible actions
+# that can be performed on the current object. This is the name of that command.
+SHOW_ACTIONS_MENU = _("Show actions menu")
 
 # Translators: the Orca "Find" dialog allows a user to search for text in a
 # window and then move focus to that text. For example, they may want to find
@@ -119,6 +130,14 @@ FIND_PREVIOUS = _("Search for the previous instance of a string")
 # sequence of words in a sequence of lines.  The flat review feature allows
 # the user to explore this text by the {previous,next} {line,word,character}.
 TOGGLE_FLAT_REVIEW = _("Enter and exit flat review mode")
+
+# Translators: the 'flat review' feature of Orca allows the blind user to
+# explore the text in a window in a 2D fashion.  That is, Orca treats all
+# the text from all objects in a window (e.g., buttons, labels, etc.) as a
+# sequence of words in a sequence of lines.  The flat review feature allows
+# the user to explore this text by the {previous,next} {line,word,character}.
+# This switch allows the user to restrict the flat review function to a specific object.
+TOGGLE_RESTRICT_FLAT_REVIEW = _("Toggle restricting flat review to the current object")
 
 # Translators: the 'flat review' feature of Orca allows the blind user to
 # explore the text in a window in a 2D fashion.  That is, Orca treats all
@@ -463,6 +482,11 @@ CHANGE_NUMBER_STYLE = _("Change spoken number style")
 # Translators: Orca allows users to cycle through punctuation levels. None,
 # some, most, or all, punctuation will be spoken.
 CYCLE_PUNCTUATION_LEVEL = _("Cycle to the next speaking of punctuation level")
+
+# Translators: Orca allows users to cycle through the speech synthesizers
+# available on their system, such as espeak, voxin, mbrola, etc. This string
+# is the description of the command.
+CYCLE_SYNTHESIZER = _("Cycle to the next speech synthesizer")
 
 # Translators: Orca has a feature whereby users can set up different "profiles,"
 # which are collection of settings which apply to a given task, such as a

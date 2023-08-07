@@ -105,7 +105,7 @@ class Script(default.Script):
         orcaApp = orca.getManager()
         mouse_review = orcaApp.getDynamicApiManager().getAPI('MouseReview')
         if mouse_review != None:
-            if event.source == mouse_review.getCurrentItem():
+            if event.source == mouse_review.getReviewer().getCurrentItem():
                 msg = "GTK: Event source is current mouse review item"
                 debug.println(debug.LEVEL_INFO, msg, True)
                 return
@@ -114,12 +114,6 @@ class Script(default.Script):
            and AXObject.supports_table(event.source) \
            and not AXUtilities.is_focused(event.source):
             return
-
-        if AXObject.supports_table(event.source):
-            selectedChildren = self.utilities.selectedChildren(event.source)
-            if selectedChildren:
-                orca.setLocusOfFocus(event, selectedChildren[0])
-                return
 
         ancestor = AXObject.find_ancestor(orca_state.locusOfFocus, lambda x: x == event.source)
         if not ancestor:
@@ -211,7 +205,7 @@ class Script(default.Script):
         """Callback for object:text-changed:delete accessibility events."""
 
         if not self.utilities.isShowingAndVisible(event.source):
-            msg = "GTK: %s is not showing and visible" % event.source
+            msg = f"GTK: {event.source} is not showing and visible"
             debug.println(debug.LEVEL_INFO, msg, True)
             return
 
@@ -221,7 +215,7 @@ class Script(default.Script):
         """Callback for object:text-changed:insert accessibility events."""
 
         if not self.utilities.isShowingAndVisible(event.source):
-            msg = "GTK: %s is not showing and visible" % event.source
+            msg = f"GTK: {event.source} is not showing and visible"
             debug.println(debug.LEVEL_INFO, msg, True)
             return
 

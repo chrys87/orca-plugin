@@ -45,7 +45,7 @@ try:
 except Exception:
     _mouseReviewCapable = False
 
-# compatibility layer
+# compatibility layer, see MouseReview.do_activate
 debug = None
 event_manager = None
 orca = None
@@ -60,6 +60,8 @@ _scriptManager = None
 _settingsManager = None
 AXObject = None
 AXUtilities = None
+keybindings = None
+input_event = None
 
 class MouseReview(GObject.Object, Peas.Activatable, plugin.Plugin):
     #__gtype_name__ = 'MouseReview'
@@ -85,7 +87,8 @@ class MouseReview(GObject.Object, Peas.Activatable, plugin.Plugin):
         global cmdnames
         global AXObject
         global AXUtilities
-
+        global keybindings
+        global input_event
         debug= API.app.getDynamicApiManager().getAPI('Debug')
         event_manager = API.app.getDynamicApiManager().getAPI('EventManager')
         messages = API.app.getDynamicApiManager().getAPI('Messages')
@@ -99,6 +102,8 @@ class MouseReview(GObject.Object, Peas.Activatable, plugin.Plugin):
         _settingsManager = settings_manager.getManager()
         AXObject = API.app.getDynamicApiManager().getAPI('AXObject')
         AXUtilities = API.app.getDynamicApiManager().getAPI('AXUtilities')
+        keybindings = API.app.getDynamicApiManager().getAPI('Keybindings')
+        input_event = API.app.getDynamicApiManager().getAPI('InputEvent')
         mouse_review = MouseReviewer()
         self.registerAPI('MouseReview', mouse_review)
         self.Initialize(API.app)
@@ -191,7 +196,7 @@ class _StringContext:
         if not (self._string and self._string.strip() in other._string):
             return False
 
-        msg = "MOUSE REVIEW: '%s' is substring of '%s'" % (self._string, other._string)
+        msg = f"MOUSE REVIEW: '{self._string}' is substring of '{other._string}'"
         debug.println(debug.LEVEL_INFO, msg, True)
         return True
 
@@ -281,7 +286,7 @@ class _ItemContext:
 
         interval = self._time - prior._time
         if interval > 0.5:
-            msg = "MOUSE REVIEW: Not a duplicate: was %.2fs ago" % interval
+            msg = f"MOUSE REVIEW: Not a duplicate: was {interval:.2f}s ago"
             debug.println(debug.LEVEL_INFO, msg, True)
             return False
 
@@ -424,6 +429,8 @@ class MouseReviewer:
         self._handlerIds = {}
         self._eventListener = Atspi.EventListener.new(self._listener)
         self.inMouseEvent = False
+        self._handlers = self._setup_handlers()
+        self._bindings = self._setup_bindings()
 
         if not _mouseReviewCapable:
             msg = "MOUSE REVIEW ERROR: Wnck is not available"
@@ -452,6 +459,42 @@ class MouseReviewer:
             return
 
         self.activate()
+
+    def get_bindings(self):
+        """Returns the mouse-review keybindings."""
+
+        return self._bindings
+
+    def get_handlers(self):
+        """Returns the mouse-review handlers."""
+
+        return self._handlers
+
+    def _setup_handlers(self):
+        """Sets up and returns the mouse-review input event handlers."""
+
+        handlers = {}
+
+        handlers["toggleMouseReviewHandler"] = \
+            input_event.InputEventHandler(
+                self.toggle,
+                cmdnames.MOUSE_REVIEW_TOGGLE)
+
+        return handlers
+
+    def _setup_bindings(self):
+        """Sets up and returns the mouse-review key bindings."""
+
+        bindings = keybindings.KeyBindings()
+
+        bindings.add(
+            keybindings.KeyBinding(
+                "",
+                keybindings.defaultModifierMask,
+                keybindings.NO_MODIFIER_MASK,
+                self._handlers.get("toggleMouseReviewHandler")))
+
+        return bindings
 
     def activate(self):
         """Activates mouse review."""
@@ -519,7 +562,7 @@ class MouseReviewer:
         obj = self._currentMouseOver.getObject()
 
         if time.time() - self._currentMouseOver.getTime() > 0.1:
-            msg = "MOUSE REVIEW: Treating %s as stale" % obj
+            msg = f"MOUSE REVIEW: Treating {obj} as stale"
             debug.println(debug.LEVEL_INFO, msg, True)
             return None
 
@@ -661,7 +704,7 @@ class MouseReviewer:
         script = _scriptManager.getScript(AXObject.get_application(window), obj)
         if menu and obj and not AXObject.find_ancestor(obj, AXUtilities.is_menu):
             if script.utilities.intersectingRegion(obj, menu) != (0, 0, 0, 0):
-                msg = "MOUSE REVIEW: %s believed to be under %s" % (obj, menu)
+                msg = f"MOUSE REVIEW: {obj} believed to be under {menu}"
                 debug.println(debug.LEVEL_INFO, msg, True)
                 return
 
@@ -669,7 +712,7 @@ class MouseReviewer:
         if objDocument and script.utilities.inDocumentContent():
             document = script.utilities.activeDocument()
             if document != objDocument:
-                msg = "MOUSE REVIEW: %s is not in active document %s" % (obj, document)
+                msg = f"MOUSE REVIEW: {obj} is not in active document {document}"
                 debug.println(debug.LEVEL_INFO, msg, True)
                 return
 
@@ -698,7 +741,7 @@ class MouseReviewer:
         """Generic listener, mainly to output debugging info."""
 
         startTime = time.time()
-        msg = "\nvvvvv PROCESS OBJECT EVENT %s vvvvv" % event.type
+        msg = f"\nvvvvv PROCESS OBJECT EVENT {event.type} vvvvv"
         debug.println(debug.LEVEL_INFO, msg, False)
 
         if event.type.startswith("mouse:abs"):
@@ -706,6 +749,6 @@ class MouseReviewer:
             self._on_mouse_moved(event)
             self.inMouseEvent = False
 
-        msg = "TOTAL PROCESSING TIME: %.4f\n" % (time.time() - startTime)
-        msg += "^^^^^ PROCESS OBJECT EVENT %s ^^^^^\n" % event.type
+        msg = f"TOTAL PROCESSING TIME: {time.time() - startTime:.4f}\n"
+        msg += f"^^^^^ PROCESS OBJECT EVENT {event.type} ^^^^^\n"
         debug.println(debug.LEVEL_INFO, msg, False)

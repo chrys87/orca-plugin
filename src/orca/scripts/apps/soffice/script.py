@@ -168,11 +168,6 @@ class Script(default.Script):
                 cmdnames.PAN_BRAILLE_RIGHT,
                 False) # Do not enable learn mode for this action
 
-        self.inputEventHandlers["whereAmISelectionHandler"] = \
-            input_event.InputEventHandler(
-                Script.whereAmISelection,
-                cmdnames.WHERE_AM_I_SELECTION)
-
     def getAppKeyBindings(self):
         """Returns the application-specific keybindings for this script."""
 
@@ -247,7 +242,7 @@ class Script(default.Script):
         tableFrame = Gtk.Frame()
         grid.attach(tableFrame, 0, 2, 1, 1)
 
-        label = Gtk.Label(label="<b>%s</b>" % guilabels.TABLE_NAVIGATION)
+        label = Gtk.Label(label=f"<b>{guilabels.TABLE_NAVIGATION}</b>")
         label.set_use_markup(True)
         tableFrame.set_label_widget(label)
 
@@ -826,7 +821,7 @@ class Script(default.Script):
             return
 
         if self.utilities.isSpreadSheetCell(orca_state.locusOfFocus):
-            msg = "SOFFICE: locusOfFocus %s is spreadsheet cell" % orca_state.locusOfFocus
+            msg = f"SOFFICE: locusOfFocus {orca_state.locusOfFocus} is spreadsheet cell"
             debug.println(debug.LEVEL_INFO, msg, True)
 
             if not self.utilities.isCellBeingEdited(event.source):
@@ -992,14 +987,3 @@ class Script(default.Script):
 
         super().onWindowDeactivated(event)
         self.spellcheck.deactivate()
-
-    def whereAmISelection(self, inputEvent=None, obj=None):
-        obj = obj or orca_state.locusOfFocus
-        if not self.utilities.isSpreadSheetCell(obj):
-            if self.utilities.inDocumentContent(obj):
-                # Because for some reason, the document implements the selection
-                # interface as if it were a spreadsheet or listbox. *sigh*
-                return super()._whereAmISelectedText(inputEvent, obj)
-            return super().whereAmISelection(inputEvent, obj)
-
-        return self.utilities.speakSelectedCellRange(self.utilities.getTable(obj))

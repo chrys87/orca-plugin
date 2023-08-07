@@ -40,15 +40,12 @@ import time
 import orca.braille as braille
 import orca.cmdnames as cmdnames
 import orca.debug as debug
-import orca.eventsynthesizer as eventsynthesizer
 import orca.find as find
 import orca.flat_review as flat_review
-import orca.guilabels as guilabels
 import orca.input_event as input_event
 import orca.keybindings as keybindings
 import orca.messages as messages
 import orca.orca as orca
-import orca.orca_gui_commandlist as commandlist
 import orca.orca_state as orca_state
 import orca.phonnames as phonnames
 import orca.script as script
@@ -150,36 +147,6 @@ class Script(script.Script):
                 Script.sayAll,
                 cmdnames.SAY_ALL)
 
-        self.inputEventHandlers["whereAmIBasicHandler"] = \
-            input_event.InputEventHandler(
-                Script.whereAmIBasic,
-                cmdnames.WHERE_AM_I_BASIC)
-
-        self.inputEventHandlers["whereAmIDetailedHandler"] = \
-            input_event.InputEventHandler(
-                Script.whereAmIDetailed,
-                cmdnames.WHERE_AM_I_DETAILED)
-
-        self.inputEventHandlers["whereAmILinkHandler"] = \
-            input_event.InputEventHandler(
-                Script.whereAmILink,
-                cmdnames.WHERE_AM_I_LINK)
-
-        self.inputEventHandlers["whereAmISelectionHandler"] = \
-            input_event.InputEventHandler(
-                Script.whereAmISelection,
-                cmdnames.WHERE_AM_I_SELECTION)
-
-        self.inputEventHandlers["getTitleHandler"] = \
-            input_event.InputEventHandler(
-                Script.presentTitle,
-                cmdnames.PRESENT_TITLE)
-
-        self.inputEventHandlers["getStatusBarHandler"] = \
-            input_event.InputEventHandler(
-                Script.presentStatusBar,
-                cmdnames.PRESENT_STATUS_BAR)
-
         self.inputEventHandlers["findHandler"] = \
             input_event.InputEventHandler(
                 orca.showFindGUI,
@@ -194,11 +161,6 @@ class Script(script.Script):
             input_event.InputEventHandler(
                 Script.findPrevious,
                 cmdnames.FIND_PREVIOUS)
-
-        self.inputEventHandlers["readCharAttributesHandler"] = \
-            input_event.InputEventHandler(
-                Script.readCharAttributes,
-                cmdnames.READ_CHAR_ATTRIBUTES)
 
         self.inputEventHandlers["panBrailleLeftHandler"] = \
             input_event.InputEventHandler(
@@ -237,11 +199,6 @@ class Script(script.Script):
                 Script.processBrailleCutLine,
                 cmdnames.PROCESS_BRAILLE_CUT_LINE)
 
-        self.inputEventHandlers["enterLearnModeHandler"] = \
-            input_event.InputEventHandler(
-                Script.enterLearnMode,
-                cmdnames.ENTER_LEARN_MODE)
-
         self.inputEventHandlers["shutdownHandler"] = \
             input_event.InputEventHandler(
                 orca.quitOrca,
@@ -262,21 +219,17 @@ class Script(script.Script):
                 Script.bypassNextCommand,
                 cmdnames.BYPASS_NEXT_COMMAND)
 
-        self.inputEventHandlers["presentSizeAndPositionHandler"] = \
-            input_event.InputEventHandler(
-                Script.presentSizeAndPosition,
-                cmdnames.PRESENT_SIZE_AND_POSITION)
-
-        orca.getManager().getDynamicApiManager().registerAPI('inputEventHandlers',self.inputEventHandlers, overwrite=True)
-        orca.getManager().getSignalManager().emitSignal('setup-inputeventhandlers-completed')
-
         self.inputEventHandlers.update(self.notificationPresenter.get_handlers())
         self.inputEventHandlers.update(self.flatReviewPresenter.get_handlers())
         self.inputEventHandlers.update(self.speechAndVerbosityManager.get_handlers())
         self.inputEventHandlers.update(self.dateAndTimePresenter.get_handlers())
         self.inputEventHandlers.update(self.bookmarks.get_handlers())
         self.inputEventHandlers.update(self.objectNavigator.get_handlers())
-
+        self.inputEventHandlers.update(self.whereAmIPresenter.get_handlers())
+        self.inputEventHandlers.update(self.learnModePresenter.get_handlers())
+        self.inputEventHandlers.update(self.actionPresenter.get_handlers())
+        orca.getManager().getDynamicApiManager().registerAPI('inputEventHandlers',self.inputEventHandlers, overwrite=True)
+        orca.getManager().getSignalManager().emitSignal('setup-inputeventhandlers-completed')
 
     def getInputEventHandlerKey(self, inputEventHandler):
         """Returns the name of the key that contains an inputEventHadler
@@ -388,6 +341,49 @@ class Script(script.Script):
         keyBindings.load(laptop_keyboardmap.keymap, self.inputEventHandlers)
         return keyBindings
 
+    def getExtensionBindings(self):
+        keyBindings = keybindings.KeyBindings()
+
+        bindings = self.notificationPresenter.get_bindings()
+        for keyBinding in bindings.keyBindings:
+            keyBindings.add(keyBinding)
+
+        layout = _settingsManager.getSetting('keyboardLayout')
+        isDesktop = layout == settings.GENERAL_KEYBOARD_LAYOUT_DESKTOP
+        bindings = self.flatReviewPresenter.get_bindings(isDesktop)
+        for keyBinding in bindings.keyBindings:
+            keyBindings.add(keyBinding)
+
+        bindings = self.whereAmIPresenter.get_bindings(isDesktop)
+        for keyBinding in bindings.keyBindings:
+            keyBindings.add(keyBinding)
+
+        bindings = self.learnModePresenter.get_bindings()
+        for keyBinding in bindings.keyBindings:
+            keyBindings.add(keyBinding)
+
+        bindings = self.speechAndVerbosityManager.get_bindings()
+        for keyBinding in bindings.keyBindings:
+            keyBindings.add(keyBinding)
+
+        bindings = self.dateAndTimePresenter.get_bindings()
+        for keyBinding in bindings.keyBindings:
+            keyBindings.add(keyBinding)
+
+        bindings = self.objectNavigator.get_bindings()
+        for keyBinding in bindings.keyBindings:
+            keyBindings.add(keyBinding)
+
+        bindings = self.bookmarks.get_bindings()
+        for keyBinding in bindings.keyBindings:
+            keyBindings.add(keyBinding)
+
+        bindings = self.actionPresenter.get_bindings()
+        for keyBinding in bindings.keyBindings:
+            keyBindings.add(keyBinding)
+
+        return keyBindings
+
     def getKeyBindings(self):
         """Defines the key bindings for this script.
 
@@ -408,36 +404,14 @@ class Script(script.Script):
         for keyBinding in bindings.keyBindings:
             keyBindings.add(keyBinding)
 
-        bindings = self.notificationPresenter.get_bindings()
-        for keyBinding in bindings.keyBindings:
-            keyBindings.add(keyBinding)
-
-        layout = _settingsManager.getSetting('keyboardLayout')
-        isDesktop = layout == settings.GENERAL_KEYBOARD_LAYOUT_DESKTOP
-        bindings = self.flatReviewPresenter.get_bindings(isDesktop)
-        for keyBinding in bindings.keyBindings:
-            keyBindings.add(keyBinding)
-
-        bindings = self.speechAndVerbosityManager.get_bindings()
-        for keyBinding in bindings.keyBindings:
-            keyBindings.add(keyBinding)
-
-        bindings = self.dateAndTimePresenter.get_bindings()
-        for keyBinding in bindings.keyBindings:
-            keyBindings.add(keyBinding)
-
-        bindings = self.objectNavigator.get_bindings()
-        for keyBinding in bindings.keyBindings:
-            keyBindings.add(keyBinding)
-
-        bindings = self.bookmarks.get_bindings()
+        bindings = self.getExtensionBindings()
         for keyBinding in bindings.keyBindings:
             keyBindings.add(keyBinding)
 
         try:
             keyBindings = _settingsManager.overrideKeyBindings(self, keyBindings)
         except Exception:
-            msg = 'ERROR: Exception when overriding keybindings in %s' % self
+            msg = f'ERROR: Exception when overriding keybindings in {self}'
             debug.println(debug.LEVEL_WARNING, msg, True)
             debug.printException(debug.LEVEL_WARNING)
 
@@ -499,10 +473,10 @@ class Script(script.Script):
             brailleBindings[braille.brlapi.KEY_CMD_HOME] = \
                 self.inputEventHandlers["goBrailleHomeHandler"]
         except AttributeError:
-            msg = 'DEFAULT: Braille bindings unavailable in %s' % self
+            msg = f'DEFAULT: Braille bindings unavailable in {self}'
             debug.println(debug.LEVEL_INFO, msg, True)
         except Exception:
-            msg = 'ERROR: Exception getting braille bindings in %s' % self
+            msg = f'ERROR: Exception getting braille bindings in {self}'
             debug.println(debug.LEVEL_INFO, msg, True)
             debug.printException(debug.LEVEL_CONFIGURATION)
 
@@ -532,7 +506,7 @@ class Script(script.Script):
 
         msg = "INFO: adding key grabs"
         if reason:
-            msg += ": %s" % reason
+            msg += f": {reason}"
         debug.println(debug.LEVEL_INFO, msg, True)
 
         bound = self.getEnabledKeyBindings()
@@ -545,7 +519,7 @@ class Script(script.Script):
 
         msg = "INFO: removing key grabs"
         if reason:
-            msg += ": %s" % reason
+            msg += f": {reason}"
         debug.println(debug.LEVEL_INFO, msg, True)
 
         for id in self.grab_ids:
@@ -557,7 +531,7 @@ class Script(script.Script):
 
         msg = "INFO: refreshing key grabs"
         if reason:
-            msg += ": %s" % reason
+            msg += f": {reason}"
         debug.println(debug.LEVEL_INFO, msg, True)
 
         # TODO: Should probably avoid removing key grabs and re-adding them.
@@ -651,8 +625,10 @@ class Script(script.Script):
         if not AXUtilities.is_table_cell(oldLocusOfFocus) \
            and not AXUtilities.is_table_cell(newLocusOfFocus) \
            and self.utilities.isSameObject(oldLocusOfFocus, newLocusOfFocus):
-            msg = 'DEFAULT: old focus %s believed to be same as new focus %s' \
-                % (oldLocusOfFocus, newLocusOfFocus)
+            msg = (
+                f"DEFAULT: old focus {oldLocusOfFocus} believed to be "
+                f"same as new focus {newLocusOfFocus}"
+            )
             debug.println(debug.LEVEL_INFO, msg, True)
             return
 
@@ -688,7 +664,7 @@ class Script(script.Script):
     def activate(self):
         """Called when this script is activated."""
 
-        msg = 'DEFAULT: activating script for %s' % self.app
+        msg = f'DEFAULT: activating script for {self.app}'
         debug.println(debug.LEVEL_INFO, msg, True)
 
         _settingsManager.loadAppSettings(self)
@@ -700,7 +676,7 @@ class Script(script.Script):
 
         self.addKeyGrabs("script activation")
 
-        msg = 'DEFAULT: Script for %s activated' % self.app
+        msg = f'DEFAULT: Script for {self.app} activated'
         debug.println(debug.LEVEL_INFO, msg, True)
 
     def updateBraille(self, obj, **args):
@@ -754,75 +730,6 @@ class Script(script.Script):
         self.removeKeyGrabs("bypass next command")
         return True
 
-    def enterLearnMode(self, inputEvent=None):
-        """Turns learn mode on.  The user must press the escape key to exit
-        learn mode.
-
-        Returns True to indicate the input event has been consumed.
-        """
-
-        if orca_state.learnModeEnabled:
-            return True
-
-        self.presentMessage(messages.VERSION)
-        self.speakMessage(messages.LEARN_MODE_START_SPEECH)
-        self.displayBrailleMessage(messages.LEARN_MODE_START_BRAILLE)
-        orca_state.learnModeEnabled = True
-        Atspi.Device.grab_keyboard(orca_state.device)
-        return True
-
-    def exitLearnMode(self, inputEvent=None):
-        """Turns learn mode off.
-
-        Returns True to indicate the input event has been consumed.
-        """
-
-        if not orca_state.learnModeEnabled:
-            return False
-
-        if isinstance(inputEvent, input_event.KeyboardEvent) \
-           and not inputEvent.event_string == 'Escape':
-            return False
-
-        self.presentMessage(messages.LEARN_MODE_STOP)
-        orca_state.learnModeEnabled = False
-        Atspi.Device.ungrab_keyboard(orca_state.device)
-        return True
-
-    def showHelp(self, inputEvent=None):
-        return orca.helpForOrca()
-
-    def listOrcaShortcuts(self, inputEvent=None):
-        """Shows a simple gui listing Orca's bound commands."""
-
-        if inputEvent is None:
-            inputEvent = orca_state.lastNonModifierKeyEvent
-
-        if not inputEvent or inputEvent.event_string == "F2":
-            bound = self.getDefaultKeyBindings().getBoundBindings()
-            title = messages.shortcutsFoundOrca(len(bound))
-        else:
-            appName = AXObject.get_name(self.app) or messages.APPLICATION_NO_NAME
-            bound = self.getAppKeyBindings().getBoundBindings()
-            bound.extend(self.getToolkitKeyBindings().getBoundBindings())
-            title = messages.shortcutsFoundApp(len(bound), appName)
-
-        if not bound:
-            self.presentMessage(title)
-            return True
-
-        self.exitLearnMode()
-
-        rows = [(kb.handler.function,
-                 kb.handler.description,
-                 kb.asString()) for kb in bound]
-        sorted(rows, key=lambda cmd: cmd[2])
-
-        header1 = guilabels.KB_HEADER_FUNCTION
-        header2 = guilabels.KB_HEADER_KEY_BINDING
-        commandlist.showUI(title, ("", header1, header2), rows, False)
-        return True
-
     def findNext(self, inputEvent):
         """Searches forward for the next instance of the string
         searched for via the Orca Find dialog.  Other than direction
@@ -874,8 +781,8 @@ class Script(script.Script):
 
         if self.flatReviewPresenter.is_active():
             if self.isBrailleBeginningShowing():
-                self.flatReviewPresenter.go_start_of_line()
-                self.flatReviewPresenter.go_previous_character(inputEvent)
+                self.flatReviewPresenter.go_start_of_line(self, inputEvent)
+                self.flatReviewPresenter.go_previous_character(self, inputEvent)
             else:
                 self.panBrailleInDirection(panAmount, panToLeft=True)
 
@@ -908,7 +815,7 @@ class Script(script.Script):
             if not movedCaret and AXUtilities.is_terminal(orca_state.locusOfFocus):
                 context = self.getFlatReviewContext()
                 context.goBegin(flat_review.Context.LINE)
-                self.reviewPreviousCharacter(inputEvent)
+                self.flatReviewPresenter.go_previous_character(self, inputEvent)
         else:
             self.panBrailleInDirection(panAmount, panToLeft=True)
             # We might be panning through a flashed message.
@@ -946,10 +853,10 @@ class Script(script.Script):
 
         if self.flatReviewPresenter.is_active():
             if self.isBrailleEndShowing():
-                self.flatReviewPresenter.go_end_of_line()
+                self.flatReviewPresenter.go_end_of_line(self, inputEvent)
                 # Reviewing the next character also updates the braille output
                 # and refreshes the display.
-                self.flatReviewPresenter.go_next_character(input_event)
+                self.flatReviewPresenter.go_next_character(self, inputEvent)
                 return
             self.panBrailleInDirection(panAmount, panToLeft=False)
             self._setFlatReviewContextToBeginningOfBrailleDisplay()
@@ -992,7 +899,8 @@ class Script(script.Script):
         """Returns to the component with focus."""
 
         if self.flatReviewPresenter.is_active():
-            return self.flatReviewPresenter.quit()
+            self.flatReviewPresenter.quit()
+            return True
 
         return braille.returnToRegionWithFocus(inputEvent)
 
@@ -1044,11 +952,11 @@ class Script(script.Script):
         self.oldMouseCoordinates = self.utilities.absoluteMouseCoordinates()
         self.lastMouseRoutingTime = time.time()
         if self.flatReviewPresenter.is_active():
-            self.flatReviewPresenter.route_pointer_to_object()
+            self.flatReviewPresenter.route_pointer_to_object(self, inputEvent)
             return True
 
-        if eventsynthesizer.routeToCharacter(orca_state.locusOfFocus) \
-           or eventsynthesizer.routeToObject(orca_state.locusOfFocus):
+        if self.eventSynthesizer.route_to_character(orca_state.locusOfFocus) \
+           or self.eventSynthesizer.route_to_object(orca_state.locusOfFocus):
             self.presentMessage(messages.MOUSE_MOVED_SUCCESS)
             return True
 
@@ -1057,98 +965,23 @@ class Script(script.Script):
         self.presentMessage(full, brief)
         return False
 
-    def presentStatusBar(self, inputEvent):
-        """Speaks and brailles the contents of the status bar and/or default
-        button of the window with focus.
-        """
-
-        obj = orca_state.locusOfFocus
-        self.updateBraille(obj)
-
-        frame, dialog = self.utilities.frameAndDialog(obj)
-        if frame:
-            start = time.time()
-            statusbar = AXUtilities.get_status_bar(frame)
-            end = time.time()
-            msg = "DEFAULT: Time searching for status bar: %.4f" % (end - start)
-            debug.println(debug.LEVEL_INFO, msg, True)
-            if statusbar:
-                self.pointOfReference['statusBarItems'] = None
-                self.presentObject(statusbar, interrupt=True)
-                self.pointOfReference['statusBarItems'] = None
-            else:
-                full = messages.STATUS_BAR_NOT_FOUND_FULL
-                brief = messages.STATUS_BAR_NOT_FOUND_BRIEF
-                self.presentMessage(full, brief)
-
-            infobar = self.utilities.infoBar(frame)
-            if infobar:
-                speech.speak(self.speechGenerator.generateSpeech(infobar))
-
-        window = dialog or frame
-        if window:
-            speech.speak(self.speechGenerator.generateDefaultButton(window))
-
-    def presentTitle(self, inputEvent):
-        """Speaks and brailles the title of the window with focus."""
-
-        obj = orca_state.locusOfFocus
-        if self.utilities.isDead(obj):
-            obj = orca_state.activeWindow
-
-        if not obj or self.utilities.isDead(obj):
-            self.presentMessage(messages.LOCATION_NOT_FOUND_FULL)
-            return True
-
-        title = self.speechGenerator.generateTitle(obj)
-        for (string, voice) in title:
-            self.presentMessage(string, voice=voice)
-
-    def readCharAttributes(self, inputEvent=None):
-        """Reads the attributes associated with the current text character.
-        Calls outCharAttributes to speak a list of attributes. By default,
-        a certain set of attributes will be spoken. If this is not desired,
-        then individual application scripts should override this method to
-        only speak the subset required.
-        """
-
-        attrs, start, end = self.utilities.textAttributes(orca_state.locusOfFocus, None, True)
-
-        # Get a dictionary of text attributes that the user cares about.
-        [userAttrList, userAttrDict] = self.utilities.stringToKeysAndDict(
-            _settingsManager.getSetting('enabledSpokenTextAttributes'))
-
-        nullValues = ['0', '0mm', 'none', 'false']
-        for key in userAttrList:
-            # Convert the standard key into the non-standard implementor variant.
-            appKey = self.utilities.getAppNameForAttribute(key)
-            value = attrs.get(appKey)
-            ignoreIfValue = userAttrDict.get(key)
-            if value in nullValues and ignoreIfValue in nullValues:
-                continue
-
-            if value and value != ignoreIfValue:
-                self.speakMessage(self.utilities.localizeTextAttribute(key, value))
-
-        return True
-
     def leftClickReviewItem(self, inputEvent=None):
         """Performs a left mouse button click on the current item."""
 
         if self.flatReviewPresenter.is_active():
             obj = self.flatReviewPresenter.get_current_object(self, inputEvent)
-            if eventsynthesizer.tryAllClickableActions(obj):
+            if self.eventSynthesizer.try_all_clickable_actions(obj):
                 return True
-            return self.flatReviewPresenter.left_click_on_object()
+            return self.flatReviewPresenter.left_click_on_object(self, inputEvent)
 
-        if eventsynthesizer.tryAllClickableActions(orca_state.locusOfFocus):
+        if self.eventSynthesizer.try_all_clickable_actions(orca_state.locusOfFocus):
             return True
 
         if self.utilities.queryNonEmptyText(orca_state.locusOfFocus):
-            if eventsynthesizer.clickCharacter(orca_state.locusOfFocus, 1):
+            if self.eventSynthesizer.click_character(orca_state.locusOfFocus, 1):
                 return True
 
-        if eventsynthesizer.clickObject(orca_state.locusOfFocus, 1):
+        if self.eventSynthesizer.click_object(orca_state.locusOfFocus, 1):
             return True
 
         full = messages.LOCATION_NOT_FOUND_FULL
@@ -1160,13 +993,13 @@ class Script(script.Script):
         """Performs a right mouse button click on the current item."""
 
         if self.flatReviewPresenter.is_active():
-            self.flatReviewPresenter.right_click_on_object(script)
+            self.flatReviewPresenter.right_click_on_object(self, inputEvent)
             return True
 
-        if eventsynthesizer.clickCharacter(orca_state.locusOfFocus, 3):
+        if self.eventSynthesizer.click_character(orca_state.locusOfFocus, 3):
             return True
 
-        if eventsynthesizer.clickObject(orca_state.locusOfFocus, 3):
+        if self.eventSynthesizer.click_object(orca_state.locusOfFocus, 3):
             return True
 
         full = messages.LOCATION_NOT_FOUND_FULL
@@ -1237,53 +1070,6 @@ class Script(script.Script):
         self.presentMessage(messages.PROFILE_CHANGED % name, name)
         return True
 
-    def doWhereAmI(self, inputEvent, basicOnly):
-        """Peforms the whereAmI operation.
-
-        Arguments:
-        - inputEvent:     The original inputEvent
-        """
-
-        if self.spellcheck and self.spellcheck.isActive():
-            self.spellcheck.presentErrorDetails(not basicOnly)
-
-        obj = orca_state.locusOfFocus
-        if self.utilities.isDead(obj):
-            obj = orca_state.activeWindow
-
-        if not obj or self.utilities.isDead(obj):
-            self.presentMessage(messages.LOCATION_NOT_FOUND_FULL)
-            return True
-
-        self.updateBraille(obj)
-
-        if basicOnly:
-            formatType = 'basicWhereAmI'
-        else:
-            formatType = 'detailedWhereAmI'
-        speech.speak(self.speechGenerator.generateSpeech(
-            self.utilities.realActiveAncestor(obj),
-            alreadyFocused=True,
-            formatType=formatType,
-            forceMnemonic=True,
-            forceList=True,
-            forceTutorial=True))
-
-        return True
-
-    def whereAmIBasic(self, inputEvent):
-        """Speaks basic information about the current object of interest.
-        """
-
-        self.doWhereAmI(inputEvent, True)
-
-    def whereAmIDetailed(self, inputEvent):
-        """Speaks detailed/custom information about the current object of
-        interest.
-        """
-
-        self.doWhereAmI(inputEvent, False)
-
     def cycleDebugLevel(self, inputEvent=None):
         levels = [debug.LEVEL_ALL, "all",
                   debug.LEVEL_FINEST, "finest",
@@ -1305,50 +1091,9 @@ class Script(script.Script):
 
         debug.debugLevel = levels[levelIndex]
         briefMessage = levels[levelIndex + 1]
-        fullMessage =  "Debug level %s." % briefMessage
+        fullMessage =  f"Debug level {briefMessage}."
         self.presentMessage(fullMessage, briefMessage)
 
-        return True
-
-    def whereAmILink(self, inputEvent=None, link=None):
-        link = link or orca_state.locusOfFocus
-        if not self.utilities.isLink(link):
-            self.presentMessage(messages.NOT_ON_A_LINK)
-        else:
-            speech.speak(self.speechGenerator.generateLinkInfo(link))
-        return True
-
-    def _whereAmISelectedText(self, inputEvent, obj):
-        text, startOffset, endOffset = self.utilities.allSelectedText(obj)
-        if self.utilities.shouldVerbalizeAllPunctuation(obj):
-            text = self.utilities.verbalizeAllPunctuation(text)
-
-        if not text:
-            msg = messages.NO_SELECTED_TEXT
-        else:
-            msg = messages.SELECTED_TEXT_IS % text
-        self.speakMessage(msg)
-        return True
-
-    def whereAmISelection(self, inputEvent=None, obj=None):
-        obj = obj or orca_state.locusOfFocus
-        if not obj:
-            return True
-
-        container = self.utilities.getSelectionContainer(obj)
-        if not container:
-            msg = "INFO: Selection container not found for %s" % obj
-            debug.println(debug.LEVEL_INFO, msg, True)
-            return self._whereAmISelectedText(inputEvent, obj)
-
-        count = self.utilities.selectedChildCount(container)
-        childCount = self.utilities.selectableChildCount(container)
-        self.presentMessage(messages.selectedItemsCount(count, childCount))
-        if not count:
-            return True
-
-        utterances = self.speechGenerator.generateSelectedItems(container)
-        speech.speak(utterances)
         return True
 
     ########################################################################
@@ -1419,7 +1164,7 @@ class Script(script.Script):
         if self.stopSpeechOnActiveDescendantChanged(event):
             self.presentationInterrupt()
 
-        msg = "DEFAULT: Setting locus of focus to any_data %s" % event.any_data
+        msg = f"DEFAULT: Setting locus of focus to any_data {event.any_data}"
         debug.println(debug.LEVEL_INFO, msg, True)
         orca.setLocusOfFocus(event, event.any_data)
 
@@ -1480,18 +1225,24 @@ class Script(script.Script):
         if event.source != orca_state.locusOfFocus and AXUtilities.is_focused(event.source):
             topLevelObject = self.utilities.topLevelObject(event.source)
             if self.utilities.isSameObject(orca_state.activeWindow, topLevelObject):
-                msg = "DEFAULT: Updating locusOfFocus from %s to %s" % \
-                      (orca_state.locusOfFocus, event.source)
+                msg = (
+                    f"DEFAULT: Updating locusOfFocus from {orca_state.locusOfFocus} "
+                    f"to {event.source}"
+                )
                 debug.println(debug.LEVEL_INFO, msg, True)
                 orca.setLocusOfFocus(event, event.source, False)
             else:
-                msg = "DEFAULT: Source window (%s) is not active window(%s)" \
-                      % (topLevelObject, orca_state.activeWindow)
+                msg = (
+                    f"DEFAULT: Source window ({topLevelObject}) is not "
+                    f"active window({orca_state.activeWindow})"
+                )
                 debug.println(debug.LEVEL_INFO, msg, True)
 
         if event.source != orca_state.locusOfFocus:
-            msg = "DEFAULT: Event source (%s) is not locusOfFocus (%s)" \
-                  % (event.source, orca_state.locusOfFocus)
+            msg = (
+                f"DEFAULT: Event source ({event.source}) is not "
+                f"locusOfFocus ({orca_state.locusOfFocus})"
+            )
             debug.println(debug.LEVEL_INFO, msg, True)
             return
 
@@ -1502,7 +1253,7 @@ class Script(script.Script):
         try:
             text.caretOffset
         except Exception:
-            msg = "DEFAULT: Exception getting caretOffset for %s" % event.source
+            msg = f"DEFAULT: Exception getting caretOffset for {event.source}"
             debug.println(debug.LEVEL_INFO, msg, True)
             return
 
@@ -1530,7 +1281,7 @@ class Script(script.Script):
         descriptions = self.pointOfReference.get('description', {})
         oldDescription = descriptions.get(hash(obj))
         if oldDescription == event.any_data:
-            msg = "DEFAULT: Old description (%s) is the same as new one" % oldDescription
+            msg = f"DEFAULT: Old description ({oldDescription}) is the same as new one"
             debug.println(debug.LEVEL_INFO, msg, True)
             return
 
@@ -1626,7 +1377,7 @@ class Script(script.Script):
         names = self.pointOfReference.get('names', {})
         oldName = names.get(hash(event.source))
         if oldName == event.any_data:
-            msg = "DEFAULT: Old name (%s) is the same as new name" % oldName
+            msg = f"DEFAULT: Old name ({oldName}) is the same as new name"
             debug.println(debug.LEVEL_INFO, msg, True)
             return
 
@@ -1674,7 +1425,7 @@ class Script(script.Script):
             return
 
         if not self.utilities.isSameObject(orca_state.locusOfFocus, event.source):
-            msg = "DEFAULT: Event is not for locusOfFocus %s" % orca_state.locusOfFocus
+            msg = f"DEFAULT: Event is not for locusOfFocus {orca_state.locusOfFocus}"
             debug.println(debug.LEVEL_INFO, msg, True)
             return
 
@@ -1751,24 +1502,23 @@ class Script(script.Script):
         if mouse_review != None:
             mouseReviewItem = mouse_review.getCurrentItem()
 
-        mouseReviewItem = mouse_review.reviewer.getCurrentItem()
         selectedChildren = self.utilities.selectedChildren(event.source)
         for child in selectedChildren:
             if AXObject.find_ancestor(orca_state.locusOfFocus, lambda x: x == child):
-                msg = "DEFAULT: Child %s is ancestor of locusOfFocus" % child
+                msg = f"DEFAULT: Child {child} is ancestor of locusOfFocus"
                 debug.println(debug.LEVEL_INFO, msg, True)
                 self._saveFocusedObjectInfo(orca_state.locusOfFocus)
                 return
 
             if child == mouseReviewItem:
-                msg = "DEFAULT: Child %s is current mouse review item" % child
+                msg = f"DEFAULT: Child {child} is current mouse review item"
                 debug.println(debug.LEVEL_INFO, msg, True)
                 continue
 
             if AXUtilities.is_page_tab(child) and orca_state.locusOfFocus \
                and AXObject.get_name(child) == AXObject.get_name(orca_state.locusOfFocus) \
                and not AXUtilities.is_focused(event.source):
-                msg = "DEFAULT: %s's selection redundant to %s" % (child, orca_state.locusOfFocus)
+                msg = f"DEFAULT: {child}'s selection redundant to {orca_state.locusOfFocus}"
                 debug.println(debug.LEVEL_INFO, msg, True)
                 break
 
@@ -2028,11 +1778,11 @@ class Script(script.Script):
             value = obj.queryValue()
             currentValue = value.currentValue
         except NotImplementedError:
-            msg = "ERROR: %s doesn't implement AtspiValue" % obj
+            msg = f"ERROR: {obj} doesn't implement AtspiValue"
             debug.println(debug.LEVEL_INFO, msg, True)
             return
         except Exception:
-            msg = "ERROR: Exception getting current value for %s" % obj
+            msg = f"ERROR: Exception getting current value for {obj}"
             debug.println(debug.LEVEL_INFO, msg, True)
             return
 
@@ -2041,11 +1791,11 @@ class Script(script.Script):
             return
 
         isProgressBarUpdate, msg = self.utilities.isProgressBarUpdate(obj)
-        msg = "DEFAULT: Is progress bar update: %s, %s" % (isProgressBarUpdate, msg)
+        msg = f"DEFAULT: Is progress bar update: {isProgressBarUpdate}, {msg}"
         debug.println(debug.LEVEL_INFO, msg, True)
 
         if not isProgressBarUpdate and obj != orca_state.locusOfFocus:
-            msg = "DEFAULT: Source != locusOfFocus (%s)" % orca_state.locusOfFocus
+            msg = f"DEFAULT: Source != locusOfFocus ({orca_state.locusOfFocus})"
             debug.println(debug.LEVEL_INFO, msg, True)
             return
 
@@ -2110,7 +1860,7 @@ class Script(script.Script):
             return
 
         if event.source != orca_state.activeWindow:
-            msg = "DEFAULT: Ignoring event. Not for active window %s." % orca_state.activeWindow
+            msg = f"DEFAULT: Ignoring event. Not for active window {orca_state.activeWindow}."
             debug.println(debug.LEVEL_INFO, msg, True)
             return
 
@@ -2133,7 +1883,7 @@ class Script(script.Script):
         orca.setLocusOfFocus(event, None)
         orca.setActiveWindow(None)
         _scriptManager.setActiveScript(None, "Window deactivated")
-        orca_state.learnModeEnabled = False
+        self.learnModePresenter.quit()
 
     def onClipboardContentsChanged(self, *args):
         if self.flatReviewPresenter.is_active():
@@ -2632,7 +2382,7 @@ class Script(script.Script):
 
     def presentObject(self, obj, **args):
         interrupt = args.get("interrupt", False)
-        msg = "DEFAULT: Presenting object %s. Interrupt: %s" % (obj, interrupt)
+        msg = f"DEFAULT: Presenting object {obj}. Interrupt: {interrupt}"
         debug.println(debug.LEVEL_INFO, msg, True)
 
         if not args.get("speechonly", False):
@@ -2718,7 +2468,7 @@ class Script(script.Script):
         def isTextOrComponent(x):
             return isinstance(x, (braille.ReviewText, braille.ReviewComponent))
 
-        regions = self.flatReviewPresenter.get_braille_regions()[0]
+        regions = self.flatReviewPresenter.get_braille_regions(self)[0]
         regions = list(filter(isTextOrComponent, regions))
         msg = "DEFAULT: Text/Component regions on line:\n%s" % "\n".join(map(str, regions))
         debug.println(debug.LEVEL_INFO, msg, True)
@@ -2754,15 +2504,17 @@ class Script(script.Script):
         if word:
             msg = "DEFAULT: Setting start of display to %s, %i" % (str(word), charOffset)
             debug.println(debug.LEVEL_INFO, msg, True)
-            self.flatReviewContext.setCurrent(
+            context = self.getFlatReviewContext()
+            context.setCurrent(
                 word.zone.line.index,
                 word.zone.index,
                 word.index,
                 charOffset)
         else:
-            msg = "DEFAULT: Setting start of display to %s" % region.zone
+            msg = f"DEFAULT: Setting start of display to {region.zone}"
             debug.println(debug.LEVEL_INFO, msg, True)
-            self.flatReviewContext.setCurrent(
+            context = self.getFlatReviewContext()
+            context.setCurrent(
                 region.zone.line.index,
                 region.zone.index,
                 0, # word index
@@ -2880,10 +2632,10 @@ class Script(script.Script):
 
                 context = speechserver.SayAllContext(
                     obj, lineString, startOffset, endOffset)
-                msg = "DEFAULT %s" % context
+                msg = f"DEFAULT {context}"
                 debug.println(debug.LEVEL_INFO, msg, True)
                 self._sayAllContexts.append(context)
-                eventsynthesizer.scrollIntoView(obj, startOffset, endOffset)
+                self.eventSynthesizer.scroll_into_view(obj, startOffset, endOffset)
                 yield [context, voice]
 
             moreLines = False
@@ -2921,7 +2673,7 @@ class Script(script.Script):
         except NotImplementedError:
             return ["", 0, 0]
         except Exception:
-            msg = "DEFAULT: Exception getting offset and length for %s" % obj
+            msg = f"DEFAULT: Exception getting offset and length for {obj}"
             debug.println(debug.LEVEL_INFO, msg, True)
             return ["", 0, 0]
 
@@ -3077,9 +2829,8 @@ class Script(script.Script):
             self._sayAllIsInterrupted = False
             self.utilities.clearCachedCommandState()
 
-        if not orca_state.learnModeEnabled:
-            if not event.shouldEcho or event.isOrcaModified():
-                return False
+        if not event.shouldEcho or event.isOrcaModified():
+            return False
 
         role = AXObject.get_role(orca_state.locusOfFocus)
         if role in [Atspi.Role.DIALOG, Atspi.Role.FRAME, Atspi.Role.WINDOW]:
@@ -3098,10 +2849,6 @@ class Script(script.Script):
         orcaModifierPressed = event.isOrcaModifier() and event.isPressedKey()
         if event.isCharacterEchoable() and not orcaModifierPressed:
             return False
-        if orca_state.learnModeEnabled:
-            if event.isPrintableKey() and event.getClickCount() == 2:
-                self.phoneticSpellCurrentItem(event.event_string)
-                return True
 
         msg = "DEFAULT: Presenting keyboard event"
         debug.println(debug.LEVEL_INFO, msg, True)
@@ -3607,23 +3354,3 @@ class Script(script.Script):
         """
         speech.speak(messages.UNICODE % \
                          self.utilities.unicodeValueString(character))
-
-    def presentSizeAndPosition(self, inputEvent):
-        """ Presents the size and position of the locusOfFocus. """
-
-        if self.flatReviewPresenter.is_active():
-            obj = self.flatReviewPresenter.get_current_object(self, inputEvent)
-        else:
-            obj = orca_state.locusOfFocus
-
-        x, y, width, height = self.utilities.getBoundingBox(obj)
-        if (x, y, width, height) == (-1, -1, 0, 0):
-            full = messages.LOCATION_NOT_FOUND_FULL
-            brief = messages.LOCATION_NOT_FOUND_BRIEF
-            self.presentMessage(full, brief)
-            return True
-
-        full = messages.SIZE_AND_POSITION_FULL % (width, height, x, y)
-        brief = messages.SIZE_AND_POSITION_BRIEF % (width, height, x, y)
-        self.presentMessage(full, brief)
-        return True
