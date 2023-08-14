@@ -42,20 +42,11 @@ SHIFT_ALT_MODIFIER_MASK = keybindings.SHIFT_ALT_MODIFIER_MASK
 
 keymap = (
 
-    ("f", defaultModifierMask, ORCA_MODIFIER_MASK,
-    "readCharAttributesHandler"),
-
-    ("h", defaultModifierMask, ORCA_MODIFIER_MASK,
-    "enterLearnModeHandler", 1),
-
     ("space", defaultModifierMask, ORCA_MODIFIER_MASK,
     "preferencesSettingsHandler"),
 
     ("space", defaultModifierMask, ORCA_CTRL_MODIFIER_MASK,
     "appPreferencesSettingsHandler"),
-
-    ("Up", defaultModifierMask, ORCA_SHIFT_MODIFIER_MASK,
-    "whereAmISelectionHandler"),
 
     ("BackSpace", defaultModifierMask, ORCA_MODIFIER_MASK,
     "bypassNextCommandHandler"),
@@ -80,14 +71,5 @@ keymap = (
     "panBrailleRightHandler"),
 
     ("", defaultModifierMask, NO_MODIFIER_MASK,
-    "toggleMouseReviewHandler"),
-
-    ("", defaultModifierMask, NO_MODIFIER_MASK,
     "shutdownHandler"),
-
-    ("", defaultModifierMask, NO_MODIFIER_MASK,
-    "whereAmILinkHandler"),
-
-    ("", defaultModifierMask, NO_MODIFIER_MASK,
-    "presentSizeAndPositionHandler"),
 )

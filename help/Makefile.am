@@ -2,7 +2,7 @@
 
 HELP_ID = orca
 HELP_MEDIA = \
-	figures/orca-logo.png
+	figures/orca-logo.svg
 
 HELP_FILES = \
 	commands_bookmarks.page \
@@ -58,4 +58,4 @@ HELP_FILES = \
 	preferences_text_attributes.page \
 	preferences_voice.page
 
-HELP_LINGUAS = bg cs da de el es fr gl hu id pt_BR ru sl sv uk
+HELP_LINGUAS = bg cs da de el es fa fr gl hu id pt_BR ru sl sv uk

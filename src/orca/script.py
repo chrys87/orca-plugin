@@ -43,6 +43,8 @@ import gi
 gi.require_version("Atspi", "2.0")
 from gi.repository import Atspi
 
+from . import ax_event_synthesizer
+from . import action_presenter
 from . import braille_generator
 from . import date_and_time_presenter
 from . import debug
@@ -51,6 +53,8 @@ from . import flat_review_presenter
 from . import formatting
 from . import keybindings
 from . import label_inference
+from . import learn_mode_presenter
+from . import mouse_review
 from . import notification_presenter
 from . import object_navigator
 from . import orca_state
@@ -64,6 +68,7 @@ from . import speech_generator
 from . import structural_navigation
 from . import bookmarks
 from . import tutorialgenerator
+from . import where_am_i_presenter
 from .ax_object import AXObject
 
 _eventManager = event_manager.getManager()
@@ -108,6 +113,11 @@ class Script:
         self.speechAndVerbosityManager = self.getSpeechAndVerbosityManager()
         self.dateAndTimePresenter = self.getDateAndTimePresenter()
         self.objectNavigator = self.getObjectNavigator()
+        self.whereAmIPresenter = self.getWhereAmIPresenter()
+        self.learnModePresenter = self.getLearnModePresenter()
+        self.mouseReviewer = self.getMouseReviewer()
+        self.eventSynthesizer = self.getEventSynthesizer()
+        self.actionPresenter = self.getActionPresenter()
 
         self.chat = self.getChat()
         self.inputEventHandlers = {}
@@ -128,7 +138,7 @@ class Script:
         self.findCommandRun = False
         self._lastCommandWasStructNav = False
 
-        msg = 'SCRIPT: %s initialized' % self.name
+        msg = f'SCRIPT: {self.name} initialized'
         debug.println(debug.LEVEL_INFO, msg, True)
 
     def getListeners(self):
@@ -244,6 +254,21 @@ class Script:
     def getSpeechAndVerbosityManager(self):
         return speech_and_verbosity_manager.getManager()
 
+    def getWhereAmIPresenter(self):
+        return where_am_i_presenter.getPresenter()
+
+    def getLearnModePresenter(self):
+        return learn_mode_presenter.getPresenter()
+
+    def getActionPresenter(self):
+        return action_presenter.getPresenter()
+
+    def getMouseReviewer(self):
+        return mouse_review.getReviewer()
+
+    def getEventSynthesizer(self):
+        return ax_event_synthesizer.getSynthesizer()
+
     def useStructuralNavigationModel(self, debugOutput=True):
         """Returns True if we should use structural navigation. Most
         scripts will have no need to override this.  Gecko does however
@@ -357,34 +382,33 @@ class Script:
     def _getQueuedEvent(self, eventType, detail1=None, detail2=None, any_data=None):
         cachedEvent, eventTime = self.eventCache.get(eventType, [None, 0])
         if not cachedEvent:
-            msg = "SCRIPT: No queued event of type %s" % eventType
+            msg = f"SCRIPT: No queued event of type {eventType}"
             debug.println(debug.LEVEL_INFO, msg, True)
             return None
 
         if detail1 is not None and detail1 != cachedEvent.detail1:
-            msg = "SCRIPT: Queued event's detail1 (%s) doesn't match %s" \
-                % (cachedEvent.detail1, detail1)
+            msg = f"SCRIPT: Queued event's detail1 ({cachedEvent.detail1}) doesn't match {detail1}"
             debug.println(debug.LEVEL_INFO, msg, True)
             return None
 
         if detail2 is not None and detail2 != cachedEvent.detail2:
-            msg = "SCRIPT: Queued event's detail2 (%s) doesn't match %s" \
-                % (cachedEvent.detail2, detail2)
+            msg = f"SCRIPT: Queued event's detail2 ({cachedEvent.detail2}) doesn't match {detail2}"
             debug.println(debug.LEVEL_INFO, msg, True)
             return None
 
         if any_data is not None and any_data != cachedEvent.any_data:
-            msg = "SCRIPT: Queued event's any_data (%s) doesn't match %s" \
-                % (cachedEvent.any_data, any_data)
+            msg = (
+                f"SCRIPT: Queued event's any_data ({cachedEvent.any_data}) "
+                f"doesn't match {any_data}"
+            )
             debug.println(debug.LEVEL_INFO, msg, True)
             return None
 
-        msg = "SCRIPT: Found matching queued event: %s (%s,%s,%s) on %s" \
-            % (cachedEvent.type,
-               cachedEvent.detail1,
-               cachedEvent.detail2,
-               cachedEvent.any_data,
-               cachedEvent.source)
+        msg = (
+            f"SCRIPT: Found matching queued event: {cachedEvent.type} "
+            f"({cachedEvent.detail1},{cachedEvent.detail2},{cachedEvent.any_data}) "
+            f"on {cachedEvent.source}"
+        )
         debug.println(debug.LEVEL_INFO, msg, True)
         return cachedEvent
 
@@ -429,7 +453,7 @@ class Script:
 
         if skip:
             eventDetails = '        %s' % str(cachedEvent).replace('\t', ' ' * 8)
-            msg = 'SCRIPT: Skipping object event due to %s\n%s' % (reason, eventDetails)
+            msg = f'SCRIPT: Skipping object event due to {reason}\n{eventDetails}'
             debug.println(debug.LEVEL_INFO, msg, True)
 
         return skip

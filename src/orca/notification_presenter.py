@@ -30,9 +30,9 @@ __copyright__ = "Copyright (c) 2023 Igalia, S.L." \
                 "Copyright (c) 2010 Informal Informatica LTDA."
 __license__   = "LGPL"
 
-import gi
 import time
 
+import gi
 gi.require_version('Gtk', '3.0')
 from gi.repository import GObject
 from gi.repository import Gtk
@@ -74,13 +74,15 @@ class NotificationPresenter:
     def save_notification(self, message):
         """Adds message to the list of notification messages."""
 
-        msg = "NOTIFICATION PRESENTER: Adding '%s'." % message
+        msg = f"NOTIFICATION PRESENTER: Adding '{message}'."
         debug.println(debug.LEVEL_INFO, msg, True)
         to_remove = max(len(self._notifications) - self._max_size + 1, 0)
         self._notifications = self._notifications[to_remove:]
         self._notifications.append([message, time.time()])
 
     def clear_list(self):
+        """Clears the notifications list."""
+
         msg = "NOTIFICATION PRESENTER: Clearing list."
         debug.println(debug.LEVEL_INFO, msg, True)
         self._notifications = []
@@ -164,7 +166,7 @@ class NotificationPresenter:
         days = round(diff / 86400)
         return messages.daysAgo(days)
 
-    def _present_last_notification(self, script, event):
+    def _present_last_notification(self, script, event=None):
         """Presents the last notification."""
 
         if not self._notifications:
@@ -175,20 +177,22 @@ class NotificationPresenter:
         debug.println(debug.LEVEL_INFO, msg, True)
 
         message, timestamp = self._notifications[-1]
-        string = "%s %s" % (message, self._timestamp_to_string(timestamp))
+        string = f"{message} {self._timestamp_to_string(timestamp)}"
         script.presentMessage(string)
         self._current_index = -1
         return True
 
-    def _present_previous_notification(self, script, event):
+    def _present_previous_notification(self, script, event=None):
         """Presents the previous notification."""
 
         if not self._notifications:
             script.presentMessage(messages.NOTIFICATION_NO_MESSAGES)
             return True
 
-        msg = "NOTIFICATION PRESENTER: Presenting previous notification. " \
-              "Current index: %i" % self._current_index
+        msg = (
+            f"NOTIFICATION PRESENTER: Presenting previous notification. "
+            f"Current index: {self._current_index}"
+        )
         debug.println(debug.LEVEL_INFO, msg, True)
 
         # This is the first (oldest) message in the list.
@@ -206,19 +210,21 @@ class NotificationPresenter:
                 script.presentMessage(messages.NOTIFICATION_LIST_TOP)
                 message, timestamp = self._notifications[self._current_index]
 
-        string = "%s %s" % (message, self._timestamp_to_string(timestamp))
+        string = f"{message} {self._timestamp_to_string(timestamp)}"
         script.presentMessage(string)
         return True
 
-    def _present_next_notification(self, script, event):
+    def _present_next_notification(self, script, event=None):
         """Presents the next notification."""
 
         if not self._notifications:
             script.presentMessage(messages.NOTIFICATION_NO_MESSAGES)
             return True
 
-        msg = "NOTIFICATION PRESENTER: Presenting next notification. " \
-              "Current index: %i" % self._current_index
+        msg = (
+            f"NOTIFICATION PRESENTER: Presenting next notification. "
+            f"Current index: {self._current_index}"
+        )
         debug.println(debug.LEVEL_INFO, msg, True)
 
         # This is the last (newest) message in the list.
@@ -236,11 +242,11 @@ class NotificationPresenter:
                 script.presentMessage(messages.NOTIFICATION_LIST_BOTTOM)
                 message, timestamp = self._notifications[self._current_index]
 
-        string = "%s %s" % (message, self._timestamp_to_string(timestamp))
+        string = f"{message} {self._timestamp_to_string(timestamp)}"
         script.presentMessage(string)
         return True
 
-    def _show_notification_list(self, script, event):
+    def _show_notification_list(self, script, event=None):
         """Opens a dialog with a list of the notifications."""
 
         if not self._notifications:
@@ -252,7 +258,7 @@ class NotificationPresenter:
 
         rows = [(message, self._timestamp_to_string(timestamp)) \
                     for message, timestamp in reversed(self._notifications)]
-        title = guilabels.NOTIFICATIONS_COUNT % len(self._notifications)
+        title = guilabels.notifications_count(len(self._notifications))
         column_headers = [guilabels.NOTIFICATIONS_COLUMN_HEADER,
                           guilabels.NOTIFICATIONS_RECEIVED_TIME]
         self._gui = NotificationListGUI(script, title, column_headers, rows)
@@ -260,16 +266,19 @@ class NotificationPresenter:
         return True
 
     def on_dialog_destroyed(self):
+        """Handler for the 'destroyed' signal of the dialog."""
+
         self._gui = None
 
 class NotificationListGUI:
+    """The dialog containing the notifications list."""
 
     def __init__(self, script, title, column_headers, rows):
         self._script = script
         self._model = None
         self._gui = self._create_dialog(title, column_headers, rows)
 
-    def _create_dialog(self, title, columnHeaders, rows):
+    def _create_dialog(self, title, column_headers, rows):
         dialog = Gtk.Dialog(title,
                             None,
                             Gtk.DialogFlags.MODAL,
@@ -289,8 +298,8 @@ class NotificationListGUI:
         tree.set_vexpand(True)
         scrolled_window.add(tree)
 
-        cols = len(columnHeaders) * [GObject.TYPE_STRING]
-        for i, header in enumerate(columnHeaders):
+        cols = len(column_headers) * [GObject.TYPE_STRING]
+        for i, header in enumerate(column_headers):
             cell = Gtk.CellRendererText()
             column = Gtk.TreeViewColumn(header, cell, text=i)
             tree.append_column(column)
@@ -299,15 +308,17 @@ class NotificationListGUI:
 
         self._model = Gtk.ListStore(*cols)
         for row in rows:
-            rowIter = self._model.append(None)
+            row_iter = self._model.append(None)
             for i, cell in enumerate(row):
-                self._model.set_value(rowIter, i, cell)
+                self._model.set_value(row_iter, i, cell)
 
         tree.set_model(self._model)
         dialog.connect("response", self.on_response)
         return dialog
 
     def on_response(self, dialog, response):
+        """The handler for the 'response' signal."""
+
         if response == Gtk.ResponseType.CLOSE:
             self._gui.destroy()
             return
@@ -320,12 +331,16 @@ class NotificationListGUI:
             self._gui.destroy()
 
     def show_gui(self):
+        """Shows the notifications list dialog."""
+
         self._gui.show_all()
-        ts = orca_state.lastInputEvent.timestamp
-        if ts == 0:
-            ts = Gtk.get_current_event_time()
-        self._gui.present_with_time(ts)
+        time_stamp = orca_state.lastInputEvent.timestamp
+        if time_stamp == 0:
+            time_stamp = Gtk.get_current_event_time()
+        self._gui.present_with_time(time_stamp)
 
 _presenter = NotificationPresenter()
 def getPresenter():
+    """Returns the Notification Presenter"""
+
     return _presenter

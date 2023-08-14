@@ -35,6 +35,7 @@ import urllib.request
 import urllib.error
 import urllib.parse
 
+from . import acss
 from . import chnames
 from . import debug
 from . import generator
@@ -42,8 +43,8 @@ from . import messages
 from . import object_properties
 from . import settings
 from . import settings_manager
+from . import speech
 from . import text_attribute_names
-from . import acss
 from .ax_object import AXObject
 from .ax_utilities import AXUtilities
 
@@ -111,7 +112,7 @@ class SpeechGenerator(generator.Generator):
     def generateSpeech(self, obj, **args):
         rv = self.generate(obj, **args)
         if rv and not list(filter(lambda x: not isinstance(x, Pause), rv)):
-            msg = 'SPEECH GENERATOR: Results for %s are pauses only' % obj
+            msg = f'SPEECH GENERATOR: Results for {obj} are pauses only'
             debug.println(debug.LEVEL_INFO, msg, True)
             rv = []
 
@@ -182,7 +183,7 @@ class SpeechGenerator(generator.Generator):
 
         role = args.get('role', AXObject.get_role(obj))
         if role == Atspi.Role.MENU and self._script.utilities.isPopupMenuForCurrentItem(obj):
-            msg = 'SPEECH GENERATOR: %s is popup menu for current item.' % obj
+            msg = f'SPEECH GENERATOR: {obj} is popup menu for current item.'
             debug.println(debug.LEVEL_INFO, msg, True)
             return []
 
@@ -789,14 +790,6 @@ class SpeechGenerator(generator.Generator):
     #                                                                   #
     #####################################################################
 
-    def generateLinkInfo(self, obj, **args):
-        result = self._generateLinkInfo(obj, **args)
-        result.extend(self._generatePause(obj, **args))
-        result.append(self._generateSiteDescription(obj, **args))
-        result.extend(self._generatePause(obj, **args))
-        result.append(self._generateFileSize(obj, **args))
-        return result
-
     def _generateLinkInfo(self, obj, **args):
         """Returns an array of strings (and possibly voice and audio
         specifications) that represent the protocol of the URI of
@@ -1282,7 +1275,7 @@ class SpeechGenerator(generator.Generator):
                 continue
             args["language"], args["dialect"] = language, dialect
             if "string" in args:
-                msg = "INFO: Found existing string '%s'; using '%s'" % (args.get("string"), string)
+                msg = f"INFO: Found existing string '{args.get('string')}'; using '{string}'"
                 debug.println(debug.LEVEL_INFO, msg)
                 args.pop("string")
 
@@ -1353,13 +1346,13 @@ class SpeechGenerator(generator.Generator):
                         #
                         if key == "weight":
                             if int(attribute) > 400:
-                                attribStr += " %s" % messages.BOLD
+                                attribStr += f" {messages.BOLD}"
                         elif key == "underline":
                             if attribute != "none":
-                                attribStr += " %s" % localizedKey
+                                attribStr += f" {localizedKey}"
                         elif key == "style":
                             if attribute != "normal":
-                                attribStr += " %s" % localizedValue
+                                attribStr += f" {localizedValue}"
                         else:
                             attribStr += " "
                             attribStr += (localizedKey + " " + localizedValue)
@@ -1367,7 +1360,7 @@ class SpeechGenerator(generator.Generator):
             # Also check to see if this is a hypertext link.
             #
             if self._script.utilities.linkIndex(obj, textOffset) >= 0:
-                attribStr += " %s" % messages.LINK
+                attribStr += f" {messages.LINK}"
 
         return attribStr
 
@@ -2386,28 +2379,6 @@ class SpeechGenerator(generator.Generator):
 
         return super()._shouldPresentProgressBarUpdate(obj, **args)
 
-    def _generateDefaultButton(self, obj, **args):
-        """Returns an array of strings (and possibly voice and audio
-        specifications) that represent the default button in a dialog.
-        This method should initially be called with a top-level window.
-        """
-        result = []
-        button = AXUtilities.get_default_button(obj)
-        if AXUtilities.is_sensitive(button):
-            name = self._generateName(button)
-            if name:
-                result.append(messages.DEFAULT_BUTTON_IS % name[0])
-                result.extend(self.voice(SYSTEM, obj=obj, **args))
-
-        return result
-
-    def generateDefaultButton(self, obj, **args):
-        """Returns an array of strings (and possibly voice and audio
-        specifications) that represent the default button of the window
-        containing the object.
-        """
-        return self._generateDefaultButton(obj, **args)
-
     def _generateStatusBar(self, obj, **args):
         """Returns an array of strings (and possibly voice and audio
         specifications) that represent the status bar of a window.
@@ -2612,7 +2583,7 @@ class SpeechGenerator(generator.Generator):
         if 'madruwb' in enclosures:
             strings.append(messages.MATH_ENCLOSURE_MADRUWB)
         if not strings:
-            msg = 'INFO: Could not get enclosure message for %s' % enclosures
+            msg = f'INFO: Could not get enclosure message for {enclosures}'
             debug.println(debug.LEVEL_INFO, msg)
             return []
 
@@ -2927,10 +2898,20 @@ class SpeechGenerator(generator.Generator):
         voice = acss.ACSS(voices.get(voiceType.get(DEFAULT)))
 
         language = args.get('language')
-        dialect = args.get('dialect')
-        msg = "SPEECH GENERATOR: %s voice requested with language='%s', dialect='%s'" % \
-            (key, language, dialect)
+        dialect = args.get('dialect', '')
+        msg = (
+            f"SPEECH GENERATOR: {key} voice requested with "
+            f"language='{language}', dialect='{dialect}'"
+        )
         debug.println(debug.LEVEL_INFO, msg, True)
+
+        # This is purely for debugging. The code needed to actually switch voices
+        # does not yet exist due to some problems which need to be debugged and
+        # fixed.
+        checkVoicesForLanguage = False
+        if language and checkVoicesForLanguage:
+            server = speech.getSpeechServer()
+            server.shouldChangeVoiceForLanguage(language, dialect)
 
         if key in [None, DEFAULT]:
             string = args.get('string', '')
@@ -2950,7 +2931,7 @@ class SpeechGenerator(generator.Generator):
         string = ""
         for u in utterances:
             if isinstance(u, str):
-                string += " %s" % u
+                string += f" {u}"
             elif isinstance(u, Pause) and string and string[-1].isalnum():
                 string += "."
 

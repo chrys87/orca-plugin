@@ -29,7 +29,7 @@ __copyright__ = "Copyright (c) 2004-2009 Sun Microsystems Inc." \
                 "Copyright (c) 2010-2013 The Orca Team"
 __license__   = "LGPL"
 
-from .orca_i18n import _, C_
+from .orca_i18n import _, C_, ngettext
 
 # Translators: This string appears on a button in a dialog. "Activating" the
 # selected item will perform the action that one would expect to occur if the
@@ -274,6 +274,16 @@ KB_HEADER_KEY_BINDING = _("Key Binding")
 # to, for instance, web browsing.
 KB_GROUP_DEFAULT = C_("keybindings", "Default")
 
+# Translators: This string is a label for the group of Orca commands which
+# are related to its "learn mode". Please use the same translation as done
+# in cmdnames.py
+KB_GROUP_LEARN_MODE = C_("keybindings", "Learn mode")
+
+# Translators: This string is a label for the group of Orca commands which
+# are related to presenting and performing the accessible actions associated
+# with the current object.
+KB_GROUP_ACTIONS = _("Actions")
+
 # Translators: An external braille device has buttons on it that permit the
 # user to create input gestures from the braille device. The braille bindings
 # are what determine the actions Orca will take when the user presses these
@@ -289,8 +299,21 @@ KB_GROUP_BOOKMARKS = _("Bookmarks")
 KB_GROUP_DATE_AND_TIME = _("Date and time")
 
 # Translators: This string is a label for the group of Orca commands which
+# are related to presenting the object under the mouse pointer in speech
+# and/or braille. The translation should be consistent with the string
+# used in cmdnames.py.
+KB_GROUP_MOUSE_REVIEW = _("Mouse review")
+
+# Translators: This string is a label for the group of Orca commands which
 # are related to object navigation.
-KB_OBJECT_NAVIGATION = _("Object navigation")
+KB_GROUP_OBJECT_NAVIGATION = _("Object navigation")
+
+# Translators: This string is a label for the group of Orca commands which
+# are related to presenting information about the current location, such as
+# the title, status bar, and default button of the current window; the
+# name, role, and location of the currently-focused object; the selected
+# text in the currently-focused object; etc.
+KB_GROUP_WHERE_AM_I = _("Object details")
 
 # Translators: This string is a label for the group of Orca commands which
 # do not currently have an associated key binding.
@@ -332,22 +355,25 @@ KB_MODIFIED = C_("keybindings", "Modified")
 # Translators: This label refers to the keyboard layout (desktop or laptop).
 KEYBOARD_LAYOUT_DESKTOP = _("_Desktop")
 
-# Translators: This is a column header for a list of notification messages.
-# It will appear over the message text.
+# Translators: Orca has a feature to list all of the notification messages
+# received, similar to the functionality gnome-shell provides when you press
+# Super+M, but it works in all desktop environments. Orca's list is a table
+# with two columns, one column for the text of the notification and one
+# column for the time of the notification. This string is a column header
+# for the text of the notifications.
 NOTIFICATIONS_COLUMN_HEADER = C_("notification presenter", "Notifications")
 
-# Translators: This is a title for a dialog that will present a list of
-# notification messages.
-NOTIFICATIONS_COUNT = C_("notification presenter", "%d Notifications")
-
-# Translators: This is a column header for a list of notification messages.
-# It will appear over the time a particular notification was received. The
-# time will be relative (e.g. "10 minutes ago") or absolute.
+# Translators: Orca has a feature to list all of the notification messages
+# received, similar to the functionality gnome-shell provides when you press
+# Super+M, but it works in all desktop environments. Orca's list is a table
+# with two columns, one column for the text of the notification and one
+# column for the time of the notification. This string is a column header
+# for the time, which will be relative (e.g. "10 minutes ago") or absolute.
 NOTIFICATIONS_RECEIVED_TIME = C_("notification presenter", "Received")
 
 # Translators: This string is a label for the group of Orca commands which
 # are associated with presenting notifications.
-NOTIFICATIONS_KB_GROUP = _("Notification presenter")
+KB_GROUP_NOTIFICATIONS = _("Notification presenter")
 
 # Translators: Orca's preferences can be configured on a per-application basis,
 # allowing users to customize Orca's behavior, keybindings, etc. to work one
@@ -697,7 +723,7 @@ SN_TITLE_HEADING = C_("structural navigation", "Headings")
 # Translators: Orca has a command that presents a list of structural navigation
 # objects in a dialog box so that users can navigate more quickly than they
 # could with native keyboard navigation. This is the title of such a dialog box.
-SN_TITLE_IFRAME = C_("structural navigation", "Interal Frames")
+SN_TITLE_IFRAME = C_("structural navigation", "Internal Frames")
 
 # Translators: Orca has a command that presents a list of structural navigation
 # objects in a dialog box so that users can navigate more quickly than they
@@ -901,3 +927,13 @@ USE_STRUCTURAL_NAVIGATION = _("Enable _structural navigation")
 # Translators: This refers to the amount of information Orca provides about a
 # particular object that receives focus.
 VERBOSITY_LEVEL_BRIEF = _("Brie_f")
+
+def notifications_count(count):
+    """Returns the gui label representing the notifications count."""
+
+    # Translators: Orca has a feature to list all of the notification messages
+    # received, similar to the functionality gnome-shell provides when you press
+    # Super+M, but it works in all desktop environments. This string is the title
+    # of the dialog that contains the list of notification messages. The string
+    # substitution is for the number of messages in the list.
+    return ngettext("%d notification", "%d notifications", count) % count

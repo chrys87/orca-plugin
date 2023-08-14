@@ -380,13 +380,13 @@ class Utilities(script_utilities.Utilities):
             try:
                 topLevel = self.topLevelObject(obj)
             except Exception:
-                msg = "ERROR: Exception getting top-level object for %s" % obj
+                msg = f"ERROR: Exception getting top-level object for {obj}"
                 debug.println(debug.LEVEL_INFO, msg, True)
                 return False
             if not topLevel:
                 return False
             if self.isDead(topLevel):
-                msg = "SOFFICE: Top level object %s is dead." % topLevel
+                msg = f"SOFFICE: Top level object {topLevel} is dead."
                 debug.println(debug.LEVEL_INFO, msg, True)
                 return False
             if AXObject.get_name(topLevel).endswith("Impress"):
@@ -635,7 +635,7 @@ class Utilities(script_utilities.Utilities):
         try:
             table = obj.queryTable()
         except Exception:
-            msg = "SOFFICE: Exception querying Table interface of %s" % obj
+            msg = f"SOFFICE: Exception querying Table interface of {obj}"
             debug.println(debug.LEVEL_INFO, msg, True)
             return
 
@@ -649,12 +649,14 @@ class Utilities(script_utilities.Utilities):
         name = self.spreadSheetCellName(cell)
         if includeContents:
             text = self.displayedText(cell)
-            name = "%s %s" % (text, name)
+            name = f"{text} {name}"
 
         return name.strip()
 
     def _getCoordinatesForSelectedRange(self, obj):
         if not (AXObject.supports_table(obj) and AXObject.supports_selection(obj)):
+            msg = f"SOFFICE: {obj} does not implement both selection and table"
+            debug.println(debug.LEVEL_INFO, msg, True)
             return (-1, -1), (-1, -1)
 
         first = AXSelection.get_selected_child(obj, 0)
@@ -663,10 +665,20 @@ class Utilities(script_utilities.Utilities):
         lastCoords = self.coordinatesForCell(last)
         return firstCoords, lastCoords
 
+    def getSelectionContainer(self, obj):
+        # Writer implements the selection interface on the document and all its
+        # children. The former is interesting, but interferes with our presentation
+        # of selected text. The latter is just weird.
+        if AXUtilities.is_document_text(obj):
+            return None
+        if AXObject.find_ancestor(obj, AXUtilities.is_document_text):
+            return None
+        return super().getSelectionContainer(obj)
+
     def speakSelectedCellRange(self, obj):
         firstCoords, lastCoords = self._getCoordinatesForSelectedRange(obj)
         if firstCoords == (-1, -1) or lastCoords == (-1, -1):
-            return True
+            return False
 
         self._script.presentationInterrupt()
 

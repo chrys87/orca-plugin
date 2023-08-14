@@ -47,7 +47,9 @@ import sys
 from gi.repository import GObject
 
 gi.require_version("Atspi", "2.0")
+gi.require_version("Gdk", "3.0")
 from gi.repository import Atspi
+from gi.repository import Gdk
 
 try:
     from gi.repository.Gio import Settings
@@ -55,24 +57,11 @@ try:
 except Exception:
     a11yAppSettings = None
 
-try:
-    # This can fail due to gtk not being available.  We want to
-    # be able to recover from that if possible.  The main driver
-    # for this is to allow "orca --text-setup" to work even if
-    # the desktop is not running.
-    #
-    gi.require_version("Gtk", "3.0")
-    from gi.repository import Gtk
-
-    gi.require_version("Gdk", "3.0")
-    from gi.repository import Gdk
-except Exception:
-    pass
-
 from . import braille
 from . import debug
 from . import event_manager
 from . import keybindings
+from . import learn_mode_presenter
 from . import logger
 from . import messages
 from . import notification_presenter
@@ -105,6 +94,7 @@ from orca import gsettings_manager
 _eventManager = event_manager.getManager()
 _scriptManager = script_manager.getManager()
 _settingsManager = settings_manager.getManager()
+_learnModePresenter = learn_mode_presenter.getPresenter()
 _logger = logger.getLogger()
 
 def onEnabledChanged(gsetting, key):
@@ -146,7 +136,16 @@ CARET_TRACKING = "caret-tracking"
 FOCUS_TRACKING = "focus-tracking"
 FLAT_REVIEW = "flat-review"
 MOUSE_REVIEW = "mouse-review"
+OBJECT_NAVIGATOR = "object-navigator"
 SAY_ALL = "say-all"
+
+def getActiveModeAndObjectOfInterest():
+    msg = (
+        f"ORCA: Active mode: {orca_state.activeMode} "
+        f"Object of interest: {orca_state.objOfInterest}"
+    )
+    debug.println(debug.LEVEL_INFO, msg, True)
+    return orca_state.activeMode, orca_state.objOfInterest
 
 def emitRegionChanged(obj, startOffset=None, endOffset=None, mode=None):
     """Notifies interested clients that the current region of interest has changed."""
@@ -165,7 +164,7 @@ def emitRegionChanged(obj, startOffset=None, endOffset=None, mode=None):
         debug.println(debug.LEVEL_INFO, msg, True)
 
     if mode != orca_state.activeMode:
-        msg = "ORCA: Switching active mode from %s to %s" % (orca_state.activeMode, mode)
+        msg = f"ORCA: Switching active mode from {orca_state.activeMode} to {mode}"
         debug.println(debug.LEVEL_INFO, msg, True)
         orca_state.activeMode = mode
 
@@ -177,10 +176,12 @@ def emitRegionChanged(obj, startOffset=None, endOffset=None, mode=None):
         msg = "ORCA: Exception emitting region-changed notification"
         debug.println(debug.LEVEL_INFO, msg, True)
 
+    orca_state.objOfInterest = obj
+
 def setActiveWindow(frame, app=None, alsoSetLocusOfFocus=False, notifyScript=False):
-    msg = "ORCA: Request to set active window to %s" % frame
+    msg = f"ORCA: Request to set active window to {frame}"
     if app is not None:
-        msg += " in %s" % app
+        msg += f" in {app}"
     debug.println(debug.LEVEL_INFO, msg, True)
 
     if frame == orca_state.activeWindow:
@@ -191,7 +192,7 @@ def setActiveWindow(frame, app=None, alsoSetLocusOfFocus=False, notifyScript=Fal
     else:
         real_app, real_frame = AXObject.find_real_app_and_window_for(frame, app)
         if real_frame != frame:
-            msg = "ORCA: Correcting active window to %s in %s" % (real_frame, real_app)
+            msg = f"ORCA: Correcting active window to {real_frame} in {real_app}"
             debug.println(debug.LEVEL_INFO, msg, True)
             orca_state.activeWindow = real_frame
         else:
@@ -234,18 +235,18 @@ def setLocusOfFocus(event, obj, notifyScript=True, force=False):
         return
 
     if orca_state.activeScript:
-        msg = "ORCA: Active script is: %s" % orca_state.activeScript
+        msg = f"ORCA: Active script is: {orca_state.activeScript}"
         debug.println(debug.LEVEL_INFO, msg, True)
         if orca_state.activeScript.utilities.isZombie(obj):
-            msg = "ERROR: New locusOfFocus (%s) is zombie. Not updating." % obj
+            msg = f"ERROR: New locusOfFocus ({obj}) is zombie. Not updating."
             debug.println(debug.LEVEL_INFO, msg, True)
             return
         if orca_state.activeScript.utilities.isDead(obj):
-            msg = "ERROR: New locusOfFocus (%s) is dead. Not updating." % obj
+            msg = f"ERROR: New locusOfFocus ({obj}) is dead. Not updating."
             debug.println(debug.LEVEL_INFO, msg, True)
             return
 
-    msg = "ORCA: Changing locusOfFocus from %s to %s. Notify: %s" % (oldFocus, obj, notifyScript)
+    msg = f"ORCA: Changing locusOfFocus from {oldFocus} to {obj}. Notify: {notifyScript}"
     debug.println(debug.LEVEL_INFO, msg, True)
     orca_state.locusOfFocus = obj
 
@@ -288,7 +289,8 @@ def _processBrailleEvent(event):
     except Exception:
         debug.printException(debug.LEVEL_SEVERE)
 
-    if (not consumed) and orca_state.learnModeEnabled:
+    # TODO - JD: Is this still possible?
+    if not consumed and _learnModePresenter.is_active():
         consumed = True
 
     return consumed
@@ -414,11 +416,17 @@ def _restoreXmodmap(keyList=[]):
       to restore the entire saved xmodmap.
     """
 
+    msg = "ORCA: Attempting to restore original xmodmap"
+    debug.println(debug.LEVEL_INFO, msg, True)
+
     global _capsLockCleared
     _capsLockCleared = False
     p = subprocess.Popen(['xkbcomp', '-w0', '-', os.environ['DISPLAY']],
         stdin=subprocess.PIPE, stdout=None, stderr=None)
     p.communicate(_originalXmodmap)
+
+    msg = "ORCA: Original xmodmap restored"
+    debug.println(debug.LEVEL_INFO, msg, True)
 
 def setKeyHandling(new):
     """Toggle use of the new vs. legacy key handling mode.
@@ -523,20 +531,6 @@ def loadUserSettings(script=None, inputEvent=None, skipReloadMessage=False):
 
     return True
 
-
-def helpForOrca(script=None, inputEvent=None, page=""):
-    """Show Orca Help window (part of the GNOME Access Guide).
-
-    Returns True to indicate the input event has been consumed.
-    """
-    orca_state.learnModeEnabled = False
-    uri = "help:orca"
-    if page:
-        uri += "?%s" % page
-    Gtk.show_uri(Gdk.Screen.get_default(),
-                 uri,
-                 Gtk.get_current_event_time())
-    return True
 
 def addKeyGrab(binding):
     """ Add a key grab for the given key binding."""
@@ -733,14 +727,8 @@ exitCount = 0
 def shutdownOnSignal(signum, frame):
     global exitCount
 
-    try:
-        # Requires python 3.8
-        signalString = '(%s)' % signal.strsignal(signum)
-    except Exception:
-        signalString = ''
-
-    msg = 'ORCA: Shutting down and exiting due to signal=%d %s' % \
-        (signum, signalString)
+    signalString = f'({signal.strsignal(signum)})'
+    msg = 'ORCA: Shutting down and exiting due to signal=%d %s' % (signum, signalString)
     debug.println(debug.LEVEL_INFO, msg, True)
 
     # Well...we'll try to exit nicely, but if we keep getting called,
@@ -777,9 +765,17 @@ def shutdownOnSignal(signum, frame):
         die(EXIT_CODE_HANG)
 
 def crashOnSignal(signum, frame):
-    signal.signal(signum, signal.SIG_DFL)
+    signalString = f'({signal.strsignal(signum)})'
+    msg = 'ORCA: Shutting down and exiting due to signal=%d %s' % (signum, signalString)
+    debug.println(debug.LEVEL_SEVERE, msg, True)
+    debug.printStack(debug.LEVEL_SEVERE)
     _restoreXmodmap(_orcaModifiers)
-    os.kill(os.getpid(), signum)
+    try:
+        orca_state.activeScript.presentationInterrupt()
+        orca_state.activeScript.presentMessage(messages.STOP_ORCA, resetStyles=False)
+    except Exception:
+        pass
+    sys.exit(1)
 
 def main():
     """The main entry point for Orca.  The exit codes for Orca will
@@ -788,15 +784,15 @@ def main():
     an exit code of 0 means normal completion and an exit code of 50
     means Orca exited because of a hang."""
 
-    msg = "ORCA: Launching version %s" % orca_platform.version
+    msg = f"ORCA: Launching version {orca_platform.version}"
     if orca_platform.revision:
-        msg += " (rev %s)" % orca_platform.revision
+        msg += f" (rev {orca_platform.revision})"
 
     sessionType = os.environ.get('XDG_SESSION_TYPE') or ""
     sessionDesktop = os.environ.get('XDG_SESSION_DESKTOP') or ""
     session = "%s %s".strip() % (sessionType, sessionDesktop)
     if session:
-        msg += " session: %s" % session
+        msg += f" session: {session}"
 
     debug.println(debug.LEVEL_INFO, msg, True)
 
@@ -836,13 +832,20 @@ def main():
 
     if script:
         window = script.utilities.activeWindow()
+
         if window and not orca_state.locusOfFocus:
             app = AXObject.get_application(window)
+            setActiveWindow(window, app, alsoSetLocusOfFocus=True, notifyScript=True)
+
+            # setActiveWindow does some corrective work needed thanks to
+            # mutter-x11-frames. So retrieve the window just in case.
+            window = orca_state.activeWindow
             script = _scriptManager.getScript(app, window)
             _scriptManager.setActiveScript(script, "Launching.")
 
-            setLocusOfFocus(None, window)
             focusedObject = AXUtilities.get_focused_object(window)
+            msg = f"ORCA: Focused object is: {focusedObject}"
+            debug.println(debug.LEVEL_INFO, msg, True)
             if focusedObject:
                 setLocusOfFocus(None, focusedObject)
                 script = _scriptManager.getScript(
@@ -941,10 +944,10 @@ class Orca(GObject.Object):
         self.getDynamicApiManager().registerAPI('EventSynthesizer', eventsynthesizer)
         self.getDynamicApiManager().registerAPI('AXObject', AXObject)
         self.getDynamicApiManager().registerAPI('AXUtilities', AXUtilities)
+        self.getDynamicApiManager().registerAPI('LearnModePresenter', learn_mode_presenter)
         # orca lets say, special compat handling....
         self.getDynamicApiManager().registerAPI('EmitRegionChanged', emitRegionChanged)
         self.getDynamicApiManager().registerAPI('LoadUserSettings', loadUserSettings)
-        self.getDynamicApiManager().registerAPI('HelpForOrca', helpForOrca)
 
 orcaApp = Orca()
 

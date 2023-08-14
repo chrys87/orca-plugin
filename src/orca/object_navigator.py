@@ -18,7 +18,7 @@
 # Free Software Foundation, Inc., Franklin Street, Fifth Floor,
 # Boston MA  02110-1301 USA.
 
-"""Object for maintaining the state of the object navigator."""
+"""Provides ability to navigate objects hierarchically."""
 
 __id__        = "$Id$"
 __version__   = "$Revision$"
@@ -28,16 +28,19 @@ __license__   = "LGPL"
 
 from . import cmdnames
 from . import debug
-from . import eventsynthesizer
 from . import input_event
 from . import keybindings
 from . import messages
+from . import orca
 from . import orca_state
+from .ax_event_synthesizer import AXEventSynthesizer
 from .ax_object import AXObject
 from .ax_utilities import AXUtilities
 
 
 class ObjectNavigator:
+    """Provides ability to navigate objects hierarchically."""
+
     def __init__(self):
         self._navigator_focus = None
         self._last_navigator_focus = None
@@ -151,26 +154,23 @@ class ObjectNavigator:
         """Returns True if obj should be excluded from simple navigation."""
 
         if self._include_in_simple_navigation(obj):
-            msg = "OBJECT NAVIGATOR: Not excluding %s: explicit inclusion" % obj
+            msg = f"OBJECT NAVIGATOR: Not excluding {obj}: explicit inclusion"
             debug.println(debug.LEVEL_INFO, msg, True)
             return False
 
+        # isLayoutOnly should catch things that really should be skipped.
+        #
+        # You do not want to exclude all sections because they may be focusable, e.g.
+        # <div tabindex=0>foo</div> should not be excluded, despite the poor authoring.
+        #
+        # You do not want to exclude table cells and headers because it will make the
+        # selectable items in tables non-navigable (e.g. the mail folders in Evolution)
         if script.utilities.isLayoutOnly(obj):
-            msg = "OBJECT NAVIGATOR: Excluding %s: is layout only" % obj
+            msg = f"OBJECT NAVIGATOR: Excluding {obj}: is layout only"
             debug.println(debug.LEVEL_INFO, msg, True)
             return True
 
-        if AXUtilities.is_table_cell_or_header(obj):
-            msg = "OBJECT NAVIGATOR: Excluding %s: is table cell or header" % obj
-            debug.println(debug.LEVEL_INFO, msg, True)
-            return True
-
-        if AXUtilities.is_section(obj):
-            msg = "OBJECT NAVIGATOR: Excluding %s: is section" % obj
-            debug.println(debug.LEVEL_INFO, msg, True)
-            return True
-
-        msg = "OBJECT NAVIGATOR: Not excluding %s" % obj
+        msg = f"OBJECT NAVIGATOR: Not excluding {obj}"
         debug.println(debug.LEVEL_INFO, msg, True)
         return False
 
@@ -180,7 +180,7 @@ class ObjectNavigator:
         if not AXObject.get_child_count(obj):
             return []
 
-        children = [child for child in AXObject.iter_children(obj)]
+        children = list(AXObject.iter_children(obj))
         if not self._simplify:
             return children
 
@@ -214,17 +214,22 @@ class ObjectNavigator:
         self._navigator_focus = obj
 
     def update(self):
-        """Updates the navigator focus to Orca's locusOfFocus."""
+        """Updates the navigator focus to Orca's object of interest."""
 
-        if self._last_locus_of_focus == orca_state.locusOfFocus:
+        mode, region = orca.getActiveModeAndObjectOfInterest()
+        obj = region or orca_state.locusOfFocus
+        if self._last_locus_of_focus == obj or (region is None and mode == orca.FLAT_REVIEW):
             return
 
-        self._navigator_focus = orca_state.locusOfFocus
-        self._last_locus_of_focus = orca_state.locusOfFocus
+        self._navigator_focus = obj
+        self._last_locus_of_focus = obj
 
     def present(self, script):
         """Presents the current navigator focus to the user."""
 
+        msg = f"OBJECT NAVIGATOR: Presenting {self._navigator_focus}"
+        debug.println(debug.LEVEL_INFO, msg, True)
+        orca.emitRegionChanged(self._navigator_focus, mode=orca.OBJECT_NAVIGATOR)
         script.presentObject(self._navigator_focus, priorObj=self._last_navigator_focus)
 
     def up(self, script, event=None):
@@ -269,6 +274,7 @@ class ObjectNavigator:
                 script.presentMessage(messages.NAVIGATOR_NO_NEXT)
         else:
             self._set_navigator_focus(parent)
+            self.present(script)
 
     def previous(self, script, event=None):
         """Moves the navigator focus to the previous sibling of the current focus."""
@@ -289,12 +295,13 @@ class ObjectNavigator:
                 script.presentMessage(messages.NAVIGATOR_NO_PREVIOUS)
         else:
             self._set_navigator_focus(parent)
+            self.present(script)
 
     def toggle_simplify(self, script, event=None):
         """Toggles simplified navigation."""
 
-        self.navigator.simplify = not self.navigator.simplify
-        if self.navigator.simplify:
+        self._simplify = not self._simplify
+        if self._simplify:
             script.presentMessage(messages.NAVIGATOR_SIMPLIFIED_ENABLED)
         else:
             script.presentMessage(messages.NAVIGATOR_SIMPLIFIED_DISABLED)
@@ -302,13 +309,15 @@ class ObjectNavigator:
 
     def perform_action(self, script, event=None):
         """Attempts to click on the current focus."""
-        if eventsynthesizer.tryAllClickableActions(self._navigator_focus):
+        if AXEventSynthesizer.try_all_clickable_actions(self._navigator_focus):
             return True
 
-        eventsynthesizer.clickObject(self._navigator_focus, 1)
+        AXEventSynthesizer.click_object(self._navigator_focus, 1)
         return True
 
 
 _navigator = ObjectNavigator()
 def getNavigator():
+    """Returns the Object Navigator"""
+
     return _navigator

@@ -8,7 +8,9 @@ gfxdir=$(datadir)/orca/gfx
 orca_python_PYTHON = \
 	__init__.py \
 	acss.py \
+	action_presenter.py \
 	ax_collection.py \
+	ax_event_synthesizer.py \
 	ax_object.py \
 	ax_selection.py \
 	ax_utilities.py \
@@ -32,7 +34,6 @@ orca_python_PYTHON = \
 	desktop_keyboardmap.py \
 	dynamic_api_manager.py \
 	event_manager.py \
-	eventsynthesizer.py \
 	find.py \
 	flat_review.py \
 	flat_review_presenter.py \
@@ -40,11 +41,13 @@ orca_python_PYTHON = \
 	generator.py \
 	gsettings_manager.py \
 	guilabels.py \
+	highlighter.py \
 	input_event.py \
 	keybindings.py \
 	keynames.py \
 	label_inference.py \
 	laptop_keyboardmap.py \
+	learn_mode_presenter.py \
 	liveregions.py \
 	logger.py \
 	mathsymbols.py \
@@ -55,7 +58,6 @@ orca_python_PYTHON = \
 	orca.py \
 	orca_gtkbuilder.py \
 	orca_gui_find.py \
-	orca_gui_commandlist.py \
 	orca_gui_navlist.py \
 	orca_i18n.py \
 	orca_state.py \
@@ -84,7 +86,8 @@ orca_python_PYTHON = \
 	text_attribute_names.py \
 	translation_context.py \
 	translation_manager.py \
-	tutorialgenerator.py 
+	tutorialgenerator.py \
+	where_am_i_presenter.py
 
 orca_pythondir=$(pkgpythondir)
 

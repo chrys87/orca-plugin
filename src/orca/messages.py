@@ -488,8 +488,23 @@ CONTAINER_NOT_IN_A = _("Not in a container.")
 CONTAINER_SELECTED_ALL = _("all items selected")
 
 # Translators: The "default" button in a dialog box is the button that gets
-# activated when Enter is pressed anywhere within that dialog box.
+# activated when Enter is pressed anywhere within that dialog box. The string
+# substitution is the name of the button (e.g. "OK" or "Close").
 DEFAULT_BUTTON_IS = _("Default button is %s")
+
+# Translators: The "default" button in a dialog box is the button that gets
+# activated when Enter is pressed anywhere within that dialog box. This
+# message is presented when the default button was found but is insensitive /
+# grayed out / cannot be activated. The string substitution is the name of
+# the button (e.g. "OK" or "Close"). When translating "Grayed," please use
+# the same word used for the string in object_properties.py.
+DEFAULT_BUTTON_IS_GRAYED = _("Default button is %s. Grayed")
+
+# Translators: The "default" button in a dialog box is the button that gets
+# activated when Enter is pressed anywhere within that dialog box. Orca has
+# a command to present the default button. This is the message Orca will
+# present if it could not find the default button.
+DEFAULT_BUTTON_NOT_FOUND = _("Default button not found")
 
 # Translators: This string is part of the presentation of an item that includes
 # one or several consecutive subscripted characters. For example, 'X' followed
@@ -502,6 +517,11 @@ DIGITS_SUBSCRIPT =  _(" subscript %s")
 # by 'superscript 2' followed by 'superscript 3' should be presented to the user
 # as 'X superscript 23'.
 DIGITS_SUPERSCRIPT =  _(" superscript %s")
+
+# Translators: this message is presented when the user tries to perform a command
+# specific to dialog boxes, such as presenting the default button, but is not in
+# a dialog.
+DIALOG_NOT_IN_A = _("Not in a dialog")
 
 # Translators: when the user selects (highlights) or unselects text in a
 # document, Orca will speak information about what they have selected or
@@ -614,6 +634,22 @@ FLAT_REVIEW_START = _("Entering flat review.")
 # sequence of words in a sequence of lines.  This message is presented to
 # let the user know he/she just entered flat review.
 FLAT_REVIEW_STOP = _("Leaving flat review.")
+
+# Translators: the 'flat review' feature of Orca allows the blind user to
+# explore the text in a window in a 2D fashion.  That is, Orca treats all
+# the text from all objects in a window (e.g., buttons, labels, etc.) as a
+# sequence of words in a sequence of lines.  This message is presented to
+# let the user know that flat review is being restricted to the current
+# object of interest.
+FLAT_REVIEW_RESTRICTED = _("Flat review restricted to the current object")
+
+# Translators: the 'flat review' feature of Orca allows the blind user to
+# explore the text in a window in a 2D fashion.  That is, Orca treats all
+# the text from all objects in a window (e.g., buttons, labels, etc.) as a
+# sequence of words in a sequence of lines.  This message is presented to
+# let the user know that flat review is unrestricted,
+# that is, the entire window can be explored.
+FLAT_REVIEW_UNRESTRICTED = _("Flat review unrestricted")
 
 # Translators: this means a particular cell in a spreadsheet has a formula
 # (e.g., "=sum(a1:d1)")
@@ -1809,6 +1845,13 @@ NESTING_LEVEL = _("Nesting level %d")
 # location on a web page. If moving the mouse pointer caused an item to appear
 # such as a pop-up menu, we want to present that fact.
 NEW_ITEM_ADDED = _("New item has been added")
+
+# Translators: Orca has a command which presents a menu with accessible actions
+# that can be performed on the current object. This is the message that Orca
+# presents when the object has no actions. The string substitution will be the
+# name of the object if it has a name (e.g. "OK" or "Close") or it's accessible,
+# localized rolename if it does not.
+NO_ACTIONS_FOUND_ON = _("No actions found on: %s")
 
 # Translators: This is intended to be a short phrase to present the fact that no
 # no accessible component has keyboard focus.
