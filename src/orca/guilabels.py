@@ -29,7 +29,7 @@ __copyright__ = "Copyright (c) 2004-2009 Sun Microsystems Inc." \
                 "Copyright (c) 2010-2013 The Orca Team"
 __license__   = "LGPL"
 
-from .orca_i18n import _, C_
+from .orca_i18n import _, C_, ngettext
 
 # Translators: This string appears on a button in a dialog. "Activating" the
 # selected item will perform the action that one would expect to occur if the
@@ -355,17 +355,20 @@ KB_MODIFIED = C_("keybindings", "Modified")
 # Translators: This label refers to the keyboard layout (desktop or laptop).
 KEYBOARD_LAYOUT_DESKTOP = _("_Desktop")
 
-# Translators: This is a column header for a list of notification messages.
-# It will appear over the message text.
+# Translators: Orca has a feature to list all of the notification messages
+# received, similar to the functionality gnome-shell provides when you press
+# Super+M, but it works in all desktop environments. Orca's list is a table
+# with two columns, one column for the text of the notification and one
+# column for the time of the notification. This string is a column header
+# for the text of the notifications.
 NOTIFICATIONS_COLUMN_HEADER = C_("notification presenter", "Notifications")
 
-# Translators: This is a title for a dialog that will present a list of
-# notification messages.
-NOTIFICATIONS_COUNT = C_("notification presenter", "%d Notifications")
-
-# Translators: This is a column header for a list of notification messages.
-# It will appear over the time a particular notification was received. The
-# time will be relative (e.g. "10 minutes ago") or absolute.
+# Translators: Orca has a feature to list all of the notification messages
+# received, similar to the functionality gnome-shell provides when you press
+# Super+M, but it works in all desktop environments. Orca's list is a table
+# with two columns, one column for the text of the notification and one
+# column for the time of the notification. This string is a column header
+# for the time, which will be relative (e.g. "10 minutes ago") or absolute.
 NOTIFICATIONS_RECEIVED_TIME = C_("notification presenter", "Received")
 
 # Translators: This string is a label for the group of Orca commands which
@@ -720,7 +723,7 @@ SN_TITLE_HEADING = C_("structural navigation", "Headings")
 # Translators: Orca has a command that presents a list of structural navigation
 # objects in a dialog box so that users can navigate more quickly than they
 # could with native keyboard navigation. This is the title of such a dialog box.
-SN_TITLE_IFRAME = C_("structural navigation", "Interal Frames")
+SN_TITLE_IFRAME = C_("structural navigation", "Internal Frames")
 
 # Translators: Orca has a command that presents a list of structural navigation
 # objects in a dialog box so that users can navigate more quickly than they
@@ -924,3 +927,13 @@ USE_STRUCTURAL_NAVIGATION = _("Enable _structural navigation")
 # Translators: This refers to the amount of information Orca provides about a
 # particular object that receives focus.
 VERBOSITY_LEVEL_BRIEF = _("Brie_f")
+
+def notifications_count(count):
+    """Returns the gui label representing the notifications count."""
+
+    # Translators: Orca has a feature to list all of the notification messages
+    # received, similar to the functionality gnome-shell provides when you press
+    # Super+M, but it works in all desktop environments. This string is the title
+    # of the dialog that contains the list of notification messages. The string
+    # substitution is for the number of messages in the list.
+    return ngettext("%d notification", "%d notifications", count) % count
